@@ -6,6 +6,9 @@ const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v)
 const apertureToExposure = (f) => clamp(2 * Math.log2(5.6 / f), -2.5, 2.5)
 const F_STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
 const SHUTTER = ['1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8']
+const ISO_STOPS = [100, 200, 400, 800, 1600, 3200, 6400, 12800]
+const isoToExposure = (iso) => clamp(Math.log2(iso / 100) * 0.5, 0, 2.3)
+const isoToNoise = (iso) => clamp(Math.log2(iso / 100) * 22, 0, 150)
 
 const lessons = [
   {
@@ -186,6 +189,94 @@ const lessons = [
         feedback: {
           correct: 'A slow shutter lets the water keep moving while it’s open, blurring it silky.',
           wrong: 'Silky water needs motion blur — that comes from a slow shutter like 1/8s.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'iso-noise',
+    number: 5,
+    title: 'ISO: brightness at a cost',
+    blurb: 'Brighten the dark — but watch the grain.',
+    steps: [
+      {
+        kind: 'intro',
+        scene: 'night',
+        title: 'ISO: the volume knob',
+        body: [
+          'When there isn’t enough light — indoors, at night — you can turn up the ISO. It amplifies the signal and brightens the photo.',
+          'But amplifying the signal also amplifies the noise. Keep an eye on the shadows.',
+        ],
+      },
+      {
+        kind: 'slider-sim',
+        scene: 'night',
+        prompt: 'Turn up the ISO until you can clearly make out the scene.',
+        control: { stops: ISO_STOPS, start: 0 },
+        toParams: (iso) => ({ exposure: isoToExposure(iso), iso: isoToNoise(iso) }),
+        format: (iso) => 'ISO ' + iso,
+        label: 'ISO',
+        ends: ['ISO 100 · clean', 'ISO 12800 · noisy'],
+        ariaLabel: 'ISO sensitivity',
+        loupe: { cx: 4, cy: 25, cells: 6 },
+        check: (iso) => iso >= 1600,
+        feedback: {
+          correct:
+            'Now you can see it — but check the loupe: the shadows are full of grain. That’s the price of ISO.',
+          wrong: 'Still too dark to make out. Raise the ISO further to amplify the light.',
+        },
+      },
+      {
+        kind: 'predict',
+        prompt:
+          'Indoors, your photo is too dark. You’ve already opened the aperture wide and slowed the shutter as far as you safely can. What’s left?',
+        options: ['Raise the ISO, accepting some grain', 'Nothing — the photo has to stay dark'],
+        answer: 0,
+        feedback: {
+          correct: 'Right — ISO is your third lever. Use it once aperture and shutter run out, and accept a little grain.',
+          wrong: 'There’s a third control: ISO. It brightens the image (with some grain) when aperture and shutter can’t.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'the-triangle',
+    number: 6,
+    title: 'The triangle: balance the three',
+    blurb: 'Trade one control for another and keep the light.',
+    steps: [
+      {
+        kind: 'intro',
+        scene: 'portrait',
+        title: 'Three controls, one job',
+        body: [
+          'Aperture, shutter, and ISO each change the brightness — and each brings a side effect: blur, motion, grain.',
+          'The craft is balancing them: open up here, speed up there, and keep the exposure just right.',
+        ],
+      },
+      {
+        kind: 'triangle',
+        scene: 'portrait',
+        prompt: 'This shot is overexposed. Balance the three controls until the exposure meter sits level.',
+        start: { aperture: 4, shutter: 4, iso: 4 },
+        feedback: {
+          correct:
+            'Balanced. And notice — you could hit this same brightness many ways: a wide aperture with a fast shutter, or a narrow one with high ISO. Those are equivalent exposures, each with its own look.',
+        },
+      },
+      {
+        kind: 'predict',
+        prompt:
+          'You balance a shot at f/8, 1/125s, ISO 200. A friend shoots the same scene at f/2.8, 1/1000s, ISO 200 — equally bright. What’s different about their photo?',
+        options: ['Their background is more blurred', 'Their photo is brighter', 'Nothing — they’re identical'],
+        answer: 0,
+        feedback: {
+          correct:
+            'Exactly. Same brightness, but f/2.8 is much wider than f/8 — so their background is more blurred. Equivalent exposure, different look.',
+          wrong:
+            'They’re equally bright (an equivalent exposure), but f/2.8 is far wider than f/8 — so their background is more blurred.',
         },
       },
     ],

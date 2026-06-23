@@ -11,6 +11,7 @@ export default function PixelScene({
   aperture = null,
   motion = 0,
   progress = 1,
+  crop = null,
   size = 320,
   live = false,
   className = '',
@@ -23,7 +24,7 @@ export default function PixelScene({
     const canvas = ref.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    const params = { scene, N, exposure, iso, aperture, motion, progress }
+    const params = { scene, N, exposure, iso, aperture, motion, progress, crop }
 
     const paint = () => {
       drawScene(ctx, params)
@@ -31,7 +32,7 @@ export default function PixelScene({
     }
     paint()
     return () => raf.current && cancelAnimationFrame(raf.current)
-  }, [scene, N, exposure, iso, aperture, motion, progress, live])
+  }, [scene, N, exposure, iso, aperture, motion, progress, live, crop?.cx, crop?.cy, crop?.cells])
 
   return (
     <canvas

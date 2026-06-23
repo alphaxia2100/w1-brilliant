@@ -239,12 +239,17 @@ export function computeGrid(params) {
 export function drawScene(ctx, params) {
   const grid = computeGrid(params)
   const N = grid.length
-  const cw = ctx.canvas.width / N
-  for (let r = 0; r < N; r++)
-    for (let c = 0; c < N; c++) {
-      const px = grid[r][c]
+  // Optional loupe: draw only a sub-square of the grid, scaled to fill the canvas.
+  const crop = params.crop
+  const span = crop ? crop.cells : N
+  const oR = crop ? crop.cy : 0
+  const oC = crop ? crop.cx : 0
+  const cw = ctx.canvas.width / span
+  for (let i = 0; i < span; i++)
+    for (let j = 0; j < span; j++) {
+      const px = grid[Math.min(oR + i, N - 1)][Math.min(oC + j, N - 1)]
       ctx.fillStyle = `rgb(${clamp(px[0], 0, 255) | 0},${clamp(px[1], 0, 255) | 0},${clamp(px[2], 0, 255) | 0})`
-      ctx.fillRect(Math.floor(c * cw), Math.floor(r * cw), Math.ceil(cw), Math.ceil(cw))
+      ctx.fillRect(Math.floor(j * cw), Math.floor(i * cw), Math.ceil(cw), Math.ceil(cw))
     }
 }
 

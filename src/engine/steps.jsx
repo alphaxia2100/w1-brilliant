@@ -185,8 +185,20 @@ function SliderSimView({ step, status, onResult, onActivity }) {
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
-      <div className="flex justify-center mb-4">
+      <div className="relative flex justify-center mb-4">
         <PixelScene scene={step.scene} size={300} live={!!params.iso} {...params} />
+        {step.loupe && (
+          <div className="absolute bottom-3 right-3 w-[88px] h-[88px] rounded-tile overflow-hidden border-2 border-white shadow-rest">
+            <PixelScene
+              scene={step.scene}
+              size={88}
+              rounded={false}
+              live={!!params.iso}
+              {...params}
+              crop={step.loupe}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-4 mb-4">
@@ -224,9 +236,109 @@ function SliderSimView({ step, status, onResult, onActivity }) {
   )
 }
 
+/* ---------- triangle (Lesson 6 hero: balance all three controls) ---------- */
+const TRI_APS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
+const TRI_SHUT = ['1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8']
+const TRI_ISOS = [100, 200, 400, 800, 1600, 3200, 6400, 12800]
+const clampN = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v)
+
+function TriRow({ label, value, raw, setRaw, onActivity, locked, ends }) {
+  return (
+    <div className="mb-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[13px] text-muted">{label}</span>
+        <span className="font-mono text-[15px] font-medium">{value}</span>
+      </div>
+      <Slider
+        value={raw}
+        min={0}
+        max={7}
+        step={1}
+        ariaLabel={label}
+        onChange={(v) => {
+          if (!locked) {
+            setRaw(v)
+            onActivity?.()
+          }
+        }}
+      />
+    </div>
+  )
+}
+
+function TriangleView({ step, status, onResult, onActivity }) {
+  const [ai, setAi] = useState(step.start.aperture)
+  const [si, setSi] = useState(step.start.shutter)
+  const [ii, setII] = useState(step.start.iso)
+  const locked = status === 'correct'
+
+  // Each control's light contribution in stops, relative to a neutral middle.
+  const sum = 4 - ai + (si - 4) + (ii - 2)
+  const params = {
+    exposure: sum * 0.7, // gentle: a balanced shot looks right, a misbalanced one reads bright/dark not blown
+    aperture: TRI_APS[ai],
+    motion: Math.round(Math.max(0, si - 2) * 0.9),
+    iso: clampN(Math.log2(TRI_ISOS[ii] / 100) * 14, 0, 110),
+  }
+  const angle = clampN(sum * 5, -28, 28)
+  const balanced = Math.abs(sum) < 0.5
+
+  function check() {
+    if (balanced) onResult(true)
+    else
+      onResult(
+        false,
+        sum > 0
+          ? 'Too bright — remove light: narrow the aperture (higher f-number), use a faster shutter, or lower the ISO.'
+          : 'Too dark — add light: open the aperture (lower f-number), slow the shutter, or raise the ISO.',
+      )
+  }
+
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="flex justify-center mb-3">
+        <PixelScene scene={step.scene} size={260} live {...params} />
+      </div>
+
+      <div className="mb-4">
+        <svg viewBox="0 0 220 64" width="180" height="52" className="mx-auto block" aria-hidden="true">
+          <g
+            style={{ transition: 'transform 0.2s cubic-bezier(0,0,0.2,1)' }}
+            transform={`rotate(${angle} 110 24)`}
+          >
+            <rect x="30" y="21" width="160" height="6" rx="3" fill={balanced ? '#29CC57' : '#141414'} />
+            <circle cx="30" cy="24" r="7" fill="none" stroke={balanced ? '#29CC57' : '#141414'} strokeWidth="3" />
+            <circle cx="190" cy="24" r="7" fill="none" stroke={balanced ? '#29CC57' : '#141414'} strokeWidth="3" />
+          </g>
+          <polygon points="110,24 99,50 121,50" fill="#141414" />
+          <rect x="92" y="50" width="36" height="5" rx="2" fill="#141414" />
+        </svg>
+        <p
+          className="text-center text-[13px] font-medium mt-1"
+          style={{ color: balanced ? '#1F8A3B' : '#666' }}
+        >
+          {balanced ? 'Level — correctly exposed' : sum > 0 ? 'Overexposed' : 'Underexposed'}
+        </p>
+      </div>
+
+      <TriRow label="Aperture" value={'f/' + (TRI_APS[ai] % 1 === 0 ? TRI_APS[ai] : TRI_APS[ai].toFixed(1))} raw={ai} setRaw={setAi} onActivity={onActivity} locked={locked} />
+      <TriRow label="Shutter" value={TRI_SHUT[si] + 's'} raw={si} setRaw={setSi} onActivity={onActivity} locked={locked} />
+      <TriRow label="ISO" value={TRI_ISOS[ii]} raw={ii} setRaw={setII} onActivity={onActivity} locked={locked} />
+
+      {!locked && (
+        <Button className="w-full mt-2" onClick={check}>
+          Check
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export const STEP_VIEWS = {
   intro: IntroView,
   predict: PredictView,
   capture: CaptureView,
   'slider-sim': SliderSimView,
+  triangle: TriangleView,
 }

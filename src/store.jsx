@@ -64,7 +64,10 @@ export function AppProvider({ children }) {
   /* ----- bootstrap auth ----- */
   useEffect(() => {
     if (firebaseEnabled) {
-      const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      // Safety net: never hang on the splash if auth init stalls (e.g. blocked storage).
+      const fallback = setTimeout(() => setReady(true), 4000)
+      const unsub = onAuthStateChanged(auth, (fbUser) => {
+        clearTimeout(fallback)
         if (fbUser) {
           const u = {
             uid: fbUser.uid,
@@ -73,14 +76,18 @@ export function AppProvider({ children }) {
             isAnonymous: fbUser.isAnonymous,
           }
           setUser(u)
-          setProgress(await loadRemote(u))
+          // Load progress in the background — never block first paint on a Firestore read.
+          loadRemote(u).then(setProgress).catch(() => {})
         } else {
           setUser(null)
           setProgress(emptyProgress())
         }
         setReady(true)
       })
-      return unsub
+      return () => {
+        clearTimeout(fallback)
+        unsub()
+      }
     }
     // LOCAL mode
     const current = localStore.readJSON(LS_CURRENT, null)
