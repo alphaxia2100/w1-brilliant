@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useApp } from './store.jsx'
 import { Logo } from './components/ui.jsx'
 import AuthPage from './pages/AuthPage.jsx'
@@ -14,6 +14,13 @@ function Splash() {
   )
 }
 
+// Key by lesson id so the page fully remounts on every lesson change — no stale
+// completion state can carry over between lessons.
+function LessonRoute() {
+  const { id } = useParams()
+  return <LessonPage key={id} />
+}
+
 export default function App() {
   const { ready, user } = useApp()
   if (!ready) return <Splash />
@@ -25,7 +32,7 @@ export default function App() {
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/" element={guard(<HomePage />)} />
       <Route path="/course" element={guard(<CoursePathPage />)} />
-      <Route path="/lesson/:id" element={guard(<LessonPage />)} />
+      <Route path="/lesson/:id" element={guard(<LessonRoute />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
