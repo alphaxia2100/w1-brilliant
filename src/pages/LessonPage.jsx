@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../store.jsx'
 import { course, getLesson, totalLessons } from '../content/course.js'
@@ -8,8 +8,10 @@ import PixelScene from '../sim/PixelScene.jsx'
 
 const XP_PER_LESSON = 20
 
-function CompletionCard({ lesson, nextLesson, onReplay }) {
+function CompletionCard({ lesson, nextLesson, onReplay, stats }) {
   const navigate = useNavigate()
+  const correct = stats?.correct || 0
+  const wrong = stats?.wrong || 0
   return (
     <div className="min-h-[100dvh] max-w-col w-full mx-auto px-5 py-10 flex flex-col justify-center text-center animate-pop">
       <div className="flex justify-center mb-6">
@@ -19,7 +21,11 @@ function CompletionCard({ lesson, nextLesson, onReplay }) {
         Lesson complete · +{XP_PER_LESSON} XP
       </div>
       <h1 className="text-[24px] font-semibold tracking-tight mb-2">{lesson.title}</h1>
-      <p className="text-muted mb-8">Nicely done. Your progress is saved.</p>
+      <p className="text-muted mb-3">Nicely done. Your progress is saved.</p>
+      <div className="flex justify-center gap-5 text-[14px] mb-8">
+        <span className="text-correct font-medium">{correct} correct</span>
+        <span className="text-muted">{wrong} missed</span>
+      </div>
 
       <div className="flex flex-col gap-3">
         {nextLesson ? (
@@ -46,6 +52,12 @@ export default function LessonPage() {
   const { progress, completeLesson, courseId } = useApp()
   const [completed, setCompleted] = useState(false)
   const [nonce, setNonce] = useState(0)
+
+  // Navigating to a different lesson reuses this component — reset per-lesson state.
+  useEffect(() => {
+    setCompleted(false)
+    setNonce(0)
+  }, [id])
 
   const base = getLesson(id)
 
@@ -76,6 +88,7 @@ export default function LessonPage() {
       <CompletionCard
         lesson={base}
         nextLesson={nextLesson}
+        stats={progress.courses[courseId]?.lessons[id]}
         onReplay={() => {
           setNonce((n) => n + 1)
           setCompleted(false)

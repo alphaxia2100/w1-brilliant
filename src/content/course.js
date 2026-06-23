@@ -1,7 +1,17 @@
 // Course content lives in the bundle as data — never in Firestore.
 // Each lesson is an array of steps the engine knows how to render.
+import { histogram } from '../sim/scene.js'
 
 const fmt = (f) => (f % 1 === 0 ? String(f) : f.toFixed(1))
+
+// True when neither the shadows nor the highlights are clipped — matches the
+// histogram the learner sees in the metering lesson.
+const CLIP = 0.09
+function wellMetered(scene, exposure) {
+  const c = histogram({ scene, exposure })
+  const total = c.reduce((a, b) => a + b, 0) || 1
+  return c[0] / total <= CLIP && c[c.length - 1] / total <= CLIP
+}
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v)
 const apertureToExposure = (f) => clamp(2 * Math.log2(5.6 / f), -2.5, 2.5)
 const F_STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
@@ -89,7 +99,10 @@ const lessons = [
         check: (f) => f <= 2,
         feedback: {
           correct: 'f/1.4 is the widest opening — small f-number, big hole, most light.',
-          wrong: 'Counterintuitive, but a smaller f-number means a bigger opening. Drag toward f/1.4.',
+          wrong: [
+            'Counterintuitive, but a smaller f-number means a bigger opening. Drag toward the low numbers.',
+            'Keep going — the brightest is f/1.4, the widest opening of all. Slide all the way left.',
+          ],
         },
       },
       {
@@ -134,7 +147,10 @@ const lessons = [
         check: (f) => f <= 2.8,
         feedback: {
           correct: 'A wide aperture (low f-number) throws the background out of focus — a shallow depth of field.',
-          wrong: 'To blur the background, open the aperture wider — drag toward the low f-numbers.',
+          wrong: [
+            'To blur the background, open the aperture wider — drag toward the low f-numbers.',
+            'Go wider still — f/2.8 or below gives that soft, melted background.',
+          ],
         },
       },
       {
@@ -178,7 +194,10 @@ const lessons = [
         check: (v) => v <= 1,
         feedback: {
           correct: 'A fast shutter (1/1000s) freezes the action into a sharp instant.',
-          wrong: 'To freeze motion you need a fast shutter — drag toward 1/1000s.',
+          wrong: [
+            'To freeze motion you need a fast shutter — drag toward 1/1000s.',
+            'Faster still — 1/1000s is the leftmost, sharpest setting.',
+          ],
         },
       },
       {
@@ -281,12 +300,148 @@ const lessons = [
       },
     ],
   },
+
+  {
+    id: 'metering',
+    number: 7,
+    title: 'Metering: read the light',
+    blurb: 'The histogram tells you if your exposure is right.',
+    steps: [
+      {
+        kind: 'intro',
+        scene: 'landscape',
+        title: 'The histogram is a light meter',
+        body: [
+          'How do you know an exposure is right without trusting your eyes? You read the histogram — a graph of how many pixels are dark (left), mid (middle), and bright (right).',
+          'If it’s crammed against the left, you’ve lost the shadows. Crammed right, you’ve blown the highlights.',
+        ],
+      },
+      {
+        kind: 'slider-sim',
+        scene: 'landscape',
+        prompt: 'This shot is underexposed. Adjust the exposure so the histogram isn’t clipped against either edge.',
+        control: { min: -2.5, max: 2.5, step: 0.1, start: -1.7 },
+        toParams: (v) => ({ exposure: v }),
+        format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV',
+        label: 'Exposure',
+        ends: ['darker', 'brighter'],
+        ariaLabel: 'Exposure compensation',
+        histogram: true,
+        check: (v) => wellMetered('landscape', v),
+        feedback: {
+          correct: 'Balanced — the tones spread across the histogram without piling up at either edge. That’s a well-metered exposure.',
+          wrong: [
+            'Watch the histogram, not just the photo. Nudge the exposure to pull the bars away from the edge.',
+            'It’s still bunched against one side. Aim to spread the tones toward the middle.',
+          ],
+        },
+      },
+      {
+        kind: 'predict',
+        prompt: 'A histogram with a tall spike jammed against the far right edge means…',
+        options: ['The highlights are blown — detail is lost', 'The photo is perfectly exposed', 'The photo is too dark'],
+        answer: 0,
+        feedback: {
+          correct: 'Right — pixels piled at the right edge are pure white with no detail. You’d lower the exposure to recover them.',
+          wrong: 'The right edge is the brightest tones. A spike there means those areas are pure white — blown highlights.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'white-balance',
+    number: 8,
+    title: 'White balance: the color of light',
+    blurb: 'Make the whites actually look white.',
+    steps: [
+      {
+        kind: 'intro',
+        scene: 'seascape',
+        title: 'Light has a color',
+        body: [
+          'Light isn’t always neutral. Indoor bulbs are warm and orange; shade is cool and blue. Your camera’s white balance corrects for it so whites look white.',
+          'Get it wrong and the whole photo takes on a color cast.',
+        ],
+      },
+      {
+        kind: 'slider-sim',
+        scene: 'seascape',
+        prompt: 'This photo has an orange cast. Cool it down until the colors look natural again.',
+        control: { min: -1, max: 1, step: 0.05, start: 0.62 },
+        toParams: (v) => ({ temp: v }),
+        format: (v) => Math.round(5500 - v * 2500) + 'K',
+        label: 'White balance',
+        ends: ['cooler', 'warmer'],
+        ariaLabel: 'White balance',
+        check: (v) => Math.abs(v) < 0.15,
+        feedback: {
+          correct: 'Neutral. The cast is gone and the colors read true — that’s correct white balance.',
+          wrong: [
+            'Still got a tint. Slide toward the cooler end to cancel the orange.',
+            'Close — ease it to the middle, where the light is neutral (around 5500K).',
+          ],
+        },
+      },
+      {
+        kind: 'predict',
+        prompt: 'You shoot indoors under warm orange bulbs and everything looks too orange. To fix it, you set white balance to…',
+        options: ['Cooler (more blue)', 'Warmer (more orange)'],
+        answer: 0,
+        feedback: {
+          correct: 'Right — you add the opposite color (cool/blue) to cancel the warm cast.',
+          wrong: 'To cancel an orange cast you add its opposite — cool it down toward blue.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'rule-of-thirds',
+    number: 9,
+    title: 'Composition: the rule of thirds',
+    blurb: 'Where you place the subject changes everything.',
+    steps: [
+      {
+        kind: 'intro',
+        scene: 'seascape',
+        title: 'Get off-center',
+        body: [
+          'Split the frame into thirds, like a tic-tac-toe board. The four points where the lines cross are the strongest places to put your subject.',
+          'Dead-center can feel static. A subject on a third feels balanced and alive.',
+        ],
+      },
+      {
+        kind: 'compose',
+        scene: 'seascape',
+        prompt: 'Drag your subject onto one of the four power points — a third of the way in.',
+        start: { x: 50, y: 50 },
+        feedback: {
+          correct: 'On a power point. Off-center placement feels more dynamic and balanced than dead-center.',
+          wrong: [
+            'Drag your subject onto one of the four points where the gridlines cross.',
+            'Aim for an intersection a third of the way in — not the middle of the frame.',
+          ],
+        },
+      },
+      {
+        kind: 'predict',
+        prompt: 'Why place a subject on a third instead of dead-center?',
+        options: ['It feels more dynamic and balanced', 'It makes the photo brighter', 'It’s the only correct way to compose'],
+        answer: 0,
+        feedback: {
+          correct: 'Exactly — it’s a guideline, not a law, but off-center usually feels more alive and intentional.',
+          wrong: 'It’s about feel: off-center composition reads as more dynamic and balanced. (It’s a guideline, not a rule.)',
+        },
+      },
+    ],
+  },
 ]
 
 export const course = {
   id: 'exposure',
-  title: 'Exposure',
-  subtitle: 'The three controls behind every photo',
+  title: 'Photography Foundations',
+  subtitle: 'Exposure, light, and composition — by doing',
   lessons,
 }
 

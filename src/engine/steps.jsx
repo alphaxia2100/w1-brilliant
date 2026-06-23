@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import PixelScene from '../sim/PixelScene.jsx'
-import { meanBrightness } from '../sim/scene.js'
+import { meanBrightness, histogram } from '../sim/scene.js'
 import { Slider, Button, ApertureIris } from '../components/ui.jsx'
 
 // The one shared feedback panel — calm gray when wrong, never red.
@@ -24,6 +24,35 @@ export function Feedback({ status, message }) {
 
 function Prompt({ children }) {
   return <p className="text-[18px] leading-snug font-medium mb-4">{children}</p>
+}
+
+// A live luminance histogram — the metering readout. Clipped ends glow red.
+function Histogram({ params }) {
+  const counts = histogram(params)
+  const total = counts.reduce((a, b) => a + b, 0) || 1
+  const max = Math.max(...counts, 1)
+  const clipLow = counts[0] / total > 0.09
+  const clipHigh = counts[counts.length - 1] / total > 0.09
+  return (
+    <div className="mb-4">
+      <div className="flex items-end gap-[2px] h-16 bg-surface rounded-tile px-2 py-1.5">
+        {counts.map((c, i) => {
+          const clipped = (i === 0 && clipLow) || (i === counts.length - 1 && clipHigh)
+          return (
+            <span
+              key={i}
+              className="flex-1 rounded-t-[2px]"
+              style={{ height: `${(c / max) * 100}%`, minHeight: '2px', background: clipped ? '#FF5D5D' : '#9AA0A6' }}
+            />
+          )
+        })}
+      </div>
+      <div className="flex justify-between text-[11px] text-muted mt-1">
+        <span style={{ color: clipLow ? '#C23B3B' : undefined }}>shadows{clipLow ? ' clipped' : ''}</span>
+        <span style={{ color: clipHigh ? '#C23B3B' : undefined }}>{clipHigh ? 'clipped ' : ''}highlights</span>
+      </div>
+    </div>
+  )
 }
 
 /* ---------- intro ---------- */
@@ -201,6 +230,8 @@ function SliderSimView({ step, status, onResult, onActivity }) {
         )}
       </div>
 
+      {step.histogram && <Histogram params={{ scene: step.scene, ...params }} />}
+
       <div className="flex items-center gap-4 mb-4">
         {step.iris && <ApertureIris f={value} />}
         <div className="flex flex-col">
@@ -335,10 +366,93 @@ function TriangleView({ step, status, onResult, onActivity }) {
   )
 }
 
+/* ---------- compose (rule of thirds: drag the subject onto a power point) ---------- */
+const THIRDS = [
+  { x: 33.33, y: 33.33 },
+  { x: 66.66, y: 33.33 },
+  { x: 33.33, y: 66.66 },
+  { x: 66.66, y: 66.66 },
+]
+function ComposeView({ step, status, onResult, onActivity }) {
+  const [pos, setPos] = useState(step.start || { x: 50, y: 50 })
+  const frame = useRef(null)
+  const dragging = useRef(false)
+  const locked = status === 'correct'
+  const near = THIRDS.some((p) => Math.hypot(p.x - pos.x, p.y - pos.y) < 11)
+
+  function place(e) {
+    const rect = frame.current.getBoundingClientRect()
+    setPos({
+      x: clampN(((e.clientX - rect.left) / rect.width) * 100, 5, 95),
+      y: clampN(((e.clientY - rect.top) / rect.height) * 100, 5, 95),
+    })
+    onActivity?.()
+  }
+  function down(e) {
+    if (locked) return
+    dragging.current = true
+    place(e)
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* no active pointer (e.g. synthetic event) — fine */
+    }
+  }
+
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="relative mx-auto mb-4" style={{ maxWidth: 300 }}>
+        <PixelScene scene={step.scene} size={300} />
+        <div
+          ref={frame}
+          className="absolute inset-0 touch-none cursor-grab active:cursor-grabbing rounded-tile overflow-hidden"
+          onPointerDown={down}
+          onPointerMove={(e) => dragging.current && place(e)}
+          onPointerUp={() => (dragging.current = false)}
+        >
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden="true">
+            {[33.33, 66.66].map((v) => (
+              <line key={'v' + v} x1={v} y1="0" x2={v} y2="100" stroke="rgba(255,255,255,0.7)" strokeWidth="0.4" />
+            ))}
+            {[33.33, 66.66].map((h) => (
+              <line key={'h' + h} x1="0" y1={h} x2="100" y2={h} stroke="rgba(255,255,255,0.7)" strokeWidth="0.4" />
+            ))}
+            {THIRDS.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r="1.6" fill="rgba(255,255,255,0.9)" />
+            ))}
+          </svg>
+          <div
+            className="absolute w-8 h-8 rounded-full border-[3px] grid place-items-center transition-[background,border-color] duration-150"
+            style={{
+              left: `${pos.x}%`,
+              top: `${pos.y}%`,
+              transform: 'translate(-50%, -50%)',
+              background: near ? '#29CC57' : '#FFFFFF',
+              borderColor: near ? '#1F8A3B' : '#141414',
+            }}
+          >
+            <span className="w-2 h-2 rounded-full" style={{ background: near ? '#fff' : '#141414' }} />
+          </div>
+        </div>
+      </div>
+      <p className="text-[13px] text-center text-muted mb-4">
+        {near ? 'On a power point — that’s the spot.' : 'Drag your subject onto a point where the lines cross.'}
+      </p>
+      {!locked && (
+        <Button className="w-full" onClick={() => onResult(near)}>
+          Check
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export const STEP_VIEWS = {
   intro: IntroView,
   predict: PredictView,
   capture: CaptureView,
   'slider-sim': SliderSimView,
   triangle: TriangleView,
+  compose: ComposeView,
 }

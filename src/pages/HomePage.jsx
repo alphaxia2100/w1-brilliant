@@ -9,6 +9,8 @@ export default function HomePage() {
   const navigate = useNavigate()
 
   const done = progress.courses[courseId]?.completedLessonIds || []
+  const lessonsMap = progress.courses[courseId]?.lessons || {}
+  const correctCount = Object.values(lessonsMap).reduce((a, l) => a + (l.correct || 0), 0)
   const resume = progress.lastLesson
   const resumeLesson = resume ? getLesson(resume.lessonId) : null
   const firstName = user?.displayName?.split(' ')[0]
@@ -27,9 +29,20 @@ export default function HomePage() {
         </div>
       </header>
 
-      <h1 className="text-[26px] font-semibold tracking-tight mb-6">
+      <h1 className="text-[26px] font-semibold tracking-tight mb-3">
         {firstName ? `Hi, ${firstName}.` : 'Welcome.'} Ready to make a photo?
       </h1>
+      <div className="flex gap-4 text-[13px] text-muted mb-6">
+        <span>
+          <span className="text-correct font-medium">{correctCount}</span> answered correctly
+        </span>
+        <span>
+          <span className="text-ink font-medium">
+            {done.length}/{totalLessons}
+          </span>{' '}
+          lessons done
+        </span>
+      </div>
 
       {resumeLesson ? (
         <Card className="p-5 mb-4">

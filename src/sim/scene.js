@@ -127,7 +127,37 @@ function buildNight(N) {
   return { cells, subject }
 }
 
-const GENERATORS = { landscape: buildLandscape, portrait: buildPortrait, night: buildNight }
+function buildSeascape(N) {
+  const rnd = mulberry32(404)
+  const horizon = Math.floor(N * 0.56)
+  const cells = []
+  const subject = []
+  for (let r = 0; r < N; r++) {
+    cells[r] = []
+    subject[r] = []
+    for (let c = 0; c < N; c++) {
+      let col
+      if (r < horizon) {
+        const t = r / horizon
+        col = [lerp(150, 224, t), lerp(186, 232, t), lerp(214, 236, t)]
+      } else {
+        const t = (r - horizon) / (N - horizon)
+        col = [lerp(40, 70, t), lerp(108, 138, t), lerp(150, 170, t)]
+      }
+      col = col.map((v) => v + (rnd() - 0.5) * 10)
+      cells[r][c] = col
+      subject[r][c] = false
+    }
+  }
+  return { cells, subject }
+}
+
+const GENERATORS = {
+  landscape: buildLandscape,
+  portrait: buildPortrait,
+  night: buildNight,
+  seascape: buildSeascape,
+}
 const cache = new Map()
 
 export function getScene(name, N) {
@@ -203,6 +233,7 @@ export function computeGrid(params) {
     iso = 0,
     aperture = null,
     motion = 0,
+    temp = 0,
     progress = 1,
   } = params
   const sc = getScene(scene, N)
@@ -221,6 +252,17 @@ export function computeGrid(params) {
       g[r][c][1] *= factor
       g[r][c][2] *= factor
     }
+
+  // White balance: warm (temp > 0) adds red / removes blue; cool does the reverse.
+  if (temp !== 0) {
+    const rF = 1 + 0.32 * temp
+    const bF = 1 - 0.32 * temp
+    for (let r = 0; r < N; r++)
+      for (let c = 0; c < N; c++) {
+        g[r][c][0] *= rF
+        g[r][c][2] *= bF
+      }
+  }
 
   if (iso > 0) {
     for (let r = 0; r < N; r++)
@@ -251,6 +293,20 @@ export function drawScene(ctx, params) {
       ctx.fillStyle = `rgb(${clamp(px[0], 0, 255) | 0},${clamp(px[1], 0, 255) | 0},${clamp(px[2], 0, 255) | 0})`
       ctx.fillRect(Math.floor(j * cw), Math.floor(i * cw), Math.ceil(cw), Math.ceil(cw))
     }
+}
+
+// Tonal distribution (luminance) of the current scene — for the metering histogram.
+export function histogram(params, bins = 22) {
+  const grid = computeGrid({ ...params, iso: 0 })
+  const N = grid.length
+  const counts = new Array(bins).fill(0)
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++) {
+      const lum = (grid[r][c][0] + grid[r][c][1] + grid[r][c][2]) / 3
+      const bin = clamp(Math.floor((lum / 255) * bins), 0, bins - 1)
+      counts[bin]++
+    }
+  return counts
 }
 
 // Average scene brightness (0..1) at the current settings — used for exposure meters.

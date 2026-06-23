@@ -9,6 +9,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   const [idx, setIdx] = useState(Math.min(lesson.resumeStepIndex || 0, lesson.steps.length - 1))
   const [status, setStatus] = useState('idle')
   const [msg, setMsg] = useState('')
+  const [tries, setTries] = useState(0)
 
   const step = lesson.steps[idx]
   const isIntro = step.kind === 'intro'
@@ -17,6 +18,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   useEffect(() => {
     setStatus('idle')
     setMsg('')
+    setTries(0)
     saveResume(lesson.id, idx)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx])
@@ -24,7 +26,18 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   function handleResult(correct, override) {
     recordAttempt(lesson.id, correct)
     setStatus(correct ? 'correct' : 'wrong')
-    setMsg(override || (correct ? step.feedback?.correct : step.feedback?.wrong) || '')
+    if (correct) {
+      setMsg(override || step.feedback?.correct || '')
+      return
+    }
+    // Staged hints: feedback.wrong may be a string or an array of escalating hints.
+    let m = override
+    if (!m) {
+      const w = step.feedback?.wrong
+      m = Array.isArray(w) ? w[Math.min(tries, w.length - 1)] : w
+    }
+    setMsg(m || '')
+    setTries((t) => t + 1)
   }
 
   // When the learner re-engages the control after a miss, clear the stale hint.
