@@ -1,0 +1,226 @@
+[
+  {
+    "lesson": "L2 aperture-hole / slider-sim step (the brightness/aperture exercise)",
+    "severity": "critical",
+    "type": "logic-bug",
+    "problem": "The brightness mapping apertureToExposure(f)=clamp(2*log2(5.6/f),-2.5,2.5) clamps the OUTPUT, so f/1.4 and f/2 BOTH map to exposure +2.5 \u2014 the photo is pixel-for-pixel IDENTICAL in brightness at f/1.4 and f/2, and f/2.8 is already +2.0 (visually near-max). But the task is 'Make the photo as bright as you can \u2014 using only the aperture' and the correct-feedback asserts 'f/1.4 is the widest opening \u2014 small f-number, big hole, MOST light.' The sim contradicts its own teaching point: stopping at f/2 yields the same brightness as f/1.4, so the learner has no in-sim evidence that f/1.4 lets in more light than f/2. The core claim (bigger hole = more light) is exactly what the sim fails to demonstrate at the wide end. Verified numerically: f/1.4->+2.500(clamped), f/2->+2.500(clamped), f/2.8->+2.000, f/4->+0.971.",
+    "fix": "Clamp the INPUT domain (or rescale) so each stop is a visible, monotonic brightness step across f/1.4..f/2.8: e.g. map the f-stop index to evenly-spaced exposure (1 stop per index) and pick a midpoint scene brightness so f/1.4 is clearly brighter than f/2 without hard-clipping. Then set the check to require the single brightest setting (f/1.4) rather than f<=2, so the success condition matches the 'as bright as you can' prompt."
+  },
+  {
+    "lesson": "L2 aperture-hole / slider-sim step \u2014 iris widget vs clamped brightness",
+    "severity": "major",
+    "type": "logic-bug",
+    "problem": "The ApertureIris widget (src/components/ui.jsx, lines 61-87) sizes the hole linearly in f: radius r=9+25*(1-(f-1.4)/14.6), giving f/1.4 r=34.0 vs f/2 r=33.0 \u2014 so the iris visibly shows f/1.4 as a BIGGER hole than f/2, while the rendered photo is identically bright at both (see prior defect). A learner who drags from f/2 to f/1.4 sees the hole grow but the photo NOT get brighter, which teaches the opposite of the intended 'bigger hole = more light.'",
+    "fix": "Once the brightness mapping is de-clamped (prior fix), the photo will brighten as the iris opens, restoring consistency. Until then, do not present the iris and the brightness goal together at the clamped wide end."
+  },
+  {
+    "lesson": "L2 aperture-hole / slider-sim check condition",
+    "severity": "minor",
+    "type": "logic-bug",
+    "problem": "check is (f)=>f<=2, i.e. BOTH f/1.4 and f/2 are accepted as 'as bright as you can.' This is arbitrary and inconsistent with the prompt and with the correct-feedback that singles out f/1.4 as 'the brightest'/'widest of all.' A learner can satisfy the goal at f/2 yet be told the answer was f/1.4.",
+    "fix": "Make the success condition match the stated goal: require f===1.4 (the actual brightest/widest), or change the prompt to 'open the aperture wide (f/2 or wider)' so check and prose agree."
+  },
+  {
+    "lesson": "L7 metering / slider-sim step",
+    "severity": "critical",
+    "type": "logic-bug",
+    "problem": "Prompt says 'This shot is underexposed. Adjust the exposure so the histogram isn't clipped against either edge,' start=-1.7. But the check wellMetered('landscape',v) passes across the ENTIRE range from -2.5 EV up to +0.1 EV (verified by simulation: every step -2.5..+0.1 passes). The start (-1.7) ALREADY passes, so the learner can press Check immediately without moving the slider. Worse, the shadow-clip fraction stays 0.000 even at the darkest setting (-2.5 EV), so the scene is never actually 'underexposed/clipped in the shadows' as claimed \u2014 the histogram only ever clips at the HIGH end (above ~+0.1 EV). The lesson's premise ('underexposed', 'pull the bars away from the edge') is false for this scene.",
+    "fix": "Use a scene/start that genuinely clips shadows (left-edge fraction >0.09) so there is a real underexposed state, and tighten the pass window (e.g. require both clip fractions <=0.09 AND mean brightness in a mid band) so the start fails and only a corrected exposure passes. Alternatively reword to a highlight-recovery task that matches the scene's actual behavior and start above +0.1 EV (clipped)."
+  },
+  {
+    "lesson": "L5 iso-noise / slider-sim step",
+    "severity": "minor",
+    "type": "logic-bug",
+    "problem": "isoToExposure clamps at +2.3 EV by ISO 3200, so ISO 3200, 6400, and 12800 all produce IDENTICAL brightness, contradicting the implicit 'higher ISO = brighter' model. (Noise still increases: 3200->110, 6400->132, 12800->150.) The slider's top three stops are a brightness dead-zone. Less severe than L2 because check only needs ISO>=1600 and noise still rises.",
+    "fix": "Either extend the exposure clamp so each ISO stop adds visible brightness up to 12800, or cap the slider where brightness stops changing, so every reachable stop changes the image."
+  },
+  {
+    "lesson": "L3 depth-of-field / intro + predict",
+    "severity": "minor",
+    "type": "shallow-pedagogy",
+    "problem": "The intro states as fact 'A wide opening blurs everything except your subject. A narrow one keeps the whole scene sharp,' and DoF is taught as a function of aperture ALONE. Depth of field also depends on focal length, subject distance, and sensor/format size; a wide aperture does NOT blur 'everything except your subject' regardless of distance. For an adult-beginner course a simplification is acceptable, but stated this absolutely it is technically misleading.",
+    "fix": "Hedge: 'A wide opening can throw the background out of focus; a narrow one tends to keep the whole scene sharp,' and add a sentence noting distance and focal length also matter. Avoid the absolute 'blurs everything except your subject.'"
+  },
+  {
+    "lesson": "L1 collected-light / predict step",
+    "severity": "minor",
+    "type": "ux",
+    "problem": "The distractor 'Press the shutter button harder' is so obviously absurd that the question is answerable by elimination without understanding stops/light gathering \u2014 it tests almost nothing for an adult learner.",
+    "fix": "Replace 'Press the shutter button harder' with a plausible-but-wrong photographic distractor (e.g. 'Use a narrower aperture') so the question tests the concept rather than rewarding elimination of nonsense."
+  },
+  {
+    "lesson": "L8 white-balance / slider-sim step",
+    "severity": "minor",
+    "type": "logic-bug",
+    "problem": "The slider value IS the tint itself (toParams v=>({temp:v})), not a correction layered over a fixed cast. start temp=0.62 makes the image warm; the learner neutralizes by returning temp to ~0 (check |v|<0.15). So 'correct white balance' is modeled as 'add zero tint,' which at temp=0 means a perfectly neutral light source \u2014 undercutting the intro's framing that the LIGHT has a color you must correct. A beginner could infer correct WB = no adjustment, the opposite of the real workflow.",
+    "fix": "Model a fixed orange cast in the scene and have the slider apply the OPPOSITE (cooling) correction, so neutrality occurs when the slider's cooling cancels the scene's fixed warm cast \u2014 not when the slider sits at zero. This matches the 'correct for the light' framing."
+  },
+  {
+    "lesson": "Global wrong-answer feedback (esp. L2/L3/L4/L8 predict and slider 'wrong' hints)",
+    "severity": "major",
+    "type": "reveals-answer",
+    "problem": "Against the stated design goal (guide without revealing), nearly every 'wrong' hint states the answer outright. L2 predict wrong: 'f-numbers are fractions \u2014 1/2 is bigger than 1/16. So f/2 is the bigger opening' (names the correct option). L3 predict wrong: 'pick a narrow aperture like f/11' (names it verbatim). L4 predict wrong: 'a slow shutter like 1/8s.' L8 predict wrong: 'cool it down toward blue.' These tell rather than guide and remove the productive-failure step the design calls for; staged slider hints (L2/L3/L4) also escalate straight to the literal target.",
+    "fix": "Rewrite wrong-feedback to be Socratic and answer-free, and where the sim allows SHOW the consequence: e.g. L2 \u2014 'You picked the bigger NUMBER. f-numbers are fractions \u2014 which is the larger slice of a pie, 1/2 or 1/16?' For slider sims, briefly animate the failing consequence (e.g. flash the still-sharp background in L3) instead of printing the target value."
+  },
+  {
+    "lesson": "Global wrong-answer feedback model (all 9 lessons: predict, slider-sim, triangle)",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "The shared Feedback component (steps.jsx lines 7-23) only prints text and never renders the consequence of a wrong choice. Nearly every wrong-answer string states the correct answer outright, so a wrong tap is a free reveal with zero productive failure. In course.js: L2 predict wrong = 'So f/2 is the bigger opening'; L3 wrong = 'pick a narrow aperture like f/11'; L4 wrong = 'a slow shutter like 1/8s'; L8 wrong = 'cool it down toward blue'. The slider-sim 'wrong' arrays (L2 'Drag toward the low numbers', L4 'drag toward 1/1000s', L8 'Slide toward the cooler end') are turn-by-turn directions, not guidance. No path lets the learner SEE why their choice fails.",
+    "fix": "Split feedback into a Socratic nudge (reframes the question or surfaces the relevant cue without naming an option) plus a visual demonstration. On a wrong predict whose options map to a renderable sim state, render the wrong choice in the existing PixelScene so the learner watches it fail before re-answering: L2/L3 show the chosen f-number's actual brightness/blur, L4 show 1/1000 freezing the waterfall (no silk), L7 show the chosen exposure's clipped histogram, L8 show the over-cool blue cast. Reserve the explicit answer for the 'correct' panel only. Keep staged hints but make stage 1 a question ('What did the bucket analogy say gathers more light?') not a direction."
+  },
+  {
+    "lesson": "L2 Aperture: the size of the hole - slider-sim step",
+    "severity": "critical",
+    "type": "logic-bug",
+    "problem": "apertureToExposure (course.js line 16) = clamp(2*log2(5.6/f), -2.5, 2.5). At f/1.4 the raw value is 2*log2(4)=4.0 and at f/2 it is 2*log2(2.8)=2.96 - BOTH clamp to +2.5, so f/1.4 and f/2 render pixel-identical brightness. f/2.8 = 2.0, already near the ceiling. The clamp flattens exactly the wide-aperture region the lesson teaches, so dragging f/2.8 to f/1.4 produces little visible change and the 'wider hole = more light' payoff is invisible. The per-stop ratio is also doubled (2*log2), showing 2 stops of brightness per 1 stop of aperture, silently contradicting L1's 'one stop = double the light'.",
+    "fix": "Rescale so f/1.4..f/16 spans the visible brightness range without saturating inside the taught range; anchor f/5.6 at mid and map the ends to the renderable brightness band. Verify f/1.4, f/2, f/2.8 each look distinctly brighter than the next. The doubling-per-stop relationship should be derivable by eye and consistent with L1."
+  },
+  {
+    "lesson": "L2 Aperture: the size of the hole - interaction design",
+    "severity": "major",
+    "type": "shallow-pedagogy",
+    "problem": "The interaction is one-knob-to-a-target ('make it as bright as you can', check f<=2). The learner discovers nothing about WHY a smaller f-number is a bigger hole - the f-number-as-fraction concept (the explicitly named 'twist') is asserted in prose and tested in the predict, never experienced. The animated iris (iris:true) shows the hole opening but is never connected to the '/f' fraction, so the counterintuitive naming stays a fact to memorize.",
+    "fix": "Make the iris the teaching instrument. Show f-number = focal-length / hole-diameter directly: render a fixed lens length with a live diameter readout and display the f-number as a literal fraction so the learner watches the denominator grow as the hole shrinks. Better target: 'set the hole to half the focal length' (=f/2), forcing reasoning about the fraction rather than just maxing brightness."
+  },
+  {
+    "lesson": "L3 Aperture's secret job: depth of field",
+    "severity": "critical",
+    "type": "factual-error",
+    "problem": "DoF is modeled as aperture-only. apertureToBlurRadius (scene.js 222-226) is a pure function of f, hard-zeroing blur above f/5.6, applied only to a fixed background mask. Subject distance, focal length, and sensor size are entirely absent - yet these dominate DoF in practice (a wide aperture on a phone keeps everything sharp; f/11 on a close macro still blurs the background). The intro 'A narrow one keeps the whole scene sharp' is categorically false without distance/focal-length caveats, and will fail the learner the first time they shoot a phone portrait or a close-up at f/11.",
+    "fix": "At minimum add an honest caveat; ideally add a second variable. Add a subject-distance (or focal-length) slider so the learner discovers DoF is a relationship: hold f fixed and show blur changing with distance, then hold distance and vary f. If keeping aperture-only for scope, reword the intro to 'aperture is the depth-of-field control you change most often - distance and lens matter too' rather than presenting it as the whole story."
+  },
+  {
+    "lesson": "L3 Aperture's secret job - exposure decoupling (interacts with L6)",
+    "severity": "major",
+    "type": "logic-bug",
+    "problem": "L3 toParams is (f) => ({ aperture: f, exposure: 0 }) - opening the aperture changes blur but NOT brightness. This silently teaches that aperture and exposure are independent, contradicting L2 (aperture = brightness) and undermining L6's entire 'equivalent exposure' premise (open up a stop, you must compensate elsewhere). A learner who internalizes L3's behavior will be confused in L6 about why widening the aperture forces a faster shutter.",
+    "fix": "Let aperture drive both blur and brightness as it physically does, and either pre-balance the scene or add a note: 'we're holding exposure fixed for now so you can watch only the focus change - in Lesson 6 you'll see they move together.' Make the coupling explicit so the triangle has a foundation."
+  },
+  {
+    "lesson": "L4 Shutter speed: freeze or blur time",
+    "severity": "major",
+    "type": "shallow-pedagogy",
+    "problem": "Two oversimplifications. (1) Motion blur is applied to the SUBJECT (horizontalSmear keys on subject[r][c]) regardless of what is actually moving; physically, blur depends on relative motion - a slow shutter on a still subject is sharp, and camera shake blurs the whole frame. The sim conflates 'slow shutter' with 'subject smears,' misteaching handheld shake and static long exposures. (2) Shutter changes smear but not brightness (exposure:0), repeating the L3 decoupling and again undercutting L6. The interaction is one-knob-to-target ('freeze it', check fastest 2 stops) with the creative tradeoff stated, not discovered.",
+    "fix": "Let shutter drive both smear AND brightness so the exposure cost of freezing (need more light) is felt - that is the real lesson and the bridge to ISO/L5. Distinguish camera shake (whole-frame) from subject motion so 'slow = blur' is correctly framed as 'blur scales with motion during the open interval.' For discovery, give a moving subject and ask for the slowest shutter that still freezes it, surfacing the speed/light tradeoff."
+  },
+  {
+    "lesson": "L5 ISO: brightness at a cost",
+    "severity": "major",
+    "type": "factual-error",
+    "problem": "The lesson frames ISO as a third source of brightness on equal footing with aperture/shutter ('It amplifies the signal and brightens the photo'; predict treats 'Raise ISO' as the way to brighten a dark shot). This reinforces the beginner misconception that ISO adds light. ISO does not capture more light - it amplifies an already light-starved signal, which is why noise rises. The sim couples brightening with grain (good), but the prose never distinguishes 'more light' (aperture/shutter) from 'more gain' (ISO), so the learner leaves thinking all three are interchangeable light sources - a misconception L6's triangle then cements.",
+    "fix": "Reframe explicitly: aperture and shutter control how much light you collect; ISO controls how hard you amplify what you collected. Demonstrate by showing that at the SAME aperture/shutter, raising ISO brightens AND degrades, whereas a wider aperture brightens cleanly. Pair the existing shadow-noise loupe with a clean-vs-amplified comparison so the learner discovers 'ISO is the lever of last resort,' not 'ISO is light.'"
+  },
+  {
+    "lesson": "L6 The triangle: balance the three",
+    "severity": "major",
+    "type": "logic-bug",
+    "problem": "The balance model (steps.jsx 307) is sum = 4 - ai + (si - 4) + (ii - 2) over slider indices 0-7. It presents a false equivalence: every control has identical 1-stop-per-notch weight, and the side effects (blur/motion/grain) are cosmetic overlays that never feed the 'level' check. So the learner can hit 'level' by pure arithmetic without ever confronting the craft decision - which side effect do I accept to gain a stop? The headline insight ('many ways to the same brightness, each with its own look') lives only in the correct-feedback text, not in the interaction. Also the offsets make the {4,4,4} start non-neutral (sum=2, i.e. 2 stops over) via a hidden asymmetry rather than a transparent centered model.",
+    "fix": "Give the triangle a goal with a real tradeoff: 'Freeze this motion AND keep the background blurred while staying level' - over-constrained so the learner must trade ISO grain to satisfy it and feel the cost. Make side effects part of the success criteria, not decoration. Fix the math so neutral is transparent (all three centered, sum=0 at center) and the start's over/under exposure is honest."
+  },
+  {
+    "lesson": "L1 A photo is collected light",
+    "severity": "minor",
+    "type": "shallow-pedagogy",
+    "problem": "The capture step is a land-the-marker-in-the-green task on one slider, then 'take the photo.' The bucket/accumulation metaphor and the light-accumulation animation are the strongest discovery moment in the course. But the too-bright/too-dark consequence (steps.jsx 144-148) only appears AFTER pressing Take, so the learner never freely explores the failure band under their own hand before committing. The 'press harder' distractor in the predict is good and age-appropriate.",
+    "fix": "Let the live preview blow out / go black as the slider passes the band edges BEFORE capture, so the learner sees clipping happen as they drag (foreshadowing the L7 histogram). Keep the accumulation animation as the payoff. This turns a target-hunt into 'discover the edges of the bucket.'"
+  },
+  {
+    "lesson": "L7 Metering: read the light",
+    "severity": "minor",
+    "type": "shallow-pedagogy",
+    "problem": "This is the strongest sim - a live histogram clipping red at the edges (steps.jsx Histogram) with a check that reads actual pixel distribution (wellMetered). Two gaps: (1) it only tests the underexposed -> spread direction; the learner never deliberately blows highlights to produce the right-edge spike they are then quizzed on, so the predict tests a state they were steered away from. (2) 'well metered = not clipped at either edge' subtly implies a centered histogram is always the goal, but a correctly exposed high-key (snow) or low-key (night) scene legitimately piles tones at one end. CLIP=0.09 hard-codes one notion of correct.",
+    "fix": "Add a two-sided task: 'now push it too far and watch the highlights blow' so the learner produces the very right-edge spike the predict asks about. Add a line that the ideal histogram depends on the scene (snowfield sits right, night sits left) so 'spread to the middle' is not over-generalized into a rule."
+  },
+  {
+    "lesson": "L8 White balance: the color of light",
+    "severity": "minor",
+    "type": "shallow-pedagogy",
+    "problem": "One-knob-to-target ('cool the orange to neutral', check |v|<0.15). The temp model (scene.js 257-264) only scales R up / B down - a tint axis, not true color-temperature correction. The 'why' (WB cancels a cast by adding the complementary color, and you set WB to the color of the LIGHT so the camera applies the opposite) is asserted, never experienced, and the predict answer is handed over in its own wrong-feedback. The Kelvin readout risks teaching the warm/cool direction backwards without a label.",
+    "fix": "Teach the cancellation directly: show the light's color and the correction as two opposing arrows on a warm-cool axis so the learner sees neutral = light-color + opposite-correction. Let them over-correct into blue to feel that WB is a balance you can push past neutral, not a single right value. Add a quick label clarifying warm light = low Kelvin so the slider direction is not learned inverted."
+  },
+  {
+    "lesson": "L9 Composition: the rule of thirds",
+    "severity": "minor",
+    "type": "shallow-pedagogy",
+    "problem": "The drag-to-power-point interaction is kinesthetically good but teaches WHERE without WHY. Success = proximity to a hard-coded point (within 11 units); the seascape has no compositional content that benefits - no horizon-on-a-third, no lead room, no subject relationship - so the learner snaps a dot to a circle with no felt difference in the image. The predict hedges 'guideline, not a law,' but the interaction presents thirds as a single correct coordinate, contradicting that nuance.",
+    "fix": "Make the image respond so the difference is felt: before/after of the subject dead-center vs on-third, or give the subject a facing direction so on-third placement creates lead room and centered feels cramped. Reward a range near the line, not a pinpoint, to embody 'guideline not law.' Tie placement to the horizon (put the sea/sky split on a third) so composition reads as a relationship between elements, not a target dot."
+  },
+  {
+    "lesson": "L2 / aperture-hole, step 3 (predict: 'Which aperture lets in more light: f/2 or f/16?')",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "The wrong-answer hint hands over the exact correct answer verbatim. course.js line 116: feedback.wrong = 'f-numbers are fractions \u2014 1/2 is bigger than 1/16. So f/2 is the bigger opening.' The correct option is literally 'f/2 \u2014 smaller number, bigger hole', and the hint states 'f/2 is the bigger opening.' A learner who guessed is just told the answer. This is the user's #1 complaint in its purest form.",
+    "fix": "Replace with a non-revealing reframe that re-applies the model without naming the winner: 'The f-number is a fraction \u2014 the slash matters. Picture cutting a pie into 2 pieces versus 16. Which slice is bigger?' SHOW-WHY visual (renderable now): the ApertureIris widget already exists; render two irises side by side at f/2 and f/16 with proportional-width light cones \u2014 the f/16 cone is a thin trickle, f/2 a flood. The learner sees which hole passes more light; no text declares the winner."
+  },
+  {
+    "lesson": "L3 / depth-of-field, step 3 (predict: landscape, mountains AND flowers sharp)",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "course.js line 163: feedback.wrong = 'Wide apertures blur. For everything sharp front-to-back, pick a narrow aperture like f/11.' The correct option is 'f/11 \u2014 narrow'. The hint names the exact answer ('pick a narrow aperture like f/11').",
+    "fix": "Reframe to recall the slider they just used: 'In the slider above, which end kept the WHOLE scene sharp \u2014 wide open, or stopped down? You need both near and far in focus here.' No naming of f/11 or 'narrow'. SHOW-WHY visual (new step-type the brief permits): a side-view optics depth-of-field diagram with a focus plane, a near zone (flowers) and far zone (mountains); animate the in-focus band shrinking as the aperture opens. The learner watches the sharp band fail to cover both subjects at wide aperture."
+  },
+  {
+    "lesson": "L4 / shutter-speed, step 3 (predict: silky waterfall)",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "course.js line 210: feedback.wrong = 'Silky water needs motion blur \u2014 that comes from a slow shutter like 1/8s.' The correct option is '1/8s \u2014 slow'. The hint states the exact value and descriptor.",
+    "fix": "Reframe around mechanism: 'Silky water is water that moved while the shutter was open. Does the curtain need to stay open for a long slice of time, or a tiny one, to let the water move?' SHOW-WHY visual (engine already does horizontal motion-smear): on a wrong pick, briefly play the chosen option's consequence \u2014 pick fast (1/1000) and the water snaps to frozen crisp droplets, visibly NOT silky. The mismatch between goal (silky) and result (frozen) shows the failure."
+  },
+  {
+    "lesson": "L6 / the-triangle, step 3 (predict: f/8 vs f/2.8 equivalent exposure)",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "course.js lines 297-298: feedback.wrong = 'They're equally bright (an equivalent exposure), but f/2.8 is far wider than f/8 \u2014 so their background is more blurred.' The correct option is 'Their background is more blurred'. The hint states the answer word-for-word.",
+    "fix": "Reframe: 'Same brightness, agreed. But list what's actually different: f/2.8 vs f/8, 1/1000 vs 1/125. From lesson 3, what does a much wider aperture do to the background?' Recalls the DoF rule without naming 'more blurred'. SHOW-WHY visual (engine supports before/after + DoF blur): render the two shots side by side at equal brightness \u2014 left f/8 sharp background, right f/2.8 blurred background. Equal luminance, visibly different look; the learner sees the difference rather than reads it."
+  },
+  {
+    "lesson": "L7 / metering, step 3 (predict: tall spike jammed at far right)",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "course.js line 346: feedback.wrong = 'The right edge is the brightest tones. A spike there means those areas are pure white \u2014 blown highlights.' The correct option is 'The highlights are blown \u2014 detail is lost'. The hint delivers the exact conclusion.",
+    "fix": "Reframe to make them read the graph: 'The right edge of a histogram is the brightest possible tone \u2014 pure white. If pixels are piled up AT that wall, what's happened to the detail in those bright areas?' Giving the axis meaning is fair scaffolding; the 'detail lost' conclusion is left to the learner. SHOW-WHY visual (live Histogram widget already exists, clipped ends glow red): on a wrong pick, animate the scene the histogram describes \u2014 push exposure until the bright region goes flat pure-white and visibly loses texture, with the right-edge bar slamming the wall in sync."
+  },
+  {
+    "lesson": "L8 / white-balance, step 3 (predict: too-orange indoor bulbs)",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "course.js line 393: feedback.wrong = 'To cancel an orange cast you add its opposite \u2014 cool it down toward blue.' The correct option is 'Cooler (more blue)'. The hint names the answer.",
+    "fix": "Reframe around the principle: 'A color cast is cancelled by adding its opposite. Orange's opposite on the color wheel is...?' Leaves the learner to supply 'blue/cooler'. SHOW-WHY visual (engine has white-balance temp tint): on a wrong pick (warmer), play the consequence \u2014 the already-orange scene slides even MORE orange, drifting further from neutral. The learner watches the cast worsen, demonstrating the wrong direction without a verdict."
+  },
+  {
+    "lesson": "L9 / rule-of-thirds, step 3 (predict: why a third instead of center)",
+    "severity": "critical",
+    "type": "reveals-answer",
+    "problem": "course.js line 434: feedback.wrong = 'It's about feel: off-center composition reads as more dynamic and balanced. (It's a guideline, not a rule.)' The correct option is 'It feels more dynamic and balanced'. The hint restates the answer verbatim.",
+    "fix": "This is a subjective 'why', so Socratic elimination is the right tool and a forced visual is weak here (honoring the user's 'don't force a visual'): 'Two of these are factually false \u2014 placement doesn't change brightness, and pros break this rule constantly. That leaves one. What's the reason that's about how the image FEELS?' This scaffolds via distractor-elimination without asserting the target phrase. Optional only: an A/B toggle of the same subject dead-center vs on a power point with NO explanatory text, letting the eye decide; skip it if it doesn't land cleanly."
+  },
+  {
+    "lesson": "L1 / collected-light, step 4 (predict: photo too dark)",
+    "severity": "minor",
+    "type": "reveals-answer",
+    "problem": "course.js line 67: feedback.wrong = 'Think of the bucket \u2014 to collect more light, leave the shutter open for longer.' Correct option is 'Use a longer shutter time'. The hint says 'leave the shutter open for longer', which is the answer. Milder (phrased as analogy) but still tells.",
+    "fix": "Reframe the analogy as a question: 'Think of the bucket in the rain \u2014 to catch MORE rain, do you hold it out for a longer time or a shorter time?' The learner maps 'longer time' to 'longer shutter' themselves; the bucket mechanism is fair scaffolding. SHOW-WHY visual (L1 already has the light-accumulation animation): on a wrong pick, replay the chosen option's consequence \u2014 pick 'shorter shutter' and the bucket fills LESS, the photo gets darker, the opposite of the goal."
+  },
+  {
+    "lesson": "All predict steps \u2014 general feedback model (LessonPlayer.jsx handleResult lines 26-41; steps.jsx Feedback lines 7-23 and PredictView lines 78-114)",
+    "severity": "major",
+    "type": "shallow-pedagogy",
+    "problem": "The architecture encourages revealing. (1) feedback.wrong is a single string or flat escalating array with no knowledge of WHICH wrong option was chosen, so hints default to globally restating the truth instead of addressing the learner's specific misconception. (2) handleActivity clears the hint the instant the learner clicks any option (lines 44-49), and PredictView lets them re-pick freely, so the staged escalation rarely advances \u2014 in practice only wrong[0] ever shows, which is the most revealing tier. (3) The escalating arrays escalate toward MORE revealing (e.g. L2 slider wrong[1] 'the brightest is f/1.4... slide all the way left'); escalation should start with the gentlest non-revealing nudge and only approach a stronger hint after repeated failure.",
+    "fix": "Adopt a structured, tiered, per-option model. Change feedback.wrong from string|string[] to: { byOption?: {[optIndex]: hint}, stages?: [tier1, tier2], showWhy?: <sim directive> }. Tier 1 (first miss): address the specific distractor's misconception with a question that re-applies the mental model \u2014 never name the correct option. Tier 2 (second miss): play the 'show why it fails' sim for the chosen option (animate the consequence). Tier 3 (after 2+ misses or explicit 'show me'): a near-reveal scaffold that still asks the learner to commit ('Compare just these two...'), and only then state the answer framed as the model, not the letter. Pass the chosen option index into handleResult so byOption can fire, and stop clearing the hint on re-pick \u2014 keep it until the next Check so escalation actually advances. This one engine change is what makes every per-lesson 'show why' above renderable: add a 'consequence' sim directive that the Feedback panel mounts a PixelScene into, parameterized by the chosen wrong option (e.g. {effect:'motion',value:0} or {effect:'aperture',value:16}); one mechanism reused across L1/L2/L3/L4/L6/L7/L8."
+  },
+  {
+    "lesson": "L2 / aperture-hole, step 2 (slider-sim) feeding step 3 \u2014 sim contradicts the lesson, breaking any 'show why'",
+    "severity": "major",
+    "type": "logic-bug",
+    "problem": "course.js apertureToExposure clamps brightness at \u00b12.5 and the brief confirms f/1.4 and f/2 render identical brightness with f/2.8 already near-max. The correct feedback (line 104) says 'f/1.4 is the widest opening... most light', yet dragging f/2 -> f/1.4 produces NO visible brightness change \u2014 the sim contradicts the text. This flat curve at the wide end also makes any proposed 'darken as you stop down' consequence animation for L2 unconvincing, and lets a learner pass the f<=2 check while the 'most light' story points at f/1.4.",
+    "fix": "Steepen/extend the brightness curve so each stop yields a visible step across the full range (especially f/2 -> f/1.4). Then both the correct-answer story and the SHOW-WHY visuals have visual truth: the two-iris light-cone demo and a 'drag to f/16 and watch it go dark' consequence both become legible. Without this fix the L2 visuals will look broken."
+  },
+  {
+    "lesson": "L3 / depth-of-field \u2014 domain caveat for the proposed optics 'show why' diagram",
+    "severity": "minor",
+    "type": "factual-error",
+    "problem": "DoF is taught and rendered as aperture-only (scene.js apertureToBlurRadius is a pure function of f; brief confirms focal length, subject distance, sensor size are ignored). Defensible as a beginner simplification, but an authoritative-looking side-view optics 'show why' diagram risks implying aperture is the SOLE cause of DoF, hardening a misconception no later lesson corrects.",
+    "fix": "Keep the simplification but inoculate it with one low-load hedge on the diagram, e.g. caption: 'Aperture is the lever you reach for first \u2014 distance and lens length matter too, later.' Keeps the visual truthful without expanding scope. Lower priority than the reveal fixes, but worth a one-line guard before shipping the optics diagram."
+  }
+]

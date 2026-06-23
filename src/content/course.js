@@ -1,24 +1,37 @@
 // Course content lives in the bundle as data — never in Firestore.
 // Each lesson is an array of steps the engine knows how to render.
-import { histogram } from '../sim/scene.js'
+//
+// Feedback model (guide without revealing):
+//   correct  — the consolidation recap shown on success
+//   byOption — first-miss Socratic nudge keyed by the chosen wrong option index
+//   stages   — escalating hints (tier 2+): name a lever + direction, never a value
+//   showWhy  — a widget that SHOWS the consequence of the learner's wrong choice
+import { histogram, meanBrightness } from '../sim/scene.js'
 
 const fmt = (f) => (f % 1 === 0 ? String(f) : f.toFixed(1))
+const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v)
 
-// True when neither the shadows nor the highlights are clipped — matches the
-// histogram the learner sees in the metering lesson.
+const F_STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
+// Brightest stop (f/1.4) anchored at 0 and descending ~0.6 stop per step, on a
+// headroom scene, so "wide open = as bright as it gets" — never blown out.
+const apertureToExposure = (f) => -F_STOPS.indexOf(f) * 0.6
+
+const SHUTTER = ['1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8']
+const ISO_STOPS = [100, 200, 400, 800, 1600, 3200, 6400, 12800]
+// Spread across the full range so every stop (to 12800) visibly changes the image.
+const isoToExposure = (iso) => clamp(Math.log2(iso / 100) * 0.4, 0, 2.8)
+const isoToNoise = (iso) => clamp(Math.log2(iso / 100) * 22, 0, 150)
+
+// Well-metered = neither edge clipped AND overall brightness in a mid band, so an
+// underexposed start genuinely fails and only a real correction passes.
 const CLIP = 0.09
 function wellMetered(scene, exposure) {
   const c = histogram({ scene, exposure })
   const total = c.reduce((a, b) => a + b, 0) || 1
-  return c[0] / total <= CLIP && c[c.length - 1] / total <= CLIP
+  const noClip = c[0] / total <= CLIP && c[c.length - 1] / total <= CLIP
+  const mean = meanBrightness({ scene, exposure })
+  return noClip && mean >= 0.4 && mean <= 0.62
 }
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v)
-const apertureToExposure = (f) => clamp(2 * Math.log2(5.6 / f), -2.5, 2.5)
-const F_STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
-const SHUTTER = ['1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8']
-const ISO_STOPS = [100, 200, 400, 800, 1600, 3200, 6400, 12800]
-const isoToExposure = (iso) => clamp(Math.log2(iso / 100) * 0.5, 0, 2.3)
-const isoToNoise = (iso) => clamp(Math.log2(iso / 100) * 22, 0, 150)
 
 const lessons = [
   {
@@ -60,11 +73,18 @@ const lessons = [
       {
         kind: 'predict',
         prompt: 'Your photo came out too dark. Which change gathers more light?',
-        options: ['Use a shorter shutter time', 'Use a longer shutter time', 'Press the shutter button harder'],
+        options: ['Use a shorter shutter time', 'Use a longer shutter time', 'Use a narrower aperture'],
         answer: 1,
         feedback: {
-          correct: 'A longer shutter time keeps light pouring in for longer, so the photo gets brighter.',
-          wrong: 'Think of the bucket — to collect more light, leave the shutter open for longer.',
+          correct: 'A longer shutter keeps light pouring in, so the photo brightens.',
+          byOption: {
+            0: 'Picture the bucket in the rain — to catch MORE water, do you hold it out for longer, or take it away sooner?',
+            2: 'A narrower opening lets in LESS light. Would that brighten a too-dark photo, or darken it further?',
+          },
+          stages: [
+            'Which change lets light keep pouring in for longer?',
+            'It’s about time, not the hole — think about how long the shutter stays open.',
+          ],
         },
       },
     ],
@@ -78,7 +98,7 @@ const lessons = [
     steps: [
       {
         kind: 'intro',
-        scene: 'landscape',
+        scene: 'room',
         title: 'Aperture: the size of the hole',
         body: [
           'Inside the lens is a hole that light passes through. Open it wide and light floods in; make it small and less gets through.',
@@ -87,8 +107,8 @@ const lessons = [
       },
       {
         kind: 'slider-sim',
-        scene: 'landscape',
-        prompt: 'Make the photo as bright as you can — using only the aperture.',
+        scene: 'room',
+        prompt: 'This room is dimly lit. Make the photo as bright as you can — using only the aperture.',
         control: { stops: F_STOPS, start: 4 },
         toParams: (f) => ({ exposure: apertureToExposure(f) }),
         format: (f) => 'f/' + fmt(f),
@@ -96,23 +116,35 @@ const lessons = [
         ends: ['f/1.4 · wide open', 'f/16 · narrow'],
         iris: true,
         ariaLabel: 'Aperture f-stop',
-        check: (f) => f <= 2,
+        check: (f) => f === 1.4,
         feedback: {
-          correct: 'f/1.4 is the widest opening — small f-number, big hole, most light.',
-          wrong: [
-            'Counterintuitive, but a smaller f-number means a bigger opening. Drag toward the low numbers.',
-            'Keep going — the brightest is f/1.4, the widest opening of all. Slide all the way left.',
+          correct: 'Wide open (f/1.4) is the biggest hole, so it gathers the most light.',
+          stages: [
+            'Is the photo as bright as it can get? Which way opens the hole wider?',
+            'Wider means a smaller f-number. Keep heading toward the wide end.',
+            'The widest opening gathers the most light — go all the way to the wide end, then Check.',
           ],
         },
       },
       {
         kind: 'predict',
         prompt: 'Which aperture lets in more light: f/2 or f/16?',
-        options: ['f/16 — bigger number, bigger hole', 'f/2 — smaller number, bigger hole'],
+        options: ['f/16', 'f/2'],
         answer: 1,
         feedback: {
-          correct: 'f-numbers are fractions, so f/2 is a far bigger opening than f/16.',
-          wrong: 'f-numbers are fractions — 1/2 is bigger than 1/16. So f/2 is the bigger opening.',
+          correct: 'f-numbers are fractions: f/2 is a much bigger opening than f/16, so it lets in far more light.',
+          byOption: {
+            0: 'An f-number is a fraction — the focal length ÷ the opening. Which is the bigger slice of pie: 1/16, or 1/2?',
+          },
+          stages: [
+            'Think of f as a fraction. A bigger number on the bottom makes a bigger slice, or a smaller one?',
+            'The smaller f-number is the bigger opening. Which of these two numbers is smaller?',
+          ],
+          showWhy: {
+            widget: 'TwoIris',
+            params: { a: 2, b: 16 },
+            caption: 'f/2 vs f/16 — the bar shows how much light each opening lets through.',
+          },
         },
       },
     ],
@@ -129,8 +161,8 @@ const lessons = [
         scene: 'portrait',
         title: 'The same hole changes focus',
         body: [
-          'Aperture does a second, almost magical thing. A wide opening blurs everything except your subject. A narrow one keeps the whole scene sharp.',
-          'This is how photographers make a subject pop off the background.',
+          'Aperture has a second job. A wide opening can throw the background out of focus; a narrow one tends to keep the whole scene sharp.',
+          'It’s how photographers make a subject pop off the background — though distance and lens length matter too, as you’ll see later.',
         ],
       },
       {
@@ -140,27 +172,34 @@ const lessons = [
         control: { stops: F_STOPS, start: 5 },
         toParams: (f) => ({ aperture: f, exposure: 0 }),
         format: (f) => 'f/' + fmt(f),
-        label: 'Aperture',
+        label: 'Aperture · brightness locked',
         ends: ['f/1.4 · blurry bg', 'f/16 · all sharp'],
         iris: true,
         ariaLabel: 'Aperture f-stop',
         check: (f) => f <= 2.8,
         feedback: {
-          correct: 'A wide aperture (low f-number) throws the background out of focus — a shallow depth of field.',
-          wrong: [
-            'To blur the background, open the aperture wider — drag toward the low f-numbers.',
-            'Go wider still — f/2.8 or below gives that soft, melted background.',
+          correct: 'A wide aperture (low f-number) softens the background — a shallow depth of field.',
+          stages: [
+            'Look at the background — is it soft yet? Which way opens the aperture wider?',
+            'Wider apertures blur more. Head toward the low f-numbers.',
+            'The widest end blurs the background most — go wide, then Check.',
           ],
         },
       },
       {
         kind: 'predict',
         prompt: 'You want a landscape where the far mountains AND the flowers up front are sharp. Which aperture?',
-        options: ['f/2.8 — wide open', 'f/11 — narrow'],
+        options: ['f/2.8', 'f/11'],
         answer: 1,
         feedback: {
-          correct: 'A narrow aperture (high f-number) gives a deep depth of field — sharp front to back.',
-          wrong: 'Wide apertures blur. For everything sharp front-to-back, pick a narrow aperture like f/11.',
+          correct: 'A narrow aperture gives a deep depth of field — sharp from the flowers to the mountains.',
+          byOption: {
+            0: 'In the slider above, did the WIDE end keep the whole scene sharp, or soften the background? You need near and far both sharp.',
+          },
+          stages: [
+            'Which end of the aperture kept the whole scene sharp — wide, or narrow?',
+            'Sharp front-to-back comes from a narrow opening. Which option is the narrower one?',
+          ],
         },
       },
     ],
@@ -193,21 +232,28 @@ const lessons = [
         ariaLabel: 'Shutter speed',
         check: (v) => v <= 1,
         feedback: {
-          correct: 'A fast shutter (1/1000s) freezes the action into a sharp instant.',
-          wrong: [
-            'To freeze motion you need a fast shutter — drag toward 1/1000s.',
-            'Faster still — 1/1000s is the leftmost, sharpest setting.',
+          correct: 'A fast shutter freezes the action into a sharp instant.',
+          stages: [
+            'Is the subject sharp yet? Which way makes the shutter faster?',
+            'Freezing motion needs a short slice of time. Head toward the fast end.',
+            'The fastest end freezes motion — go fast, then Check.',
           ],
         },
       },
       {
         kind: 'predict',
         prompt: 'You want a waterfall to look silky and smooth. Which shutter speed?',
-        options: ['1/1000s — fast', '1/8s — slow'],
+        options: ['1/1000s', '1/8s'],
         answer: 1,
         feedback: {
-          correct: 'A slow shutter lets the water keep moving while it’s open, blurring it silky.',
-          wrong: 'Silky water needs motion blur — that comes from a slow shutter like 1/8s.',
+          correct: 'A slow shutter lets the water keep moving while it’s open — that’s the silky blur.',
+          byOption: {
+            0: 'Silky water is water that MOVED while the shutter was open. Does a tiny slice of time let it move, or freeze it still?',
+          },
+          stages: [
+            'Silky means the water blurred as it flowed — does that need a long exposure, or a short one?',
+            'Motion blur comes from a slow shutter. Which option is the slower one?',
+          ],
         },
       },
     ],
@@ -241,9 +287,12 @@ const lessons = [
         loupe: { cx: 4, cy: 25, cells: 6 },
         check: (iso) => iso >= 1600,
         feedback: {
-          correct:
-            'Now you can see it — but check the loupe: the shadows are full of grain. That’s the price of ISO.',
-          wrong: 'Still too dark to make out. Raise the ISO further to amplify the light.',
+          correct: 'ISO brightened the shot — but the loupe shows the cost: grain creeping into the shadows.',
+          stages: [
+            'Can you make out the scene yet? Which way turns the ISO up?',
+            'Higher ISO amplifies the signal brighter. Keep raising it.',
+            'Raise the ISO higher until the scene is readable, then Check.',
+          ],
         },
       },
       {
@@ -253,8 +302,14 @@ const lessons = [
         options: ['Raise the ISO, accepting some grain', 'Nothing — the photo has to stay dark'],
         answer: 0,
         feedback: {
-          correct: 'Right — ISO is your third lever. Use it once aperture and shutter run out, and accept a little grain.',
-          wrong: 'There’s a third control: ISO. It brightens the image (with some grain) when aperture and shutter can’t.',
+          correct: 'ISO is your third lever — it brightens when aperture and shutter can’t, at the cost of some grain.',
+          byOption: {
+            1: 'You’ve maxed two of the three controls — but there’s a third. What does turning ISO up do to a dark photo?',
+          },
+          stages: [
+            'Aperture and shutter are maxed — is there a third control you haven’t reached for yet?',
+            'ISO is the third lever. What does raising it do to brightness?',
+          ],
         },
       },
     ],
@@ -293,9 +348,26 @@ const lessons = [
         answer: 0,
         feedback: {
           correct:
-            'Exactly. Same brightness, but f/2.8 is much wider than f/8 — so their background is more blurred. Equivalent exposure, different look.',
-          wrong:
-            'They’re equally bright (an equivalent exposure), but f/2.8 is far wider than f/8 — so their background is more blurred.',
+            'Same brightness, different look: f/2.8 is far wider than f/8, so its background is more blurred — an equivalent exposure.',
+          byOption: {
+            1: 'You already said they’re equally bright — so brightness isn’t the difference. Look again at the apertures.',
+            2: 'Same brightness, yes — but the SETTINGS differ. From lesson 3, what does a much wider aperture change?',
+          },
+          stages: [
+            'They’re equally bright. So what ELSE differs between f/8 and f/2.8?',
+            'Recall lesson 3: a wider aperture changes the depth of field. f/2.8 is much wider than f/8.',
+          ],
+          showWhy: {
+            widget: 'BeforeAfter',
+            scene: 'portrait',
+            params: {
+              left: { aperture: 8, exposure: 0 },
+              right: { aperture: 2.8, exposure: 0 },
+              leftLabel: 'f/8',
+              rightLabel: 'f/2.8',
+            },
+            caption: 'Same brightness — but watch the background.',
+          },
         },
       },
     ],
@@ -319,7 +391,7 @@ const lessons = [
       {
         kind: 'slider-sim',
         scene: 'landscape',
-        prompt: 'This shot is underexposed. Adjust the exposure so the histogram isn’t clipped against either edge.',
+        prompt: 'This shot is underexposed. Adjust the exposure until the tones spread across the histogram.',
         control: { min: -2.5, max: 2.5, step: 0.1, start: -1.7 },
         toParams: (v) => ({ exposure: v }),
         format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV',
@@ -329,10 +401,11 @@ const lessons = [
         histogram: true,
         check: (v) => wellMetered('landscape', v),
         feedback: {
-          correct: 'Balanced — the tones spread across the histogram without piling up at either edge. That’s a well-metered exposure.',
-          wrong: [
-            'Watch the histogram, not just the photo. Nudge the exposure to pull the bars away from the edge.',
-            'It’s still bunched against one side. Aim to spread the tones toward the middle.',
+          correct: 'Balanced — the tones spread across the histogram without piling up at either edge.',
+          stages: [
+            'Watch the histogram, not just the photo. Are the bars bunched against one edge?',
+            'The mass is still pushed to one side — move the exposure the other way to spread it out.',
+            'Spread the tones toward the middle: brighten if they’re piled left, darken if piled right. Then Check.',
           ],
         },
       },
@@ -342,8 +415,15 @@ const lessons = [
         options: ['The highlights are blown — detail is lost', 'The photo is perfectly exposed', 'The photo is too dark'],
         answer: 0,
         feedback: {
-          correct: 'Right — pixels piled at the right edge are pure white with no detail. You’d lower the exposure to recover them.',
-          wrong: 'The right edge is the brightest tones. A spike there means those areas are pure white — blown highlights.',
+          correct: 'Pixels piled at the right edge are pure white with no detail — blown highlights. You’d lower exposure to recover them.',
+          byOption: {
+            1: 'A good exposure spreads the tones out. A tall SPIKE jammed against one wall isn’t a spread — what’s happened there?',
+            2: 'The right edge is the BRIGHTEST tones. Would a too-dark photo pile its pixels on the bright side?',
+          },
+          stages: [
+            'The right edge is the brightest possible tone — pure white. What happens to detail piled against that wall?',
+            'Pixels stuck at maximum white have nothing left to recover. What do photographers call that?',
+          ],
         },
       },
     ],
@@ -376,10 +456,11 @@ const lessons = [
         ariaLabel: 'White balance',
         check: (v) => Math.abs(v) < 0.15,
         feedback: {
-          correct: 'Neutral. The cast is gone and the colors read true — that’s correct white balance.',
-          wrong: [
-            'Still got a tint. Slide toward the cooler end to cancel the orange.',
-            'Close — ease it to the middle, where the light is neutral (around 5500K).',
+          correct: 'Neutral — the cast is gone and the colors read true.',
+          stages: [
+            'Does the image still have a tint? Which direction cancels orange?',
+            'Orange is cancelled by its opposite. Nudge toward the cool end.',
+            'Ease it toward the middle, where the light is neutral, then Check.',
           ],
         },
       },
@@ -389,8 +470,20 @@ const lessons = [
         options: ['Cooler (more blue)', 'Warmer (more orange)'],
         answer: 0,
         feedback: {
-          correct: 'Right — you add the opposite color (cool/blue) to cancel the warm cast.',
-          wrong: 'To cancel an orange cast you add its opposite — cool it down toward blue.',
+          correct: 'You cancel a cast by adding its opposite — cooling (blue) neutralizes a warm orange cast.',
+          byOption: {
+            1: 'Adding MORE orange to an already-orange photo — does that cancel the cast, or deepen it?',
+          },
+          stages: [
+            'A cast is cancelled by adding its opposite colour. What’s the opposite of orange?',
+            'Orange’s opposite is blue. Which setting adds blue — cooler, or warmer?',
+          ],
+          showWhy: {
+            widget: 'PixelScene',
+            scene: 'seascape',
+            params: { temp: 0.95 },
+            caption: 'Going warmer just deepens the orange cast.',
+          },
         },
       },
     ],
@@ -417,9 +510,9 @@ const lessons = [
         prompt: 'Drag your subject onto one of the four power points — a third of the way in.',
         start: { x: 50, y: 50 },
         feedback: {
-          correct: 'On a power point. Off-center placement feels more dynamic and balanced than dead-center.',
-          wrong: [
-            'Drag your subject onto one of the four points where the gridlines cross.',
+          correct: 'On a power point. Off-center placement usually feels more dynamic and balanced than dead-center.',
+          stages: [
+            'Where do the gridlines cross? Try moving the subject onto one of those points.',
             'Aim for an intersection a third of the way in — not the middle of the frame.',
           ],
         },
@@ -430,8 +523,16 @@ const lessons = [
         options: ['It feels more dynamic and balanced', 'It makes the photo brighter', 'It’s the only correct way to compose'],
         answer: 0,
         feedback: {
-          correct: 'Exactly — it’s a guideline, not a law, but off-center usually feels more alive and intentional.',
-          wrong: 'It’s about feel: off-center composition reads as more dynamic and balanced. (It’s a guideline, not a rule.)',
+          correct: 'It’s about feel — off-center often reads as more dynamic and balanced. A guideline, not a law.',
+          byOption: {
+            1: 'Does WHERE you place a subject change the exposure? Placement and brightness are unrelated.',
+            2: 'Plenty of great photos put the subject dead-center — it’s a guideline, not a law. So that option overstates it.',
+          },
+          stages: [
+            'Two of these are factually off — placement doesn’t change brightness, and the rule isn’t absolute. That leaves one.',
+            'Composition is about how the frame FEELS. Which option is about feel?',
+          ],
+          showWhy: { widget: 'none' },
         },
       },
     ],

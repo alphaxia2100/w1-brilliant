@@ -10,6 +10,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   const [status, setStatus] = useState('idle')
   const [msg, setMsg] = useState('')
   const [tries, setTries] = useState(0)
+  const [showWhy, setShowWhy] = useState(null)
 
   const step = lesson.steps[idx]
   const isIntro = step.kind === 'intro'
@@ -19,34 +20,45 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
     setStatus('idle')
     setMsg('')
     setTries(0)
+    setShowWhy(null)
     saveResume(lesson.id, idx)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx])
 
-  function handleResult(correct, override) {
+  // Guide without revealing. Tier 1 (first miss): a per-option Socratic nudge and
+  // a visual "show-why" of the learner's actual choice. Tier 2+: escalating hints
+  // that name a lever + direction but never the exact answer/value.
+  function handleResult(correct, meta = {}) {
     recordAttempt(lesson.id, correct)
-    setStatus(correct ? 'correct' : 'wrong')
+    const fb = step.feedback || {}
     if (correct) {
-      setMsg(override || step.feedback?.correct || '')
+      setStatus('correct')
+      setMsg(meta.override || fb.correct || '')
+      setShowWhy(null)
       return
     }
-    // Staged hints: feedback.wrong may be a string or an array of escalating hints.
-    let m = override
+    setStatus('wrong')
+    let m = meta.override
     if (!m) {
-      const w = step.feedback?.wrong
-      m = Array.isArray(w) ? w[Math.min(tries, w.length - 1)] : w
+      if (tries === 0) {
+        const bo = fb.byOption || {}
+        m = (meta.chosen != null && bo[meta.chosen]) || (meta.bucket && bo[meta.bucket]) || fb.stages?.[0]
+      } else {
+        m = fb.stages?.[Math.min(tries, (fb.stages?.length || 1) - 1)]
+      }
+      if (!m) {
+        const w = fb.wrong // legacy fallback
+        m = Array.isArray(w) ? w[Math.min(tries, w.length - 1)] : w
+      }
     }
     setMsg(m || '')
+    setShowWhy(fb.showWhy ? { ...fb.showWhy, chosen: meta.chosen } : null)
     setTries((t) => t + 1)
   }
 
-  // When the learner re-engages the control after a miss, clear the stale hint.
-  function handleActivity() {
-    if (status === 'wrong') {
-      setStatus('idle')
-      setMsg('')
-    }
-  }
+  // No-op: the hint and its show-why stay visible while the learner re-adjusts, so
+  // they can study the consequence; only a fresh Check advances the hint tier.
+  function handleActivity() {}
 
   function next() {
     if (isLast) onComplete()
@@ -79,7 +91,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
         </div>
 
         <div className="space-y-3 pt-3 sticky bottom-0 bg-white">
-          <Feedback status={status} message={msg} />
+          <Feedback status={status} message={msg} showWhy={showWhy} step={step} />
           {showContinue && (
             <Button className="w-full" onClick={next}>
               {isLast ? 'Finish lesson' : 'Continue'}

@@ -3,10 +3,87 @@ import PixelScene from '../sim/PixelScene.jsx'
 import { meanBrightness, histogram } from '../sim/scene.js'
 import { Slider, Button, ApertureIris } from '../components/ui.jsx'
 
-// The one shared feedback panel — calm gray when wrong, never red.
-export function Feedback({ status, message }) {
+const fmtF = (f) => (f % 1 === 0 ? String(f) : f.toFixed(1))
+
+// "Show why it fails" widgets — mounted inside the feedback panel, parameterized
+// by the learner's actual wrong choice. They show the consequence, they don't tell.
+function TwoIris({ a, b }) {
+  const light = (f) => 1 / (f * f)
+  const base = light(Math.min(a, b)) // normalize to the wider (brighter) one
+  return (
+    <div className="flex justify-center gap-8 py-1">
+      {[a, b].map((f, i) => (
+        <div key={i} className="flex flex-col items-center gap-1.5">
+          <ApertureIris f={f} size={52} />
+          <span className="font-mono text-[13px]">f/{fmtF(f)}</span>
+          <div className="w-14 h-2 rounded-full bg-hairline overflow-hidden">
+            <div className="h-full bg-pear" style={{ width: `${Math.min(light(f) / base, 1) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function BeforeAfter({ left, right, leftLabel, rightLabel, scene }) {
+  return (
+    <div className="flex justify-center gap-3 py-1">
+      {[
+        [left, leftLabel],
+        [right, rightLabel],
+      ].map(([p, label], i) => (
+        <div key={i} className="flex flex-col items-center gap-1">
+          <PixelScene scene={scene} size={120} {...p} />
+          <span className="font-mono text-[12px] text-muted">{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function resolveParams(showWhy, step) {
+  const p = showWhy.params
+  if (p === 'fromChoice') return step?.toParams ? step.toParams(showWhy.chosen) : {}
+  if (typeof p === 'function') return p(showWhy.chosen, step)
+  return p || {}
+}
+
+function ShowWhy({ showWhy, step }) {
+  const w = showWhy.widget
+  if (!w || w === 'none') return null
+  const cap = showWhy.caption ? (
+    <p className="text-[12px] mt-1.5 text-center opacity-80">{showWhy.caption}</p>
+  ) : null
+  if (w === 'TwoIris')
+    return (
+      <div>
+        <TwoIris a={showWhy.params.a} b={showWhy.params.b} />
+        {cap}
+      </div>
+    )
+  if (w === 'BeforeAfter')
+    return (
+      <div>
+        <BeforeAfter {...showWhy.params} scene={showWhy.scene} />
+        {cap}
+      </div>
+    )
+  if (w === 'PixelScene')
+    return (
+      <div className="flex flex-col items-center">
+        <PixelScene scene={showWhy.scene || step?.scene} size={160} {...resolveParams(showWhy, step)} />
+        {cap}
+      </div>
+    )
+  return null
+}
+
+// The one shared feedback panel — calm gray when wrong, never red. On a miss it
+// SHOWS the consequence of the learner's choice first, then guides without revealing.
+export function Feedback({ status, message, showWhy, step }) {
   if (status === 'idle') return null
   const correct = status === 'correct'
+  const hasVisual = !correct && showWhy && showWhy.widget && showWhy.widget !== 'none'
   return (
     <div
       className="rounded-tile px-4 py-3 text-[15px] leading-snug animate-pop"
@@ -16,7 +93,12 @@ export function Feedback({ status, message }) {
       }}
       role="status"
     >
-      <span className="font-medium">{correct ? 'Nice. ' : 'Not quite. '}</span>
+      {hasVisual && (
+        <div className="mb-2.5">
+          <ShowWhy showWhy={showWhy} step={step} />
+        </div>
+      )}
+      {correct && <span className="font-medium">Nice. </span>}
       {message}
     </div>
   )
@@ -105,7 +187,7 @@ function PredictView({ step, status, onResult, onActivity }) {
         })}
       </div>
       {!locked && (
-        <Button className="w-full" disabled={sel === null} onClick={() => onResult(sel === step.answer)}>
+        <Button className="w-full" disabled={sel === null} onClick={() => onResult(sel === step.answer, { chosen: sel })}>
           Check
         </Button>
       )}
@@ -146,7 +228,7 @@ function CaptureView({ step, status, onResult, onActivity }) {
           : marker < bandLo
             ? 'Too dark — your photo gathered too little light. Open the shutter longer.'
             : 'Too bright — you blew out the highlights. Let in a little less light.'
-        onResult(inBand, inBand ? undefined : msg)
+        onResult(inBand, { override: inBand ? undefined : msg })
       }
     }
     setProgress(0)
@@ -259,7 +341,7 @@ function SliderSimView({ step, status, onResult, onActivity }) {
       </div>
 
       {!locked && (
-        <Button className="w-full" onClick={() => onResult(step.check(value))}>
+        <Button className="w-full" onClick={() => onResult(step.check(value), { chosen: value })}>
           Check
         </Button>
       )}
@@ -317,12 +399,12 @@ function TriangleView({ step, status, onResult, onActivity }) {
   function check() {
     if (balanced) onResult(true)
     else
-      onResult(
-        false,
-        sum > 0
-          ? 'Too bright — remove light: narrow the aperture (higher f-number), use a faster shutter, or lower the ISO.'
-          : 'Too dark — add light: open the aperture (lower f-number), slow the shutter, or raise the ISO.',
-      )
+      onResult(false, {
+        override:
+          sum > 0
+            ? 'Overexposed — too much light. Trade some away: narrow the aperture, speed up the shutter, or lower the ISO.'
+            : 'Underexposed — too little light. Add some: open the aperture, slow the shutter, or raise the ISO.',
+      })
   }
 
   return (

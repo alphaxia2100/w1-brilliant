@@ -152,11 +152,43 @@ function buildSeascape(N) {
   return { cells, subject }
 }
 
+// A mid-tone interior with highlight headroom (window is bright but NOT clipped).
+// Used for the aperture-brightness lesson so "wide open" looks bright, never blown.
+function buildRoom(N) {
+  const rnd = mulberry32(505)
+  const cells = []
+  const subject = []
+  const winL = Math.floor(N * 0.54)
+  const winR = Math.floor(N * 0.9)
+  const winT = Math.floor(N * 0.14)
+  const winB = Math.floor(N * 0.52)
+  const floorT = Math.floor(N * 0.74)
+  for (let r = 0; r < N; r++) {
+    cells[r] = []
+    subject[r] = []
+    for (let c = 0; c < N; c++) {
+      let col
+      if (r >= floorT) col = [104, 86, 66] // wood floor
+      else col = [150, 140, 128] // warm wall
+      // framed picture on the wall (left)
+      if (c >= Math.floor(N * 0.12) && c <= Math.floor(N * 0.3) && r >= Math.floor(N * 0.24) && r <= Math.floor(N * 0.46))
+        col = [118, 98, 80]
+      // window — the brightest element, but kept ~0.85 so there's headroom
+      if (c >= winL && c <= winR && r >= winT && r <= winB) col = [206, 212, 222]
+      col = col.map((v) => v + (rnd() - 0.5) * 9)
+      cells[r][c] = col
+      subject[r][c] = false
+    }
+  }
+  return { cells, subject }
+}
+
 const GENERATORS = {
   landscape: buildLandscape,
   portrait: buildPortrait,
   night: buildNight,
   seascape: buildSeascape,
+  room: buildRoom,
 }
 const cache = new Map()
 
