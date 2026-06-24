@@ -386,8 +386,10 @@ function TriangleView({ step, status, onResult, onActivity }) {
   const [ii, setII] = useState(step.start.iso)
   const locked = status === 'correct'
 
-  // Each control's light contribution in stops, relative to a neutral middle.
-  const sum = 4 - ai + (si - 4) + (ii - 2)
+  // Each control's light contribution in stops, all measured from the SAME neutral
+  // middle (index 4): wider aperture (lower index) adds light, slower shutter and
+  // higher ISO (higher index) add light. {4,4,4} is perfectly balanced.
+  const sum = 4 - ai + (si - 4) + (ii - 4)
   const params = {
     exposure: sum * 0.7, // gentle: a balanced shot looks right, a misbalanced one reads bright/dark not blown
     aperture: TRI_APS[ai],
@@ -667,10 +669,10 @@ function DofView({ step, status, onResult }) {
         </svg>
       </div>
 
-      <div className="flex gap-2 mb-2">
-        <ReadoutCard label="Near" value={dist(d.near)} />
-        <ReadoutCard label="Far" value={dist(d.far)} />
-        <ReadoutCard label="Total DoF" value={dist(d.total)} />
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <ReadoutCard label="Near focus" value={dist(d.near)} />
+        <ReadoutCard label="Far focus" value={dist(d.far)} />
+        <ReadoutCard label="Total depth of field" value={dist(d.total)} />
         <ReadoutCard label="Hyperfocal" value={dist(d.H)} />
       </div>
 

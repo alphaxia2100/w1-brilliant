@@ -73,17 +73,17 @@ const lessons = [
       {
         kind: 'predict',
         prompt: 'Your photo came out too dark. Which change gathers more light?',
-        options: ['Use a shorter shutter time', 'Use a longer shutter time', 'Use a narrower aperture'],
+        options: ['Open the shutter for a shorter time', 'Open the shutter for a longer time', 'Take several quick photos instead'],
         answer: 1,
         feedback: {
-          correct: 'A longer shutter keeps light pouring in, so the photo brightens.',
+          correct: 'A longer shutter keeps light pouring in during the shot, so it gathers more and the photo brightens.',
           byOption: {
             0: 'Picture the bucket in the rain — to catch MORE water, do you hold it out for longer, or take it away sooner?',
-            2: 'A narrower opening lets in LESS light. Would that brighten a too-dark photo, or darken it further?',
+            2: 'Each quick photo still gathers only a little light. It’s how long the shutter stays open in ONE shot that matters — longer or shorter?',
           },
           stages: [
             'Which change lets light keep pouring in for longer?',
-            'It’s about time, not the hole — think about how long the shutter stays open.',
+            'It’s about how long the shutter stays open in a single shot.',
           ],
         },
       },
@@ -211,11 +211,10 @@ const lessons = [
     steps: [
       {
         kind: 'intro',
-        scene: 'portrait',
         title: 'Shutter speed: a slice of time',
         body: [
           'The shutter is a curtain that opens for a slice of time. A fast shutter freezes motion into a crisp instant. A slow one lets moving things smear across the frame.',
-          'Neither is right or wrong — it’s a creative choice.',
+          'Neither is right or wrong — it’s a creative choice. Watch it on the moving car next.',
         ],
       },
       {
@@ -325,8 +324,8 @@ const lessons = [
       {
         kind: 'triangle',
         scene: 'portrait',
-        prompt: 'This shot is overexposed. Balance the three controls until the exposure meter sits level.',
-        start: { aperture: 4, shutter: 4, iso: 4 },
+        prompt: 'This shot is overexposed — the ISO is cranked too high. Balance the three controls until the exposure meter sits level.',
+        start: { aperture: 4, shutter: 4, iso: 6 },
         feedback: {
           correct:
             'Balanced. And notice — you could hit this same brightness many ways: a wide aperture with a fast shutter, or a narrow one with high ISO. Those are equivalent exposures, each with its own look.',
