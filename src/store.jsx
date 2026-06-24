@@ -232,6 +232,7 @@ export function AppProvider({ children }) {
   }
 
   function recordAttempt(lessonId, correct) {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null } // don't let a stale resume write clobber this
     setProgress((prev) => {
       const next = structuredClone(prev)
       const c = course(next)
@@ -241,18 +242,21 @@ export function AppProvider({ children }) {
       else l.wrong = (l.wrong || 0) + 1
       l.lastAttemptAt = Date.now()
       c.lessons[lessonId] = l
+      persist(user, next) // attempt counters survive an early exit, not just lesson completion
       return next
     })
   }
 
-  // Save a captured photo. At most one keeper + one experiment per lesson step
-  // (re-shooting overwrites), so the gallery stays meaningful, not spammy.
+  // Save a captured photo — KEEPERS ONLY (wrong answers are never collected). At
+  // most one shot per lesson step (re-shooting overwrites), so the roll stays a
+  // gallery of bests, not a log of failures.
   function saveShot(shot) {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null } // don't let a stale resume write clobber this keeper
     setProgress((prev) => {
       const next = structuredClone(prev)
-      const key = `${shot.lessonId}:${shot.stepIndex}:${shot.verdict}`
-      const kept = (next.shots || []).filter((s) => s.key !== key)
-      kept.push({ ...shot, key, createdAt: Date.now() })
+      const key = `${shot.lessonId}:${shot.stepIndex}`
+      const kept = (next.shots || []).filter((s) => s.key !== key && s.verdict !== 'experiment')
+      kept.push({ ...shot, verdict: 'keeper', key, createdAt: Date.now() })
       next.shots = kept.slice(-60) // cap the roll
       persist(user, next)
       return next

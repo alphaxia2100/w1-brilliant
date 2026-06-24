@@ -23,7 +23,7 @@ export function Card({ className = '', children }) {
   )
 }
 
-export function Slider({ value, min, max, step = 1, onChange, ariaLabel }) {
+export function Slider({ value, min, max, step = 1, onChange, ariaLabel, valueText }) {
   const pct = ((value - min) / (max - min)) * 100
   return (
     <input
@@ -34,6 +34,7 @@ export function Slider({ value, min, max, step = 1, onChange, ariaLabel }) {
       step={step}
       value={value}
       aria-label={ariaLabel}
+      aria-valuetext={valueText}
       onChange={(e) => onChange(parseFloat(e.target.value))}
       style={{
         background: `linear-gradient(90deg, var(--pear) ${pct}%, var(--hairline) ${pct}%)`,

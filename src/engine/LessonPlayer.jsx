@@ -32,11 +32,11 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   // that name a lever + direction but never the exact answer/value.
   function handleResult(correct, meta = {}) {
     recordAttempt(lesson.id, correct)
-    // A "shootable" step hands back a shot to save to the gallery.
-    if (meta.shot) {
-      const verdict = correct ? 'keeper' : 'experiment'
-      saveShot({ ...meta.shot, lessonId: lesson.id, lessonTitle: lesson.title, stepIndex: idx, verdict })
-      setPolaroid({ ...meta.shot, verdict })
+    // A "shootable" step hands back a shot — KEEPERS ONLY: save it and reveal the
+    // polaroid on success; a wrong attempt goes straight to calm feedback (no keepsake).
+    if (correct && meta.shot) {
+      saveShot({ ...meta.shot, lessonId: lesson.id, lessonTitle: lesson.title, stepIndex: idx, verdict: 'keeper' })
+      setPolaroid({ ...meta.shot, verdict: 'keeper' })
     }
     const fb = step.feedback || {}
     if (correct) {
@@ -69,12 +69,23 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   function handleActivity() {}
 
   function next() {
-    if (isLast) onComplete()
-    else setIdx((i) => i + 1)
+    if (isLast) {
+      onComplete()
+      return
+    }
+    // Reset transient feedback synchronously so the next step never flashes the
+    // previous step's green success panel + Continue for a frame.
+    setStatus('idle')
+    setMsg('')
+    setTries(0)
+    setShowWhy(null)
+    setPolaroid(null)
+    setIdx((i) => i + 1)
   }
 
   const View = STEP_VIEWS[step.kind]
   const showContinue = isIntro || status === 'correct'
+  const barActive = status !== 'idle' || showContinue
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
@@ -99,7 +110,9 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
           <View key={idx} step={step} status={status} onResult={handleResult} onActivity={handleActivity} />
         </div>
 
-        <div className="space-y-3 pt-3 sticky bottom-0 bg-white">
+        <div
+          className={`space-y-3 pt-3 -mx-4 px-4 sticky bottom-0 bg-white ${barActive ? 'pb-3 border-t border-hairline/70 shadow-[0_-6px_18px_-10px_rgba(0,0,0,0.18)]' : ''}`}
+        >
           <Feedback status={status} message={msg} showWhy={showWhy} step={step} />
           {showContinue && (
             <Button className="w-full" onClick={next}>

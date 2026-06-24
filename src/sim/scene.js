@@ -13,6 +13,16 @@ function mulberry32(seed) {
   }
 }
 
+// Deterministic per-cell noise in [0,1): grain that round-trips for a saved shot.
+// Vary `seed` per frame for a live shimmer; keep it fixed for a stable keepsake.
+function hashNoise(i, seed) {
+  let t = (Math.imul(i ^ 0x9e3779b1, 0x85ebca6b) + Math.imul(seed + 1, 0xc2b2ae35)) >>> 0
+  t ^= t >>> 15
+  t = Math.imul(t, 0x2c1b3c6d)
+  t ^= t >>> 13
+  return (t >>> 0) / 4294967296
+}
+
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v)
 const lerp = (a, b, t) => a + (b - a) * t
 
@@ -182,6 +192,9 @@ function buildRoom(N) {
       // framed picture on the wall (left)
       if (c >= Math.floor(N * 0.12) && c <= Math.floor(N * 0.3) && r >= Math.floor(N * 0.24) && r <= Math.floor(N * 0.46))
         col = [118, 98, 80]
+      // neutral gray reference card — reads true gray only when the white balance is right
+      if (c >= Math.floor(N * 0.12) && c <= Math.floor(N * 0.3) && r >= Math.floor(N * 0.54) && r <= Math.floor(N * 0.68))
+        col = [188, 188, 188]
       // window — the brightest element, but kept ~0.85 so there's headroom
       if (c >= winL && c <= winR && r >= winT && r <= winB) col = [206, 212, 222]
       col = col.map((v) => v + (rnd() - 0.5) * 9)
@@ -192,12 +205,46 @@ function buildRoom(N) {
   return { cells, subject }
 }
 
+// A high-key snowfield: mostly bright tones, so its CORRECT exposure piles the
+// histogram to the RIGHT (not centered), with one dark tree as a tonal anchor.
+function buildSnow(N) {
+  const rnd = mulberry32(606)
+  const horizon = Math.floor(N * 0.44)
+  const cells = []
+  const subject = []
+  for (let r = 0; r < N; r++) {
+    cells[r] = []
+    subject[r] = []
+    for (let c = 0; c < N; c++) {
+      let col
+      if (r < horizon) {
+        const t = r / horizon
+        col = [lerp(182, 206, t), lerp(192, 212, t), lerp(202, 220, t)] // pale sky
+      } else {
+        const t = (r - horizon) / (N - horizon)
+        col = [lerp(204, 182, t), lerp(206, 186, t), lerp(210, 192, t)] // bright snow
+      }
+      col = col.map((v) => v + (rnd() - 0.5) * 9)
+      cells[r][c] = col
+      subject[r][c] = false
+    }
+  }
+  // a bare dark tree near the horizon — the lone dark anchor in a bright frame
+  const tx = Math.round(N * 0.68)
+  for (let r = horizon - Math.floor(N * 0.2); r <= horizon; r++)
+    for (let c = tx - 1; c <= tx; c++) if (cells[r] && cells[r][c]) cells[r][c] = [44, 42, 50]
+  for (let r = horizon - Math.floor(N * 0.18); r < horizon - Math.floor(N * 0.05); r++)
+    for (let c = tx - 3; c <= tx + 3; c++) if (cells[r] && cells[r][c] && rnd() > 0.5) cells[r][c] = [50, 48, 56]
+  return { cells, subject }
+}
+
 const GENERATORS = {
   landscape: buildLandscape,
   portrait: buildPortrait,
   night: buildNight,
   seascape: buildSeascape,
   room: buildRoom,
+  snow: buildSnow,
 }
 const cache = new Map()
 
@@ -275,7 +322,9 @@ export function computeGrid(params) {
     aperture = null,
     motion = 0,
     temp = 0,
+    baseTemp = 0,
     progress = 1,
+    noiseSeed = 0,
   } = params
   const sc = getScene(scene, N)
   let g = sc.cells.map((row) => row.map((c) => c.slice()))
@@ -294,10 +343,12 @@ export function computeGrid(params) {
       g[r][c][2] *= factor
     }
 
-  // White balance: warm (temp > 0) adds red / removes blue; cool does the reverse.
-  if (temp !== 0) {
-    const rF = 1 + 0.32 * temp
-    const bF = 1 - 0.32 * temp
+  // White balance: a scene can ship with an intrinsic cast (baseTemp); the slider
+  // (temp) is the CORRECTION. Neutral happens when they cancel — usually NOT at temp 0.
+  const effTemp = baseTemp + temp
+  if (effTemp !== 0) {
+    const rF = 1 + 0.32 * effTemp
+    const bF = 1 - 0.32 * effTemp
     for (let r = 0; r < N; r++)
       for (let c = 0; c < N; c++) {
         g[r][c][0] *= rF
@@ -310,7 +361,7 @@ export function computeGrid(params) {
       for (let c = 0; c < N; c++) {
         const lum = (g[r][c][0] + g[r][c][1] + g[r][c][2]) / 3
         const shadowW = 1 - clamp(lum / 255, 0, 1)
-        const n = (Math.random() - 0.5) * iso * (0.35 + shadowW)
+        const n = (hashNoise(r * N + c, noiseSeed) - 0.5) * iso * (0.35 + shadowW)
         g[r][c][0] += n
         g[r][c][1] += n
         g[r][c][2] += n

@@ -3,6 +3,9 @@ import { useApp } from '../store.jsx'
 import { course, getLesson, totalLessons } from '../content/course.js'
 import { Button, Card, Logo } from '../components/ui.jsx'
 import PixelScene from '../sim/PixelScene.jsx'
+import DofBokeh from '../sim/DofBokeh.jsx'
+import LightDirection from '../sim/LightDirection.jsx'
+import { MotionShot, ComposeShot } from '../engine/steps.jsx'
 
 function ShotThumb({ shot, size = 88 }) {
   const keeper = shot.verdict !== 'experiment'
@@ -14,6 +17,14 @@ function ShotThumb({ shot, size = 88 }) {
     >
       {shot.image ? (
         <img src={shot.image} alt="" className="block w-full h-full object-cover" />
+      ) : shot.kind === 'bokeh' ? (
+        <DofBokeh f={shot.f} subjectDist={shot.subjectDist} bgDist={shot.bgDist} focal={shot.focal} bg={shot.bg} size={size} rounded={false} />
+      ) : shot.kind === 'light' ? (
+        <LightDirection angle={shot.angle} soft={shot.soft} size={size} rounded={false} />
+      ) : shot.kind === 'motion' ? (
+        <MotionShot si={shot.si} size={size} rounded={false} fill />
+      ) : shot.kind === 'compose' ? (
+        <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} size={size} rounded={false} fill />
       ) : (
         <PixelScene scene={shot.scene} size={size} rounded={false} {...shot.params} />
       )}
@@ -43,10 +54,9 @@ export default function HomePage() {
   const done = progress.courses[courseId]?.completedLessonIds || []
   const lessonsMap = progress.courses[courseId]?.lessons || {}
   const correctCount = Object.values(lessonsMap).reduce((a, l) => a + (l.correct || 0), 0)
-  const shots = progress.shots || []
+  const shots = (progress.shots || []).filter((s) => s.verdict !== 'experiment')
   const recentShots = shots.slice().reverse()
-  const keeperCount = shots.filter((s) => s.verdict !== 'experiment').length
-  const expCount = shots.length - keeperCount
+  const keeperCount = shots.length
   const resume = progress.lastLesson
   const resumeLesson = resume ? getLesson(resume.lessonId) : null
   const firstName = user?.displayName?.split(' ')[0]
@@ -106,8 +116,7 @@ export default function HomePage() {
           <div className="flex items-baseline justify-between mb-2">
             <h2 className="text-[15px] font-semibold">Your roll</h2>
             <span className="text-[12px] text-muted">
-              {keeperCount} {keeperCount === 1 ? 'keeper' : 'keepers'} · {expCount}{' '}
-              {expCount === 1 ? 'experiment' : 'experiments'}
+              {keeperCount} {keeperCount === 1 ? 'keeper' : 'keepers'}
             </span>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 items-start">

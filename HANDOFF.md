@@ -1,108 +1,66 @@
 # Aperture — Handoff
 
-**Date:** 2026-06-24 · **Repo:** https://github.com/alphaxia2100/w1-brilliant (branch `main`, latest `5291f44`)
-**Read this first, then `PRD.md`, then `Redesign/AUDIT-LEDGER.md`.**
+**Date:** 2026-06-24 (session 2 — ground-up lesson rebuild) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore + Hosting). All visuals geometric SVG / pixel-art, no real photos.
+**Read order:** this file → `/Users/sky/.claude/plans/take-a-read-through-validated-platypus.md` (the approved north star) → the memory files (below).
 
-A Brilliant.org-style interactive photography course. Adult-beginner persona. Stack: **Vite + React + Tailwind + Firebase** (Auth + Firestore + Hosting). All visuals are **geometric pixel-art / SVG — no real photos** (locked decision). Design system: white/charcoal canvas, one **pear** accent, single ~432px column, wrong-answer feedback is **calm gray, never red**, XP only (no streaks).
-
----
-
-## TL;DR of the current problem (why this handoff exists)
-
-Development became reactive — many small feedback-driven edits — and the **depth-of-field lesson, the portrait/silhouette rendering, the blur quality, and the motion→polaroid flow are now an inconsistent mess.** The scaffolding underneath is solid; the *visual treatment of a few interactive parts* and *one lesson's structure* need a clean, deliberate redo rather than more patches.
-
-### The specific things the user is unhappy with (verbatim intent)
-1. **DoF lesson style is disliked and "too complicated at points."** The current DoF is a 6-step lesson built around an abstract **side-view lens diagram** (camera → cone → focus band → objects). The user does **not** want that. They want a **simple, forward-facing photo demo: a flower in focus with other things in the background, showing how the background blurs** as you open the aperture. Cut the step count down; drop or hide the side-view diagram.
-2. **Blur edges look bad.** The blur is done as a per-cell box-blur on the low-res pixel grid (`boxBlur` in `src/sim/scene.js`) and/or a CSS `filter: blur()` on SVG silhouettes in the diagram. Both produce ugly/blocky edges. **Needs a cleaner blur** (e.g. layered approach: a sharp subject layer over a CSS-`blur()`'d background layer, or a higher-res/gaussian treatment).
-3. **Portrait/silhouette style is disliked.** History: subject was a crude person → swapped to a sunflower → reverted to a "nicer" head-and-shoulders **bust silhouette**. The user still doesn't love it. For the new DoF they want a **flower** subject (forward-facing, not a side-diagram silhouette).
-4. **Motion → polaroid artifacts.** In the shutter lesson (`MotionView`), after the shutter fires, the **blurred car is still visible behind/around the polaroid** (the live canvas shows through the semi-transparent overlay backdrop), and the captured blurred frame lingers in the view. Looks broken.
-5. **Multiple choice mostly remains.** Mentor advice: "anything is better than multichoice." Only L2 and L4 were converted to a `rank` (tap-to-order) interaction. **L1, L3, L5, L6, L7, L8, L9 still use `predict` (MC).**
+> Everything below was verified against the code on 2026-06-24, not recalled. If you edit a file,
+> RE-READ it first — a stale mental model caused a real confabulation this session (see Honest notes).
 
 ---
 
-## What's solid (keep)
-- **The data-driven lesson engine** (`src/engine/LessonPlayer.jsx` + `steps.jsx`): lessons are data; each step `kind` maps to a renderer. Clean loop: render → act → check → feedback → next.
-- **The no-reveal feedback model**: `feedback.{correct, byOption (per-distractor Socratic), stages (escalating, never the answer), showWhy (visual)}`. Calm gray, never red. This is good — preserve it.
-- **Auth + persistence** (`src/store.jsx`): Firebase when `.env` present, else localStorage fallback. Resume, XP, attempt counts, gallery shots. First paint never blocks on Firestore.
-- **The shutter + gallery loop**: shootable steps save a "shot" (keeper/experiment) to `progress.shots`; Home shows "Your roll." Shots store params to re-render (no image storage) — except motion, which snapshots the canvas.
-- **The polaroid reveal idea** (develops, random tilt) — good; just fix the artifact behind it.
-- **Exposure-triangle core (L1, L2, L4, L5, L6)** mostly works and is verified.
-- **DoF optics math** (`src/sim/dof.js`) is correct (validated vs dofsimulator). Even if the *diagram* is dropped, the math can drive a forward-scene blur amount.
+## TL;DR
+The course was rebuilt from a reactive 9-lesson sprawl into **6 deep, predict-first topic-lessons with ZERO multiple choice**, each verified by an automatic test gate (`npm test`) and live in the browser. New rendering primitives replaced the disliked DoF calculator. A small **dev-system of skills + memory** now governs the build loop. The remaining big item is **deploying** (needs you).
 
----
+## Current state — the 6 lessons (verified from `src/content/course.js`)
+| # | id | beats | what it teaches |
+|---|----|------|-----------------|
+| 1 | `exposure-triangle` | **8** | capture light→target · aperture · shutter(motion) · ISO · "stops" · balance puzzle · equivalent-exposures rank |
+| 2 | `depth-of-field` | **8** | forward flower bokeh via 4 real levers: aperture · subject-distance · background-distance · focal length · night-lights bloom · rank · 4-slider synthesis keeper |
+| 3 | `metering` | **6** | histogram: spread · blow highlights · crush shadows · high-key **snow** (right-piled) · scene rank (no single "correct" shape) |
+| 4 | `white-balance` | **5** | warm→cool correct · cool→warm correct · **gray-card** reference · creative-warm (neutral is *wrong*); uses a baked-in cast so neutral is a NON-zero slider |
+| 5 | `rule-of-thirds` | **5** | responsive frame: thirds · lead-room (facing subject) · horizon · synthesis keeper — the subject is a figure that MOVES and the frame reacts |
+| 6 | `light-direction` | **4** | sphere lit front→side(reveals form)→behind(rim/silhouette) + hard/soft |
 
-## Architecture map
-```
-src/
-  main.jsx, App.jsx            routing (App keys /lesson/:id so it remounts per lesson)
-  store.jsx                    AppProvider: auth + progress + shots; Firebase/local
-  lib/firebase.js              init; firebaseEnabled = config present
-  sim/
-    scene.js                   PixelScene engine: computeGrid + effects
-                               (exposure, aperture→box-blur, motion smear, ISO noise, temp/WB, histogram);
-                               scene generators: landscape, portrait, night, seascape, room
-    PixelScene.jsx             canvas renderer for a scene + effects (+ crop loupe)
-    dof.js                     thin-lens DoF math (near/far/total/hyperfocal) + formatting
-  engine/
-    LessonPlayer.jsx           the loop; handleResult (tiered hints) + PolaroidReveal mount
-    steps.jsx                  ALL step views + Feedback + PolaroidReveal + show-why widgets
-  components/ui.jsx            Button, Card, Slider, ProgressBar, ApertureIris, Logo
-  content/course.js            the 9 lessons as data  ← most content lives here
-  pages/                       AuthPage, HomePage (gallery), CoursePathPage, LessonPage
-```
-**Step kinds** (in `steps.jsx` STEP_VIEWS): `intro, predict (MC), capture, slider-sim, triangle, compose, dof, motion, rank`.
+All are **predict-first** (do → surprise → confirm), calm-gray feedback (never red on a learner mistake), and a success mints a polaroid "keepsake" saved to the Home "roll".
 
-**Lessons today** (`course.js`):
-1. `collected-light` — intro · capture (collect light to target) · intro (stops) · predict
-2. `aperture-hole` — intro · slider-sim (brightness on `room`) · intro (f = fraction) · **rank** (order apertures by light)
-3. `depth-of-field` — intro · **dof ×4** (aperture → distance → focal → all four, side-view diagram) · predict  ← THE ONE TO REDESIGN
-4. `shutter-speed` — intro · **motion** (animated car; sharp live, blur on capture) · **rank** (order shutters by blur)
-5. `iso-noise` — intro · slider-sim (brighten night) · intro (grain cost) · slider-sim (lowest usable ISO) · predict
-6. `the-triangle` — intro · triangle (balance 3 sliders) · predict
-7. `metering` — intro · slider-sim (histogram) · predict
-8. `white-balance` — intro · slider-sim (temp/WB on `seascape`) · predict
-9. `rule-of-thirds` — intro · compose (drag subject onto a power point) · predict
+## What changed this session
+**Restructure:** 9 lessons → 6; the six old exposure lessons compressed into the one 8-beat anchor; `PredictView` (multiple choice) removed entirely.
 
-**Data model** (`users/{uid}` in Firestore, mirrored in localStorage):
-`{ email, displayName, isAnonymous, totalXp, lastLesson, shots: [{key, lessonId, stepIndex, verdict:'keeper'|'experiment', scene, params, image?, createdAt}], courses: { exposure: { completedLessonIds, lessons: { <id>: {status, resumeStepIndex, attempts, correct, wrong} } } } }`
+**New rendering primitives (the DoF calculator + box-blur are gone from the lessons):**
+- `src/sim/DofBokeh.jsx` + `src/sim/bokehMath.js` — forward flower, layered **CSS blur** (clean bokeh), driven by `effectiveBlur({f, subjectDist, bgDist, focal})`. Renders the lesson AND the keepsake.
+- `src/sim/LightDirection.jsx` — directional sphere shading (angle + softness).
+- `src/sim/composeEval.js` + responsive `ComposeView`/`ComposeFigure`/`ComposeShot` in `steps.jsx` — the image responds to placement (thirds / leadroom / horizon targets).
+- `MotionShot` keepsake renders from `si` (the base64 JPEG that was being written into the Firestore doc is gone — a self-DoS risk).
+- `scene.js`: `baseTemp` intrinsic-cast support for white balance + a neutral **gray card** in the `room` scene; a `snow` high-key scene (used by metering).
 
----
+**Hardening / correctness:**
+- React **error boundary** (`src/components/ErrorBoundary.jsx`, wraps the app in `main.jsx`) — no more white-screen on a render throw.
+- **Keepers-only** (wrong answers no longer saved; failure count removed from Home).
+- Deterministic, seeded **ISO grain** (`scene.js` `hashNoise`/`noiseSeed`; `PixelScene` varies the seed per frame only when live) — saved shots round-trip.
+- `prefers-reduced-motion` honored for the JS rAF sims (`src/components/useReducedMotion.js`; gates the car + ISO shimmer). MotionView's rAF now stops on capture.
+- `store.jsx`: `recordAttempt` persists immediately; the debounced `saveResume` timer is cleared on `saveShot`/`recordAttempt` (was clobbering fresh keepers).
+- `Slider` got `aria-valuetext`; histogram clipping recolored out of the danger-red; sticky feedback panel polished + a one-frame green-flash on step transitions fixed; rank tiles no longer clip at 375px.
 
-## Recommended next steps (in priority order)
+## The test gate (use it — `npm test`)
+`Redesign/checks.mjs` (run via `npm test`, dependency-free Node). Asserts that **every checked beat fails at its start and is reachable in range**, rank solutions are permutations, aperture brightness is monotonic, no scene yields NaN. **Currently 59/59 green.** Extend it whenever you add a checked beat — a retuned scene can't then silently make a lesson unpassable. (`Redesign/gate.mjs` still covers L2 brightness + L7 metering monotonicity.)
 
-### 1. Redesign Depth of Field (the big one)
-- **Drop the side-view lens diagram** as the primary view (it's disliked + complex). Optionally keep it behind an "advanced" toggle, or delete `DofView` and the diagram `Silhouette`/`ReadoutCard` code.
-- Build a **forward-facing bokeh demo**: a **flower** (sharp foreground/subject) with a few **background objects** (trees, lights) that **blur smoothly as the aperture opens**. One aperture slider; show the photo. Maybe a 2nd step adds distance/focal as "also affects this" — but keep it short (≈2–3 steps, not 6).
-- **Fix the blur.** Do NOT box-blur the low-res grid (blocky edges). Recommended: render the **background on its own layer and apply CSS `filter: blur(Xpx)`**, with the sharp subject composited on top — clean, GPU-cheap, good edges. `dof.js` can still compute a believable blur radius from aperture (+distance/focal if wanted).
+## The dev system (skills + memory)
+- **Skills** — `.claude/skills/aperture-lesson/` (repo: how to author + verify a lesson), `~/.claude/skills/shimmering-personas/` (10–20 unconventional Opus personas → triangulated synthesis; now hardened against confabulation), `~/.claude/skills/what-would-sky-do/` (model Sky's judgment; predict → self-critique as Sky at max power → revise → test → escalate only if uncertain → learn).
+- **Memory** (`.../memory/`): `project-northstar-redesign`, `working-style-high-caliber`, `sky-model` (Sky's values + catalog of his catches + corrections log), plus the older `project-brilliant-photography-clone`, `brilliant-research-findings`, `testing-discipline`. Read for SPIRIT, not letter.
 
-### 2. Fix the motion → polaroid artifact (`steps.jsx` MotionView + PolaroidReveal)
-- When the shutter fires, **stop/clear the live canvas** (or make the `PolaroidReveal` backdrop opaque) so the blurred car doesn't show through behind the polaroid. After dismiss, don't leave a messy blurred frame in the view — reset to live, or show only the clean captured polaroid.
+## How to run / verify
+- **Dev:** `npm run dev` → :5173 (or Claude_Preview MCP, server "aperture"). **Gate:** `npm test`. **Build:** `npm run build`.
+- **Verify a lesson:** walk the FULL beat sequence in the UI (click Continue/Take-the-shot between beats), test wrong paths, at **mobile 375px** and desktop; confirm the keepsake matches what the lesson taught. Don't say "done" on a narrow check.
 
-### 3. Remove the remaining multiple choice
-- Build a **drag-to-bin / sort** interaction for conceptual questions (e.g. "sort each control into *deepens DoF* / *shallows DoF*"). Convert L1, L3, L5, L6, L7, L8, L9 predicts to `rank` or the new sort. `rank` already exists and works.
+## Open / next (prioritized)
+1. **DEPLOY — P0, needs YOU.** `firebase login` (interactive), then `npm run deploy` (Hosting + rules → `aperture-dac66.web.app`). Enable **Anonymous** sign-in in the Firebase console (else "try without an account" stays disabled). Then walk the graded scenario (signup → lesson → progress → logout → resume) on the **live URL**, mobile + desktop — that is success criterion #1 and is still unverified in its graded form.
+2. **Dead code:** delete `DofView` + `Silhouette` + `src/sim/dof.js` and the `dof` entry in `STEP_VIEWS` — no lesson uses `kind: 'dof'` (verify: `grep "kind: 'dof'"` is empty; gate stays green). Deferred this session; benign but should go.
+3. **Light & Direction (4 beats)** is the lightest lesson — deepen toward ~6 (light height/position, golden-hour warmth, a flattering-vs-dramatic transfer). `LightDirection.jsx` would need height + warmth params.
+4. **Accessibility (real, deferred per "core first"):** every sim is `aria-hidden` — add an `aria-live` text readout of each sim's already-computed state; `ComposeView` is pointer-only — add keyboard (tap-to-place + arrow-nudge, like RankView).
+5. **Cold-start (persona insight, not built):** render the first lesson beat with ZERO auth + lazy-load Firebase; ask for an account only at the first save. Highest-leverage onboarding fix.
+6. **Optional depth:** metering "meter-fooled" causal spine (watch the reflective meter be confidently wrong on snow, then override it); WB green/magenta tint (engine is a single warm/cool `temp` axis today).
 
-### 4. Consistency + polish pass
-- Make the interactive parts visually consistent. Re-check on **mobile (375px)** — `preview_resize` preset mobile; the DoF cards already needed a 2×2 fix once.
-
-### 5. Then: deploy + later phases
-- **Deploy:** run `firebase login` once (interactive — can't be automated), then `npm run deploy` (builds + deploys Hosting + Firestore rules). Site → `aperture-dac66.web.app`.
-- **Enable Anonymous sign-in** in the Firebase console, or "Try a lesson without an account" stays broken (currently errors `auth/admin-restricted-operation` — handled gracefully with a message).
-- Then **Fri = AI Socratic tutor**, **Sun = learning science** (spacing, checkpoint) per `PRD.md`.
-
----
-
-## How to run / test
-- **Dev:** `npm run dev` → http://localhost:5173 (or the Claude_Preview MCP, server name `aperture` from `.claude/launch.json`).
-- **Verify in-browser** (don't trust a single screenshot of an animated step): play full lesson flows, click Next between lessons, test wrong answers, and **check mobile width**.
-- **Sim acceptance gate:** `node Redesign/gate.mjs` (prints L2 brightness monotonicity + L7 metering window — extend it for new sims).
-- **Build:** `npm run build`. **Firebase config** lives in `.env` (gitignored; web keys are public, not secret). Project: `aperture-dac66`.
-
-## Design history (so we don't re-loop)
-- All-geometric pixel-art, **no real photos** — locked.
-- DoF: pixel-blur portrait ("bad") → **side-view lens diagram** (liked initially, now "too complicated/disliked") → **now: simple forward flower-bokeh photo with better blur**.
-- Subject: crude person → sunflower → bust silhouette → **flower (for the new forward DoF)**.
-- Feedback: multiple-choice → **Socratic no-reveal + show-why**; MC being replaced by `rank`/drag interactions.
-- Research + plan: `Research/`, `Redesign/00-REDESIGN-PLAN.md`, `Redesign/AUDIT-LEDGER.md` (open issues tracked there too).
-
-## Honest assessment
-The **engine, feedback model, auth/persistence, gallery, and the exposure-triangle lessons (1,2,4,5,6) are in good shape.** The **DoF lesson (3) needs a ground-up simpler redesign**, the **blur needs to be layered/CSS not per-cell**, and the **motion→polaroid flow has a visual bug**. Multiple choice should be finished off. Do those four, then it's deploy + AI tutor + learning science.
+## Honest notes
+- **Verify ground truth, including your own memory.** This session I confidently told the user "metering is 3 thin beats / the personas hallucinated it" — wrong; metering is 6 deep beats and the personas were right. Re-read files before asserting or editing. The `sky-model` corrections log records this.
+- The build loop is meant to **self-govern** via `what-would-sky-do` (catch what Sky would catch before he has to) + `shimmering-personas` for evaluation — both run at Opus/max effort, web-researched.
+- Nothing is committed yet this session — `git status` shows the working tree; commit when ready.

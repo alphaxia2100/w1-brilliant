@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import PixelScene from '../sim/PixelScene.jsx'
+import DofBokeh from '../sim/DofBokeh.jsx'
+import { BOKEH_STOPS, effectiveBlur } from '../sim/bokehMath.js'
+import { composeEval, THIRDS } from '../sim/composeEval.js'
+import LightDirection from '../sim/LightDirection.jsx'
 import { meanBrightness, histogram } from '../sim/scene.js'
 import { dofCalc, fmtDist, dofTag, SENSORS } from '../sim/dof.js'
 import { Slider, Button, ApertureIris } from '../components/ui.jsx'
+import { useReducedMotion } from '../components/useReducedMotion.js'
 
 const fmtF = (f) => (f % 1 === 0 ? String(f) : f.toFixed(1))
 
@@ -126,22 +131,39 @@ export function PolaroidReveal({ shot, onDone }) {
   const tiltRef = useRef(null)
   if (tiltRef.current === null) tiltRef.current = Math.random() * 11 - 5.5 // random orientation each shot
   useEffect(() => {
-    const t = setTimeout(() => doneRef.current(), 2800)
+    const t = setTimeout(() => doneRef.current(), 2400)
     return () => clearTimeout(t)
   }, [])
   const keeper = shot.verdict !== 'experiment'
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center px-6"
-      style={{ background: 'rgba(20,20,20,0.42)' }}
+      className="fixed inset-0 z-40 flex items-center justify-center px-6 cursor-pointer"
+      style={{ background: 'rgba(16,16,18,0.82)' }}
       onClick={onDone}
       role="status"
+      aria-label="Captured photo — tap to continue"
     >
       <div style={{ transform: `rotate(${tiltRef.current}deg)` }}>
         <div className="polaroid-in bg-white rounded-[8px] p-3 pb-9" style={{ width: 252, boxShadow: '0 18px 44px rgba(0,0,0,0.32)' }}>
-        <div className="rounded-[3px] overflow-hidden bg-[#10131A]" style={{ aspectRatio: shot.image ? '2 / 1' : '1 / 1' }}>
+        <div className="rounded-[3px] overflow-hidden bg-[#10131A]" style={{ aspectRatio: shot.image || shot.kind === 'motion' ? '2 / 1' : '1 / 1' }}>
           {shot.image ? (
             <img src={shot.image} alt="" className="block w-full polaroid-develop" />
+          ) : shot.kind === 'bokeh' ? (
+            <div className="polaroid-develop">
+              <DofBokeh f={shot.f} subjectDist={shot.subjectDist} bgDist={shot.bgDist} focal={shot.focal} bg={shot.bg} size={228} rounded={false} />
+            </div>
+          ) : shot.kind === 'light' ? (
+            <div className="polaroid-develop">
+              <LightDirection angle={shot.angle} soft={shot.soft} size={228} rounded={false} />
+            </div>
+          ) : shot.kind === 'motion' ? (
+            <div className="polaroid-develop">
+              <MotionShot si={shot.si} size={228} rounded={false} />
+            </div>
+          ) : shot.kind === 'compose' ? (
+            <div className="polaroid-develop">
+              <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} size={228} rounded={false} />
+            </div>
           ) : (
             <div className="polaroid-develop">
               <PixelScene scene={shot.scene} size={228} rounded={false} {...shot.params} />
@@ -153,6 +175,7 @@ export function PolaroidReveal({ shot, onDone }) {
         </div>
         </div>
       </div>
+      <p className="absolute bottom-8 inset-x-0 text-center text-[12px] text-white/55">tap to continue</p>
     </div>
   )
 }
@@ -173,14 +196,14 @@ function Histogram({ params }) {
             <span
               key={i}
               className="flex-1 rounded-t-[2px]"
-              style={{ height: `${(c / max) * 100}%`, minHeight: '2px', background: clipped ? '#FF5D5D' : '#9AA0A6' }}
+              style={{ height: `${(c / max) * 100}%`, minHeight: '2px', background: clipped ? '#C9A227' : '#9AA0A6' }}
             />
           )
         })}
       </div>
       <div className="flex justify-between text-[11px] text-muted mt-1">
-        <span style={{ color: clipLow ? '#C23B3B' : undefined }}>shadows{clipLow ? ' clipped' : ''}</span>
-        <span style={{ color: clipHigh ? '#C23B3B' : undefined }}>{clipHigh ? 'clipped ' : ''}highlights</span>
+        <span style={{ color: clipLow ? '#8A6D1A' : undefined }}>shadows{clipLow ? ' clipped' : ''}</span>
+        <span style={{ color: clipHigh ? '#8A6D1A' : undefined }}>{clipHigh ? 'clipped ' : ''}highlights</span>
       </div>
     </div>
   )
@@ -201,45 +224,6 @@ function IntroView({ step }) {
           {p}
         </p>
       ))}
-    </div>
-  )
-}
-
-/* ---------- predict (multiple choice) ---------- */
-function PredictView({ step, status, onResult, onActivity }) {
-  const [sel, setSel] = useState(null)
-  const locked = status === 'correct'
-  return (
-    <div className="animate-risein">
-      <Prompt>{step.prompt}</Prompt>
-      <div className="flex flex-col gap-2.5 mb-4">
-        {step.options.map((opt, i) => {
-          const active = sel === i
-          return (
-            <button
-              key={i}
-              disabled={locked}
-              onClick={() => {
-                setSel(i)
-                onActivity?.()
-              }}
-              className="text-left px-4 py-3 rounded-tile border text-[15px] transition-[transform,box-shadow,border-color] duration-150 ease-pop active:translate-y-[1px]"
-              style={{
-                borderColor: active ? '#456DFF' : '#E5E5E5',
-                boxShadow: active ? '0 0 0 2px rgba(69,109,255,0.35)' : '0 2px 0 0 #E5E5E5',
-                background: '#fff',
-              }}
-            >
-              {opt}
-            </button>
-          )
-        })}
-      </div>
-      {!locked && (
-        <Button className="w-full" disabled={sel === null} onClick={() => onResult(sel === step.answer, { chosen: sel })}>
-          Check
-        </Button>
-      )}
     </div>
   )
 }
@@ -382,6 +366,7 @@ function SliderSimView({ step, status, onResult, onActivity }) {
             onActivity?.()
           }}
           ariaLabel={step.ariaLabel || 'adjust'}
+          valueText={step.format ? step.format(value) : undefined}
         />
       </div>
       <div className="flex justify-between text-[11px] text-muted mb-5">
@@ -505,25 +490,49 @@ function TriangleView({ step, status, onResult, onActivity }) {
 }
 
 /* ---------- compose (rule of thirds: drag the subject onto a power point) ---------- */
-const THIRDS = [
-  { x: 33.33, y: 33.33 },
-  { x: 66.66, y: 33.33 },
-  { x: 33.33, y: 66.66 },
-  { x: 66.66, y: 66.66 },
-]
+// A little figure drawn at a frame position (0..100). The subject the learner places.
+function ComposeFigure({ x, y, ok, gaze }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <circle cx="0" cy="-4.6" r="3.1" fill={ok ? '#29CC57' : '#141414'} stroke="#fff" strokeWidth="0.7" />
+      <path d="M -4 6.2 C -4 0.6, -2.2 -1.4, 0 -1.4 C 2.2 -1.4, 4 0.6, 4 6.2 Z" fill={ok ? '#29CC57' : '#141414'} stroke="#fff" strokeWidth="0.7" />
+      {gaze && <circle cx={gaze === 'right' ? 5.4 : -5.4} cy="-4.6" r="1.05" fill="#FBE39A" />}
+    </g>
+  )
+}
+
+// The composition keepsake — re-renders the scene + the placed subject from params.
+export function ComposeShot({ scene, x, y, facing, size = 228, rounded = true, fill = false }) {
+  return (
+    <div
+      className={`relative overflow-hidden ${rounded ? 'rounded-tile' : ''}`}
+      style={fill ? { width: '100%', height: '100%' } : { width: '100%', maxWidth: size, aspectRatio: '1 / 1' }}
+      aria-hidden="true"
+    >
+      <PixelScene scene={scene} size={size} rounded={false} className="absolute inset-0" />
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+        <ComposeFigure x={x} y={y} ok={false} gaze={facing} />
+      </svg>
+    </div>
+  )
+}
+
 function ComposeView({ step, status, onResult, onActivity }) {
+  const target = step.target || { kind: 'thirds' }
+  const horizon = target.kind === 'horizon'
   const [pos, setPos] = useState(step.start || { x: 50, y: 50 })
+  const [moved, setMoved] = useState(false)
   const frame = useRef(null)
   const dragging = useRef(false)
   const locked = status === 'correct'
-  const near = THIRDS.some((p) => Math.hypot(p.x - pos.x, p.y - pos.y) < 11)
+  const { ok, cue } = composeEval(target, pos)
 
   function place(e) {
     const rect = frame.current.getBoundingClientRect()
-    setPos({
-      x: clampN(((e.clientX - rect.left) / rect.width) * 100, 5, 95),
-      y: clampN(((e.clientY - rect.top) / rect.height) * 100, 5, 95),
-    })
+    const x = clampN(((e.clientX - rect.left) / rect.width) * 100, 6, 94)
+    const y = clampN(((e.clientY - rect.top) / rect.height) * 100, 6, 94)
+    setPos(horizon ? { x: 50, y } : { x, y })
+    setMoved(true)
     onActivity?.()
   }
   function down(e) {
@@ -533,14 +542,14 @@ function ComposeView({ step, status, onResult, onActivity }) {
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
     } catch {
-      /* no active pointer (e.g. synthetic event) — fine */
+      /* synthetic event — fine */
     }
   }
 
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
-      <div className="relative mx-auto mb-4" style={{ maxWidth: 300 }}>
+      <div className="relative mx-auto mb-3" style={{ maxWidth: 300 }}>
         <PixelScene scene={step.scene} size={300} />
         <div
           ref={frame}
@@ -550,36 +559,46 @@ function ComposeView({ step, status, onResult, onActivity }) {
           onPointerUp={() => (dragging.current = false)}
         >
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden="true">
-            {[33.33, 66.66].map((v) => (
-              <line key={'v' + v} x1={v} y1="0" x2={v} y2="100" stroke="rgba(255,255,255,0.7)" strokeWidth="0.4" />
-            ))}
-            {[33.33, 66.66].map((h) => (
-              <line key={'h' + h} x1="0" y1={h} x2="100" y2={h} stroke="rgba(255,255,255,0.7)" strokeWidth="0.4" />
-            ))}
-            {THIRDS.map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r="1.6" fill="rgba(255,255,255,0.9)" />
-            ))}
+            {/* a "cramped" vignette when the frame reads static — the felt cue */}
+            {!ok && moved && !horizon && (
+              <>
+                <rect x="0" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
+                <rect x="83" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
+              </>
+            )}
+            <g style={{ opacity: moved ? 1 : 0, transition: 'opacity 0.3s' }}>
+              {[33.33, 66.66].map((v) => (
+                <line key={'v' + v} x1={v} y1="0" x2={v} y2="100" stroke="rgba(255,255,255,0.62)" strokeWidth="0.4" />
+              ))}
+              {[33.33, 66.66].map((h) => (
+                <line key={'h' + h} x1="0" y1={h} x2="100" y2={h} stroke="rgba(255,255,255,0.62)" strokeWidth="0.4" />
+              ))}
+              {!horizon &&
+                THIRDS.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="1.4" fill="rgba(255,255,255,0.85)" />)}
+            </g>
+            {horizon ? (
+              <>
+                <rect x="0" y="0" width="100" height={pos.y} fill="rgba(150,200,255,0.12)" />
+                <line x1="0" y1={pos.y} x2="100" y2={pos.y} stroke={ok ? '#29CC57' : '#FFFFFF'} strokeWidth="1.4" />
+                <rect x="42" y={pos.y - 3.2} width="16" height="6.4" rx="2" fill={ok ? '#29CC57' : '#141414'} />
+              </>
+            ) : (
+              <ComposeFigure x={pos.x} y={pos.y} ok={ok} gaze={target.kind === 'leadroom' ? target.facing || 'right' : null} />
+            )}
           </svg>
-          <div
-            className="absolute w-8 h-8 rounded-full border-[3px] grid place-items-center transition-[background,border-color] duration-150"
-            style={{
-              left: `${pos.x}%`,
-              top: `${pos.y}%`,
-              transform: 'translate(-50%, -50%)',
-              background: near ? '#29CC57' : '#FFFFFF',
-              borderColor: near ? '#1F8A3B' : '#141414',
-            }}
-          >
-            <span className="w-2 h-2 rounded-full" style={{ background: near ? '#fff' : '#141414' }} />
-          </div>
         </div>
       </div>
-      <p className="text-[13px] text-center text-muted mb-4">
-        {near ? 'On a power point — that’s the spot.' : 'Drag your subject onto a point where the lines cross.'}
+      <p className="text-[13px] text-center mb-4 font-medium" style={{ color: ok ? '#1F8A3B' : '#777' }}>
+        {cue}
       </p>
       {!locked && (
-        <Button className="w-full" onClick={() => onResult(near)}>
-          Check
+        <Button
+          className="w-full"
+          onClick={() =>
+            onResult(ok, step.keeper ? { shot: { kind: 'compose', scene: step.scene, x: pos.x, y: pos.y, facing: target.facing } } : undefined)
+          }
+        >
+          {step.keeper ? <><Shutter /> Take the shot</> : 'Check'}
         </Button>
       )}
     </div>
@@ -865,6 +884,28 @@ function drawRoad(ctx, W, H, x, si, dashOff) {
   ctx.globalAlpha = 1
 }
 
+// The motion keepsake — re-rendered deterministically from the shutter index `si`
+// (NO stored pixels; a base64 JPEG in the Firestore user doc was a self-DoS toward
+// the 1MiB cap). Used by PolaroidReveal + the Home roll.
+export function MotionShot({ si, size = 228, rounded = true, fill = false }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const c = ref.current
+    if (!c) return
+    drawRoad(c.getContext('2d'), c.width, c.height, c.width * 0.6, si, 0)
+  }, [si])
+  return (
+    <canvas
+      ref={ref}
+      width={size * 2}
+      height={size}
+      className={`block ${fill ? 'w-full h-full object-cover' : 'w-full'} ${rounded ? 'rounded-tile' : ''}`}
+      style={fill ? undefined : { aspectRatio: '2 / 1' }}
+      aria-hidden="true"
+    />
+  )
+}
+
 function MotionView({ step, status, onResult }) {
   const [si, setSi] = useState(step.start ?? 5)
   const [captured, setCaptured] = useState(null) // { x, si, dashOff } once the shutter fires
@@ -872,10 +913,9 @@ function MotionView({ step, status, onResult }) {
   const raf = useRef(null)
   const siRef = useRef(si)
   siRef.current = si
-  const capRef = useRef(null)
-  capRef.current = captured
   const xRef = useRef(-80)
   const dashRef = useRef(0)
+  const reduced = useReducedMotion()
 
   useEffect(() => {
     const canvas = ref.current
@@ -883,41 +923,41 @@ function MotionView({ step, status, onResult }) {
     const ctx = canvas.getContext('2d')
     const W = canvas.width
     const H = canvas.height
+    // Captured: draw the frozen photo ONCE — no perpetual rAF (it used to repaint a
+    // static frame at 60fps forever, pure battery burn).
+    if (captured) {
+      drawRoad(ctx, W, H, captured.x, captured.si, captured.dashOff)
+      return
+    }
+    // Reduced motion: a single static frame, no animation loop.
+    if (reduced) {
+      xRef.current = W * 0.5
+      dashRef.current = 0
+      drawRoad(ctx, W, H, xRef.current, 0, 0)
+      return
+    }
+    // Live: the car drives across, sharp (your eyes do not see motion blur).
     let startT = null
     const speed = (W + 160) / 2600
     const frame = (now) => {
       if (startT == null) startT = now
-      if (capRef.current) {
-        drawRoad(ctx, W, H, capRef.current.x, capRef.current.si, capRef.current.dashOff) // frozen photo, with blur
-      } else {
-        const t = now - startT
-        const x = ((t * speed) % (W + 160)) - 80
-        const dashOff = (t * speed) % 72
-        xRef.current = x
-        dashRef.current = dashOff
-        drawRoad(ctx, W, H, x, 0, dashOff) // live: sharp, like your eyes see it
-      }
+      const t = now - startT
+      const x = ((t * speed) % (W + 160)) - 80
+      const dashOff = (t * speed) % 72
+      xRef.current = x
+      dashRef.current = dashOff
+      drawRoad(ctx, W, H, x, 0, dashOff)
       raf.current = requestAnimationFrame(frame)
     }
     raf.current = requestAnimationFrame(frame)
     return () => raf.current && cancelAnimationFrame(raf.current)
-  }, [])
+  }, [captured, reduced])
 
   function shoot() {
     const s = siRef.current
-    const cap = { x: xRef.current, si: s, dashOff: dashRef.current }
-    let image
-    const c = ref.current
-    if (c) {
-      drawRoad(c.getContext('2d'), c.width, c.height, cap.x, cap.si, cap.dashOff) // render the captured frame, then snapshot it
-      try {
-        image = c.toDataURL('image/jpeg', 0.55)
-      } catch {
-        image = undefined
-      }
-    }
-    setCaptured(cap)
-    onResult(step.check(s), { chosen: s, shot: { scene: 'portrait', params: { motion: Math.round(s * 0.85) }, image } })
+    // Store re-renderable PARAMS, never pixels — the keepsake renders from `si`.
+    setCaptured({ x: xRef.current, si: s, dashOff: dashRef.current })
+    onResult(step.check(s), { chosen: s, shot: { kind: 'motion', si: s } })
   }
 
   const frozen = captured && captured.si <= 1
@@ -1007,7 +1047,7 @@ function RankView({ step, status, onResult }) {
               key={pos}
               disabled={locked || !filled}
               onClick={() => removeAt(pos)}
-              className="flex-1 h-14 rounded-tile flex items-center justify-center font-mono text-[15px] transition"
+              className="flex-1 h-14 rounded-tile flex items-center justify-center font-mono text-[13px] leading-tight text-center px-1 transition"
               style={{
                 border: `2px ${filled ? 'solid' : 'dashed'} ${filled ? '#141414' : '#E5E5E5'}`,
                 background: filled ? '#fff' : '#FAFAFA',
@@ -1024,7 +1064,7 @@ function RankView({ step, status, onResult }) {
             key={i}
             disabled={locked}
             onClick={() => placeTile(i)}
-            className="px-4 py-2.5 rounded-tile border border-hairline font-mono text-[15px] bg-white shadow-tile active:translate-y-[1px]"
+            className="px-3 py-2.5 rounded-tile border border-hairline font-mono text-[13px] bg-white shadow-tile active:translate-y-[1px]"
           >
             {items[i].label}
           </button>
@@ -1042,14 +1082,112 @@ function RankView({ step, status, onResult }) {
   )
 }
 
+/* ---------- bokeh (Depth of field: any of the four DoF levers drive the melt) ---------- */
+const BOKEH_CTRL = {
+  aperture: { label: 'Aperture', ends: ['f/1.4 · wide', 'f/16 · narrow'] },
+  subjectDist: { label: 'Distance to subject', ends: ['up close', 'far back'] },
+  bgDist: { label: 'Background distance', ends: ['just behind', 'far away'] },
+  focal: { label: 'Focal length', ends: ['wide-angle', 'telephoto'] },
+}
+function BokehView({ step, status, onResult }) {
+  const controls = Array.isArray(step.control) ? step.control : [step.control || 'aperture']
+  const base = { f: 5.6, subjectDist: 0.5, bgDist: 0.4, focal: 0.3, ...(step.lock || {}), ...(step.start || {}) }
+  const [fi, setFi] = useState(Math.max(0, BOKEH_STOPS.indexOf(base.f)))
+  const [subjectDist, setSubjectDist] = useState(base.subjectDist)
+  const [bgDist, setBgDist] = useState(base.bgDist)
+  const [focal, setFocal] = useState(base.focal)
+  const locked = status === 'correct'
+  const f = BOKEH_STOPS[fi]
+  const blur = effectiveBlur({ f, subjectDist, bgDist, focal })
+
+  const ui = {
+    aperture: { value: fi, min: 0, max: BOKEH_STOPS.length - 1, step: 1, set: setFi, valueText: `f/${fmtF(f)}` },
+    subjectDist: { value: subjectDist, min: 0, max: 1, step: 0.05, set: setSubjectDist, valueText: `${Math.round((1 - subjectDist) * 100)}% close` },
+    bgDist: { value: bgDist, min: 0, max: 1, step: 0.05, set: setBgDist, valueText: `${Math.round(bgDist * 100)}% far` },
+    focal: { value: focal, min: 0, max: 1, step: 0.05, set: setFocal, valueText: `${Math.round(focal * 100)}% tele` },
+  }
+
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="flex justify-center mb-4">
+        <DofBokeh f={f} subjectDist={subjectDist} bgDist={bgDist} focal={focal} bg={step.bg || 'garden'} size={300} />
+      </div>
+      {controls.includes('aperture') && (
+        <div className="flex items-center gap-4 mb-3">
+          <ApertureIris f={f} />
+          <span className="font-mono text-[26px] font-medium leading-none">f/{fmtF(f)}</span>
+        </div>
+      )}
+      {controls.map((c) => {
+        const s = ui[c]
+        return (
+          <div key={c} className="mb-3">
+            <div className="text-[13px] text-muted mb-1">{BOKEH_CTRL[c].label}</div>
+            <Slider value={s.value} min={s.min} max={s.max} step={s.step} onChange={s.set} ariaLabel={BOKEH_CTRL[c].label} valueText={s.valueText} />
+            <div className="flex justify-between text-[11px] text-muted mt-1">
+              <span>{BOKEH_CTRL[c].ends[0]}</span>
+              <span>{BOKEH_CTRL[c].ends[1]}</span>
+            </div>
+          </div>
+        )
+      })}
+      {!locked && (
+        <Button
+          className="w-full mt-2"
+          onClick={() => onResult(step.check(blur), { chosen: Math.round(blur), shot: { kind: 'bokeh', f, subjectDist, bgDist, focal, bg: step.bg || 'garden' } })}
+        >
+          <Shutter /> Take the shot
+        </Button>
+      )}
+    </div>
+  )
+}
+
+/* ---------- light-direction (Light & Direction: front→side→behind + hard/soft) ---------- */
+function LightDirView({ step, status, onResult }) {
+  const init = { angle: 90, soft: 0.4, ...(step.fixed || {}), ...(step.start || {}) }
+  const ctrl = step.control || 'angle'
+  const [angle, setAngle] = useState(init.angle)
+  const [soft, setSoft] = useState(init.soft)
+  const locked = status === 'correct'
+  const isAngle = ctrl === 'angle'
+  const cfg = isAngle
+    ? { value: angle, set: setAngle, min: 0, max: 180, step: 1, label: 'Light direction', readout: `${angle}°`, ends: ['front · flat', 'behind · rim'] }
+    : { value: soft, set: setSoft, min: 0, max: 1, step: 0.02, label: 'Softness', readout: `${Math.round(soft * 100)}%`, ends: ['hard · crisp', 'soft · gentle'] }
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="flex justify-center mb-4">
+        <LightDirection angle={angle} soft={soft} size={300} />
+      </div>
+      <div className="flex items-center gap-3 mb-1">
+        <span className="font-mono text-[22px] font-medium">{cfg.readout}</span>
+        <span className="text-[12px] text-muted">{cfg.label}</span>
+      </div>
+      <Slider value={cfg.value} min={cfg.min} max={cfg.max} step={cfg.step} onChange={cfg.set} ariaLabel={cfg.label} valueText={cfg.readout} />
+      <div className="flex justify-between text-[11px] text-muted mb-5 mt-1">
+        <span>{cfg.ends[0]}</span>
+        <span>{cfg.ends[1]}</span>
+      </div>
+      {!locked && (
+        <Button className="w-full" onClick={() => onResult(step.check({ angle, soft }), { chosen: cfg.value, shot: { kind: 'light', angle, soft } })}>
+          <Shutter /> Take the shot
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export const STEP_VIEWS = {
   intro: IntroView,
-  predict: PredictView,
   capture: CaptureView,
   'slider-sim': SliderSimView,
   triangle: TriangleView,
   compose: ComposeView,
   dof: DofView,
+  bokeh: BokehView,
+  'light-direction': LightDirView,
   motion: MotionView,
   rank: RankView,
 }
