@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../store.jsx'
-import { STEP_VIEWS, Feedback } from './steps.jsx'
+import { STEP_VIEWS, Feedback, PolaroidReveal } from './steps.jsx'
 import { Button, ProgressBar } from '../components/ui.jsx'
 
 // The universal lesson loop: render step → act → check → feedback → next.
@@ -11,6 +11,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   const [msg, setMsg] = useState('')
   const [tries, setTries] = useState(0)
   const [showWhy, setShowWhy] = useState(null)
+  const [polaroid, setPolaroid] = useState(null)
 
   const step = lesson.steps[idx]
   const isIntro = step.kind === 'intro'
@@ -21,6 +22,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
     setMsg('')
     setTries(0)
     setShowWhy(null)
+    setPolaroid(null)
     saveResume(lesson.id, idx)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx])
@@ -32,13 +34,9 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
     recordAttempt(lesson.id, correct)
     // A "shootable" step hands back a shot to save to the gallery.
     if (meta.shot) {
-      saveShot({
-        ...meta.shot,
-        lessonId: lesson.id,
-        lessonTitle: lesson.title,
-        stepIndex: idx,
-        verdict: correct ? 'keeper' : 'experiment',
-      })
+      const verdict = correct ? 'keeper' : 'experiment'
+      saveShot({ ...meta.shot, lessonId: lesson.id, lessonTitle: lesson.title, stepIndex: idx, verdict })
+      setPolaroid({ ...meta.shot, verdict })
     }
     const fb = step.feedback || {}
     if (correct) {
@@ -80,6 +78,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
+      {polaroid && <PolaroidReveal shot={polaroid} onDone={() => setPolaroid(null)} />}
       <header className="flex items-center gap-3 px-4 pt-4 pb-2 max-w-col w-full mx-auto">
         <button
           onClick={onExit}

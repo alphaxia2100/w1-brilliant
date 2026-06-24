@@ -119,6 +119,40 @@ function Shutter() {
   )
 }
 
+// The captured photo, shown briefly on a polaroid that "develops" after a shot.
+export function PolaroidReveal({ shot, onDone }) {
+  const doneRef = useRef(onDone)
+  doneRef.current = onDone
+  useEffect(() => {
+    const t = setTimeout(() => doneRef.current(), 2800)
+    return () => clearTimeout(t)
+  }, [])
+  const keeper = shot.verdict !== 'experiment'
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center px-6"
+      style={{ background: 'rgba(20,20,20,0.42)' }}
+      onClick={onDone}
+      role="status"
+    >
+      <div className="polaroid-in bg-white rounded-[8px] p-3 pb-9" style={{ width: 252, boxShadow: '0 18px 44px rgba(0,0,0,0.32)' }}>
+        <div className="rounded-[3px] overflow-hidden bg-[#10131A]" style={{ aspectRatio: shot.image ? '2 / 1' : '1 / 1' }}>
+          {shot.image ? (
+            <img src={shot.image} alt="" className="block w-full polaroid-develop" />
+          ) : (
+            <div className="polaroid-develop">
+              <PixelScene scene={shot.scene} size={228} rounded={false} {...shot.params} />
+            </div>
+          )}
+        </div>
+        <div className="text-center mt-3 font-mono text-[12px]" style={{ color: keeper ? '#1F8A3B' : '#888' }}>
+          {keeper ? '★ keeper' : 'experiment'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // A live luminance histogram — the metering readout. Clipped ends glow red.
 function Histogram({ params }) {
   const counts = histogram(params)
@@ -850,8 +884,19 @@ function MotionView({ step, status, onResult }) {
 
   function shoot() {
     const s = siRef.current
-    setCaptured({ x: xRef.current, si: s, dashOff: dashRef.current })
-    onResult(step.check(s), { chosen: s, shot: { scene: 'portrait', params: { motion: Math.round(s * 0.85) } } })
+    const cap = { x: xRef.current, si: s, dashOff: dashRef.current }
+    let image
+    const c = ref.current
+    if (c) {
+      drawRoad(c.getContext('2d'), c.width, c.height, cap.x, cap.si, cap.dashOff) // render the captured frame, then snapshot it
+      try {
+        image = c.toDataURL('image/jpeg', 0.55)
+      } catch {
+        image = undefined
+      }
+    }
+    setCaptured(cap)
+    onResult(step.check(s), { chosen: s, shot: { scene: 'portrait', params: { motion: Math.round(s * 0.85) }, image } })
   }
 
   const frozen = captured && captured.si <= 1

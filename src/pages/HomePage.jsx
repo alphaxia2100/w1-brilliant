@@ -12,7 +12,11 @@ function ShotThumb({ shot, size = 88 }) {
       style={{ width: size, height: size }}
       title={shot.lessonTitle}
     >
-      <PixelScene scene={shot.scene} size={size} rounded={false} {...shot.params} />
+      {shot.image ? (
+        <img src={shot.image} alt="" className="block w-full h-full object-cover" />
+      ) : (
+        <PixelScene scene={shot.scene} size={size} rounded={false} {...shot.params} />
+      )}
       <span
         className="absolute bottom-0 inset-x-0 text-[9px] text-center py-0.5 text-white"
         style={{ background: keeper ? 'rgba(31,138,59,0.74)' : 'rgba(20,20,20,0.6)' }}

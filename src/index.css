@@ -94,3 +94,29 @@ body {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
+/* Polaroid capture: the photo "develops" from dark + flat to full. */
+@keyframes develop {
+  0% {
+    filter: brightness(0.18) contrast(0.45) saturate(0.3);
+  }
+  100% {
+    filter: none;
+  }
+}
+@keyframes polaroid-in {
+  0% {
+    transform: translateY(18px) scale(0.9) rotate(-2.5deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(-2.5deg);
+    opacity: 1;
+  }
+}
+.polaroid-develop {
+  animation: develop 1.5s ease-out forwards;
+}
+.polaroid-in {
+  animation: polaroid-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
