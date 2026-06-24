@@ -13,6 +13,13 @@ mobile 375px). Kept current so issues don't "slip through" again.
 - **L6 triangle math** had an inconsistent hidden ISO offset (neutral at index 2 vs 4) → symmetric centering; {4,4,4} truly level. (fb2aa77)
 - **L1 predict referenced "aperture"** before it's taught → in-scope distractor. (fb2aa77)
 - **L4 intro showed a portrait** before a car demo → dropped. (fb2aa77)
+- **Auth guest button had NO error handling** — silent dead-end in Firebase mode; also surfaced that Anonymous sign-in is DISABLED in the project (auth/admin-restricted-operation). Now shows a clear message. (13352c5)
+- **displayName not shown after signup** (onAuthStateChanged doesn't re-fire) → reflect it + refresh denormalized doc fields. (13352c5)
+- **Dead `SHUTTER` const** removed; **🔒 emoji** → drawn lock icon. (13352c5)
+
+## Config / deployment to-do (for the user)
+- **Enable Anonymous sign-in** in the Firebase console, or "Try a lesson without an account" stays disabled in production (confirmed live).
+- Deploy still needs `firebase login`.
 
 ## Open — found, not yet fixed (ranked)
 1. **Predict-before-explain (all 9 lessons).** Every lesson still opens with an intro that *states* the concept, then quizzes it. True active learning leads with the attempt. Structural reorder. [MAJOR]

@@ -21,6 +21,7 @@ function emptyProgress() {
   return {
     totalXp: 0,
     lastLesson: null,
+    shots: [], // captured photos: keepers + experiments (params to re-render, not images)
     courses: { [COURSE]: { completedLessonIds: [], lessons: {} } },
   }
 }
@@ -107,6 +108,7 @@ export function AppProvider({ children }) {
       return {
         totalXp: data.totalXp || 0,
         lastLesson: data.lastLesson || null,
+        shots: data.shots || [],
         courses: data.courses || emptyProgress().courses,
       }
     }
@@ -133,6 +135,7 @@ export function AppProvider({ children }) {
           updatedAt: Date.now(),
           totalXp: next.totalXp,
           lastLesson: next.lastLesson,
+          shots: next.shots || [],
           courses: next.courses,
         },
         { merge: true },
@@ -242,6 +245,20 @@ export function AppProvider({ children }) {
     })
   }
 
+  // Save a captured photo. At most one keeper + one experiment per lesson step
+  // (re-shooting overwrites), so the gallery stays meaningful, not spammy.
+  function saveShot(shot) {
+    setProgress((prev) => {
+      const next = structuredClone(prev)
+      const key = `${shot.lessonId}:${shot.stepIndex}:${shot.verdict}`
+      const kept = (next.shots || []).filter((s) => s.key !== key)
+      kept.push({ ...shot, key, createdAt: Date.now() })
+      next.shots = kept.slice(-60) // cap the roll
+      persist(user, next)
+      return next
+    })
+  }
+
   function completeLesson(lessonId, xpGain = 20) {
     if (saveTimer.current) clearTimeout(saveTimer.current) // cancel any pending resume write
     setProgress((prev) => {
@@ -272,6 +289,7 @@ export function AppProvider({ children }) {
     saveResume,
     recordAttempt,
     completeLesson,
+    saveShot,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

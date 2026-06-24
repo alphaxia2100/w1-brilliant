@@ -5,7 +5,7 @@ import { Button, ProgressBar } from '../components/ui.jsx'
 
 // The universal lesson loop: render step → act → check → feedback → next.
 export default function LessonPlayer({ lesson, onExit, onComplete }) {
-  const { saveResume, recordAttempt } = useApp()
+  const { saveResume, recordAttempt, saveShot } = useApp()
   const [idx, setIdx] = useState(Math.min(lesson.resumeStepIndex || 0, lesson.steps.length - 1))
   const [status, setStatus] = useState('idle')
   const [msg, setMsg] = useState('')
@@ -30,6 +30,16 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   // that name a lever + direction but never the exact answer/value.
   function handleResult(correct, meta = {}) {
     recordAttempt(lesson.id, correct)
+    // A "shootable" step hands back a shot to save to the gallery.
+    if (meta.shot) {
+      saveShot({
+        ...meta.shot,
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        stepIndex: idx,
+        verdict: correct ? 'keeper' : 'experiment',
+      })
+    }
     const fb = step.feedback || {}
     if (correct) {
       setStatus('correct')

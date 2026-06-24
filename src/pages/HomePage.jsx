@@ -4,6 +4,26 @@ import { course, getLesson, totalLessons } from '../content/course.js'
 import { Button, Card, Logo } from '../components/ui.jsx'
 import PixelScene from '../sim/PixelScene.jsx'
 
+function ShotThumb({ shot, size = 88 }) {
+  return (
+    <div
+      className="shrink-0 rounded-tile overflow-hidden border border-hairline relative"
+      style={{ width: size, height: size }}
+      title={shot.lessonTitle}
+    >
+      <PixelScene scene={shot.scene} size={size} rounded={false} {...shot.params} />
+      {shot.verdict === 'experiment' && (
+        <span
+          className="absolute bottom-0 inset-x-0 text-[9px] text-center text-white py-0.5"
+          style={{ background: 'rgba(20,20,20,0.6)' }}
+        >
+          experiment
+        </span>
+      )}
+    </div>
+  )
+}
+
 export default function HomePage() {
   const { user, progress, logOut, courseId } = useApp()
   const navigate = useNavigate()
@@ -11,6 +31,10 @@ export default function HomePage() {
   const done = progress.courses[courseId]?.completedLessonIds || []
   const lessonsMap = progress.courses[courseId]?.lessons || {}
   const correctCount = Object.values(lessonsMap).reduce((a, l) => a + (l.correct || 0), 0)
+  const shots = progress.shots || []
+  const recentShots = shots.slice().reverse()
+  const keeperCount = shots.filter((s) => s.verdict === 'keeper').length
+  const expCount = shots.filter((s) => s.verdict === 'experiment').length
   const resume = progress.lastLesson
   const resumeLesson = resume ? getLesson(resume.lessonId) : null
   const firstName = user?.displayName?.split(' ')[0]
@@ -43,6 +67,22 @@ export default function HomePage() {
           lessons done
         </span>
       </div>
+
+      {recentShots.length > 0 && (
+        <div className="mb-5">
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-[15px] font-semibold">Your roll</h2>
+            <span className="text-[12px] text-muted">
+              {keeperCount} {keeperCount === 1 ? 'keeper' : 'keepers'} · {expCount} experiments
+            </span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            {recentShots.map((s) => (
+              <ShotThumb key={s.key + s.createdAt} shot={s} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {resumeLesson ? (
         <Card className="p-5 mb-4">

@@ -109,6 +109,16 @@ function Prompt({ children }) {
   return <p className="text-[18px] leading-snug font-medium mb-4">{children}</p>
 }
 
+// The shutter-release glyph used on every "take the shot" button.
+function Shutter() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 // A live luminance histogram — the metering readout. Clipped ends glow red.
 function Histogram({ params }) {
   const counts = histogram(params)
@@ -229,7 +239,7 @@ function CaptureView({ step, status, onResult, onActivity }) {
           : marker < bandLo
             ? 'Too dark — your photo gathered too little light. Open the shutter longer.'
             : 'Too bright — you blew out the highlights. Let in a little less light.'
-        onResult(inBand, { override: inBand ? undefined : msg })
+        onResult(inBand, { override: inBand ? undefined : msg, shot: { scene: step.scene, params: { exposure: exp } } })
       }
     }
     setProgress(0)
@@ -277,7 +287,7 @@ function CaptureView({ step, status, onResult, onActivity }) {
 
       {!locked && (
         <Button className="w-full" disabled={busy} onClick={take}>
-          {busy ? 'Exposing…' : 'Take the photo'}
+          {busy ? 'Exposing…' : <><Shutter /> Take the photo</>}
         </Button>
       )}
     </div>
@@ -342,8 +352,11 @@ function SliderSimView({ step, status, onResult, onActivity }) {
       </div>
 
       {!locked && (
-        <Button className="w-full" onClick={() => onResult(step.check(value), { chosen: value })}>
-          Check
+        <Button
+          className="w-full"
+          onClick={() => onResult(step.check(value), { chosen: value, shot: { scene: step.scene, params: params } })}
+        >
+          <Shutter /> Take the shot
         </Button>
       )}
     </div>
@@ -400,9 +413,11 @@ function TriangleView({ step, status, onResult, onActivity }) {
   const balanced = Math.abs(sum) < 0.5
 
   function check() {
-    if (balanced) onResult(true)
+    const shot = { scene: step.scene, params }
+    if (balanced) onResult(true, { shot })
     else
       onResult(false, {
+        shot,
         override:
           sum > 0
             ? 'Overexposed — too much light. Trade some away: narrow the aperture, speed up the shutter, or lower the ISO.'
@@ -444,7 +459,7 @@ function TriangleView({ step, status, onResult, onActivity }) {
 
       {!locked && (
         <Button className="w-full mt-2" onClick={check}>
-          Check
+          <Shutter /> Take the shot
         </Button>
       )}
     </div>
@@ -636,7 +651,9 @@ function DofView({ step, status, onResult }) {
     .sort((a, b) => b.dist - a.dist)
 
   function check() {
-    onResult(step.check({ total: d.total, near: d.near, far: d.far, focal, fnum, distM }), {})
+    onResult(step.check({ total: d.total, near: d.near, far: d.far, focal, fnum, distM }), {
+      shot: { scene: 'portrait', params: { aperture: fnum, exposure: 0 } },
+    })
   }
 
   return (
@@ -717,7 +734,7 @@ function DofView({ step, status, onResult }) {
 
       {!locked && (
         <Button className="w-full mt-1" onClick={check}>
-          Check
+          <Shutter /> Take the shot
         </Button>
       )}
     </div>
@@ -811,8 +828,11 @@ function MotionView({ step, status, onResult }) {
         <span>1/8 · blur</span>
       </div>
       {!locked && (
-        <Button className="w-full" onClick={() => onResult(step.check(si), { chosen: si })}>
-          Check
+        <Button
+          className="w-full"
+          onClick={() => onResult(step.check(si), { chosen: si, shot: { scene: 'portrait', params: { motion: Math.round(si * 0.85) } } })}
+        >
+          <Shutter /> Take the shot
         </Button>
       )}
     </div>
