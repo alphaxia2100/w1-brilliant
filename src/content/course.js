@@ -16,7 +16,6 @@ const F_STOPS = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
 // headroom scene, so "wide open = as bright as it gets" — never blown out.
 const apertureToExposure = (f) => -F_STOPS.indexOf(f) * 0.6
 
-const SHUTTER = ['1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8']
 const ISO_STOPS = [100, 200, 400, 800, 1600, 3200, 6400, 12800]
 // Spread across the full range so every stop (to 12800) visibly changes the image.
 const isoToExposure = (iso) => clamp(Math.log2(iso / 100) * 0.4, 0, 2.8)

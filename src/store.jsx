@@ -163,6 +163,15 @@ export function AppProvider({ children }) {
         await createUserWithEmailAndPassword(auth, email, password)
       }
       if (displayName) await updateProfile(auth.currentUser, { displayName })
+      // onAuthStateChanged won't re-fire for profile/link updates — reflect them now,
+      // and refresh the denormalized doc fields (email / isAnonymous: false).
+      const cur = auth.currentUser
+      const u = { uid: cur.uid, email: cur.email, displayName: displayName || cur.displayName, isAnonymous: cur.isAnonymous }
+      setUser(u)
+      setProgress((prev) => {
+        persist(u, prev)
+        return prev
+      })
       return
     }
     // LOCAL mode: migrate any anonymous progress to the new account

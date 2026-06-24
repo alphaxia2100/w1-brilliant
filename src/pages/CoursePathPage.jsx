@@ -50,7 +50,16 @@ export default function CoursePathPage() {
                     borderColor: isDone ? '#D8E82E' : isNext ? '#141414' : '#E5E5E5',
                   }}
                 >
-                  {isDone ? '✓' : locked ? '🔒' : lesson.number}
+                  {isDone ? (
+                    '✓'
+                  ) : locked ? (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2.4" aria-hidden="true">
+                      <rect x="5" y="11" width="14" height="9" rx="2" />
+                      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                    </svg>
+                  ) : (
+                    lesson.number
+                  )}
                 </span>
                 <span className="min-w-0">
                   <span className="block font-semibold text-[16px] leading-tight truncate">

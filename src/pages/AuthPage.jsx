@@ -31,6 +31,23 @@ export default function AuthPage() {
     }
   }
 
+  async function guest() {
+    setError('')
+    setBusy(true)
+    try {
+      await tryAnonymously()
+    } catch (err) {
+      const code = err?.code || ''
+      setError(
+        code === 'auth/operation-not-allowed' || code === 'auth/admin-restricted-operation'
+          ? 'Guest mode isn’t enabled yet — sign up with an email instead (or enable Anonymous sign-in in Firebase).'
+          : err?.message?.replace('Firebase: ', '') || 'Couldn’t start a guest session.',
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const field =
     'w-full px-4 py-3 rounded-tile border border-hairline text-[15px] outline-none focus:border-link focus:ring-2 focus:ring-link/30 transition'
 
@@ -102,7 +119,7 @@ export default function AuthPage() {
         <span className="h-px flex-1 bg-hairline" />
       </div>
 
-      <Button variant="ghost" className="w-full" onClick={tryAnonymously}>
+      <Button variant="ghost" className="w-full" disabled={busy} onClick={guest}>
         Try a lesson without an account
       </Button>
 
