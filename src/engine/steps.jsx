@@ -123,6 +123,8 @@ function Shutter() {
 export function PolaroidReveal({ shot, onDone }) {
   const doneRef = useRef(onDone)
   doneRef.current = onDone
+  const tiltRef = useRef(null)
+  if (tiltRef.current === null) tiltRef.current = Math.random() * 11 - 5.5 // random orientation each shot
   useEffect(() => {
     const t = setTimeout(() => doneRef.current(), 2800)
     return () => clearTimeout(t)
@@ -135,7 +137,8 @@ export function PolaroidReveal({ shot, onDone }) {
       onClick={onDone}
       role="status"
     >
-      <div className="polaroid-in bg-white rounded-[8px] p-3 pb-9" style={{ width: 252, boxShadow: '0 18px 44px rgba(0,0,0,0.32)' }}>
+      <div style={{ transform: `rotate(${tiltRef.current}deg)` }}>
+        <div className="polaroid-in bg-white rounded-[8px] p-3 pb-9" style={{ width: 252, boxShadow: '0 18px 44px rgba(0,0,0,0.32)' }}>
         <div className="rounded-[3px] overflow-hidden bg-[#10131A]" style={{ aspectRatio: shot.image ? '2 / 1' : '1 / 1' }}>
           {shot.image ? (
             <img src={shot.image} alt="" className="block w-full polaroid-develop" />
@@ -147,6 +150,7 @@ export function PolaroidReveal({ shot, onDone }) {
         </div>
         <div className="text-center mt-3 font-mono text-[12px]" style={{ color: keeper ? '#1F8A3B' : '#888' }}>
           {keeper ? '★ keeper' : 'experiment'}
+        </div>
         </div>
       </div>
     </div>
@@ -655,12 +659,15 @@ function Silhouette({ kind, x, groundY, h, color, blur, opacity }) {
         <ellipse cx={x} cy={groundY + h * 0.25} rx={h * 1.3} ry={h * 0.8} fill={color} />
       </g>
     )
-  const w = h * 0.44
+  // person — a smooth head-and-shoulders portrait bust
+  const headR = h * 0.15
+  const headCy = groundY - h * 0.8
+  const sw = h * 0.52
   return (
     <g style={style}>
-      <circle cx={x} cy={groundY - h * 0.85} r={h * 0.15} fill={color} />
+      <ellipse cx={x} cy={headCy} rx={headR * 0.9} ry={headR} fill={color} />
       <path
-        d={`M ${x - w * 0.5} ${groundY} L ${x - w * 0.4} ${groundY - h * 0.62} Q ${x} ${groundY - h * 0.8} ${x + w * 0.4} ${groundY - h * 0.62} L ${x + w * 0.5} ${groundY} Z`}
+        d={`M ${x - sw} ${groundY} C ${x - sw} ${groundY - h * 0.4}, ${x - h * 0.26} ${headCy + headR * 0.5}, ${x} ${headCy + headR * 0.5} C ${x + h * 0.26} ${headCy + headR * 0.5}, ${x + sw} ${groundY - h * 0.4}, ${x + sw} ${groundY} Z`}
         fill={color}
       />
     </g>
@@ -697,8 +704,8 @@ function DofView({ step, status, onResult }) {
   const coneHalf = Math.max(34, Math.min(116, span * Math.tan(Math.atan(12 / focal))))
 
   const objects = [
-    { kind: 'rock', dist: u * 0.5 },
-    { kind: 'flower', dist: u },
+    { kind: 'flower', dist: u * 0.5 }, // foreground bouquet (like the dofsimulator reference)
+    { kind: 'person', dist: u }, // the portrait subject
     { kind: 'tree', dist: u * 2.4 },
     { kind: 'hill', dist: u * 7 },
   ]

@@ -106,11 +106,11 @@ body {
 }
 @keyframes polaroid-in {
   0% {
-    transform: translateY(18px) scale(0.9) rotate(-2.5deg);
+    transform: translateY(18px) scale(0.9);
     opacity: 0;
   }
   100% {
-    transform: translateY(0) scale(1) rotate(-2.5deg);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
