@@ -85,15 +85,29 @@ function buildPortrait(N) {
         if (dx * dx + dy * dy < N * N * lr) cells[r][c] = color.slice()
       }
   }
-  // centered subject: a dark, high-contrast silhouette so sharp edges read clearly
+  // centered subject: a flower (sunflower-ish) — far nicer than a silhouette
+  const cx0 = N * 0.5
+  const cy0 = N * 0.4
+  const petalAng = [0, 1, 2, 3, 4, 5].map((k) => (k * Math.PI) / 3 - Math.PI / 2)
   for (let r = 0; r < N; r++)
     for (let c = 0; c < N; c++) {
-      const hx = c - N * 0.5
-      const hy = r - N * 0.41
-      const head = hx * hx + hy * hy < N * N * 0.017
-      const shoulders = r > N * 0.6 && Math.abs(c - N * 0.5) < N * (0.17 + (r / N) * 0.2)
-      if (head || shoulders) {
-        cells[r][c] = [52 + (rnd() - 0.5) * 10, 58 + (rnd() - 0.5) * 10, 74 + (rnd() - 0.5) * 10]
+      let col = null
+      // stem
+      if (Math.abs(c - cx0) <= 0.9 && r > cy0 && r < N * 0.93) col = [78, 140, 52]
+      // leaf
+      const lx = c - (cx0 + 2.4)
+      const ly = r - N * 0.66
+      if (c > cx0 && lx * lx + ly * ly * 2.2 < 5.5) col = [92, 156, 60]
+      // petals
+      for (const a of petalAng) {
+        const px = cx0 + Math.cos(a) * N * 0.135
+        const py = cy0 + Math.sin(a) * N * 0.135
+        if ((c - px) ** 2 + (r - py) ** 2 < (N * 0.072) ** 2) col = [244, 196, 48]
+      }
+      // center (drawn last so it sits on top)
+      if ((c - cx0) ** 2 + (r - cy0) ** 2 < (N * 0.078) ** 2) col = [150, 92, 30]
+      if (col) {
+        cells[r][c] = col.map((v) => v + (rnd() - 0.5) * 10)
         subject[r][c] = true
       }
     }

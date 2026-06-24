@@ -135,38 +135,17 @@ const lessons = [
         ],
       },
       {
-        kind: 'predict',
-        prompt: 'Which aperture lets in more light: f/2 or f/16?',
-        options: ['f/16', 'f/2'],
-        answer: 1,
+        kind: 'rank',
+        prompt: 'Put these apertures in order — the one that lets in the MOST light first.',
+        scale: ['most light', 'least light'],
+        items: [{ label: 'f/8' }, { label: 'f/1.4' }, { label: 'f/16' }],
+        solution: [1, 0, 2], // f/1.4 (widest) → f/8 → f/16 (narrowest)
         feedback: {
-          correct: 'f-numbers are fractions: f/2 is a much bigger opening than f/16, so it lets in far more light.',
-          byOption: {
-            0: 'An f-number is a fraction — the focal length ÷ the opening. Which is the bigger slice of pie: 1/16, or 1/2?',
-          },
+          correct: 'Exactly. An f-number is a fraction, so f/1.4 is the widest opening (most light) and f/16 the narrowest (least).',
           stages: [
-            'Think of f as a fraction. A bigger number on the bottom makes a bigger slice, or a smaller one?',
-            'The smaller f-number is the bigger opening. Which of these two numbers is smaller?',
+            'Remember: a smaller f-number means a bigger opening. Which number is smallest?',
+            'Order by opening size: f/1.4 is widest, then f/8, then f/16 is a pinhole.',
           ],
-          showWhy: {
-            widget: 'TwoIris',
-            params: { a: 2, b: 16 },
-            caption: 'f/2 vs f/16 — the bar shows how much light each opening lets through.',
-          },
-        },
-      },
-      {
-        kind: 'predict',
-        prompt: 'You’re indoors and your photo is too dark. Which aperture lets in the most light?',
-        options: ['f/16', 'f/8', 'f/1.4'],
-        answer: 2,
-        feedback: {
-          correct: 'f/1.4 — the smallest number, the widest hole, the most light. Made for dim rooms.',
-          byOption: {
-            0: 'f/16 is the smallest opening of the three — the least light, not the most.',
-            1: 'f/8 is middling. One of these is much wider — and wider means a smaller f-number.',
-          },
-          stages: ['Smaller f-number = wider hole = more light. Which option is the smallest number?'],
         },
       },
     ],
@@ -298,18 +277,16 @@ const lessons = [
         },
       },
       {
-        kind: 'predict',
-        prompt: 'You want a waterfall to look silky and smooth. Which shutter speed?',
-        options: ['1/1000s', '1/8s'],
-        answer: 1,
+        kind: 'rank',
+        prompt: 'Order these shutter speeds by how much they BLUR moving water — most blur first.',
+        scale: ['most blur (silky)', 'frozen'],
+        items: [{ label: '1/125s' }, { label: '1/8s' }, { label: '1/1000s' }],
+        solution: [1, 0, 2], // 1/8 (slowest, silkiest) → 1/125 → 1/1000 (frozen)
         feedback: {
-          correct: 'A slow shutter lets the water keep moving while it’s open — that’s the silky blur.',
-          byOption: {
-            0: 'Silky water is water that MOVED while the shutter was open. Does a tiny slice of time let it move, or freeze it still?',
-          },
+          correct: 'A slow shutter (1/8s) stays open long enough for the water to smear silky; a fast one (1/1000s) freezes every droplet.',
           stages: [
-            'Silky means the water blurred as it flowed — does that need a long exposure, or a short one?',
-            'Motion blur comes from a slow shutter. Which option is the slower one?',
+            'Longer the shutter stays open, the more the water moves and blurs. Which is the slowest?',
+            'Order by exposure time: 1/8s (slowest, silkiest), 1/125s, then 1/1000s (fastest, frozen).',
           ],
         },
       },

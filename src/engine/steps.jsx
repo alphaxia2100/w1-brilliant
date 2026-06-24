@@ -619,13 +619,27 @@ function FixedRow({ label, value }) {
 
 function Silhouette({ kind, x, groundY, h, color, blur, opacity }) {
   const style = { filter: blur ? `blur(${blur}px)` : undefined, opacity }
-  if (kind === 'flower')
+  if (kind === 'flower') {
+    const cyB = groundY - h * 0.78
+    const petals = [0, 1, 2, 3, 4].map((k) => {
+      const a = ((-90 + k * 72) * Math.PI) / 180
+      return [x + Math.cos(a) * h * 0.17, cyB + Math.sin(a) * h * 0.17]
+    })
     return (
       <g style={style}>
-        <rect x={x - h * 0.018} y={groundY - h * 0.6} width={h * 0.036} height={h * 0.6} fill={color} />
-        <circle cx={x} cy={groundY - h * 0.64} r={h * 0.13} fill={color} />
-        <circle cx={x - h * 0.11} cy={groundY - h * 0.56} r={h * 0.07} fill={color} />
-        <circle cx={x + h * 0.11} cy={groundY - h * 0.56} r={h * 0.07} fill={color} />
+        <rect x={x - h * 0.025} y={cyB} width={h * 0.05} height={groundY - cyB} fill={color} />
+        <ellipse cx={x - h * 0.14} cy={groundY - h * 0.34} rx={h * 0.13} ry={h * 0.05} fill={color} transform={`rotate(-28 ${x - h * 0.14} ${groundY - h * 0.34})`} />
+        {petals.map((p, i) => (
+          <circle key={i} cx={p[0]} cy={p[1]} r={h * 0.12} fill={color} />
+        ))}
+        <circle cx={x} cy={cyB} r={h * 0.11} fill={color} />
+      </g>
+    )
+  }
+  if (kind === 'rock')
+    return (
+      <g style={style}>
+        <ellipse cx={x} cy={groundY - h * 0.22} rx={h * 0.55} ry={h * 0.4} fill={color} />
       </g>
     )
   if (kind === 'tree')
@@ -683,8 +697,8 @@ function DofView({ step, status, onResult }) {
   const coneHalf = Math.max(34, Math.min(116, span * Math.tan(Math.atan(12 / focal))))
 
   const objects = [
-    { kind: 'flower', dist: u * 0.5 },
-    { kind: 'person', dist: u },
+    { kind: 'rock', dist: u * 0.5 },
+    { kind: 'flower', dist: u },
     { kind: 'tree', dist: u * 2.4 },
     { kind: 'hill', dist: u * 7 },
   ]
@@ -948,6 +962,79 @@ function MotionView({ step, status, onResult }) {
   )
 }
 
+/* ---------- rank (tap tiles into the correct order — replaces multiple choice) ---------- */
+function RankView({ step, status, onResult }) {
+  const [placed, setPlaced] = useState([])
+  const locked = status === 'correct'
+  const items = step.items
+  const inTray = items.map((_, i) => i).filter((i) => !placed.includes(i))
+  const full = placed.length === items.length
+
+  function placeTile(i) {
+    if (locked || placed.includes(i)) return
+    setPlaced((p) => [...p, i])
+  }
+  function removeAt(pos) {
+    if (locked) return
+    setPlaced((p) => p.filter((_, idx) => idx !== pos))
+  }
+  function check() {
+    onResult(JSON.stringify(placed) === JSON.stringify(step.solution), { chosen: placed.join(',') })
+  }
+
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      {step.scale && (
+        <div className="flex justify-between text-[12px] text-muted mb-2 px-1">
+          <span>← {step.scale[0]}</span>
+          <span>{step.scale[1]} →</span>
+        </div>
+      )}
+      <div className="flex gap-2 mb-4">
+        {items.map((_, pos) => {
+          const idx = placed[pos]
+          const filled = idx != null
+          return (
+            <button
+              key={pos}
+              disabled={locked || !filled}
+              onClick={() => removeAt(pos)}
+              className="flex-1 h-14 rounded-tile flex items-center justify-center font-mono text-[15px] transition"
+              style={{
+                border: `2px ${filled ? 'solid' : 'dashed'} ${filled ? '#141414' : '#E5E5E5'}`,
+                background: filled ? '#fff' : '#FAFAFA',
+              }}
+            >
+              {filled ? items[idx].label : <span className="text-muted/50 text-[12px]">{pos + 1}</span>}
+            </button>
+          )
+        })}
+      </div>
+      <div className="flex gap-2 flex-wrap mb-5 min-h-[46px]">
+        {inTray.map((i) => (
+          <button
+            key={i}
+            disabled={locked}
+            onClick={() => placeTile(i)}
+            className="px-4 py-2.5 rounded-tile border border-hairline font-mono text-[15px] bg-white shadow-tile active:translate-y-[1px]"
+          >
+            {items[i].label}
+          </button>
+        ))}
+        {inTray.length === 0 && !locked && (
+          <span className="text-[12px] text-muted self-center">Tap a slot to move it back</span>
+        )}
+      </div>
+      {!locked && (
+        <Button className="w-full" disabled={!full} onClick={check}>
+          Check the order
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export const STEP_VIEWS = {
   intro: IntroView,
   predict: PredictView,
@@ -957,4 +1044,5 @@ export const STEP_VIEWS = {
   compose: ComposeView,
   dof: DofView,
   motion: MotionView,
+  rank: RankView,
 }
