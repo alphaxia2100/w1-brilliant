@@ -167,16 +167,61 @@ const lessons = [
       {
         kind: 'dof',
         prompt:
-          'Shoot a portrait with a soft, blurred background. Shrink the green “in-focus” band to under 1 foot — using any of the three controls.',
-        start: { focal: 85, fnum: 8, distM: 3, sensor: 'Full frame' },
-        check: ({ total }) => total <= 305, // ~1 ft, in mm
+          'Meet the green band — the slice of the scene that comes out sharp. Open the aperture and watch it shrink. Get it under 2 feet.',
+        controls: ['aperture'],
+        lock: { focal: 50, distM: 3 },
+        start: { fnum: 8 },
+        check: ({ total }) => total <= 600,
+        feedback: {
+          correct: 'A wider aperture (lower f-number) shrinks the band — a shallower depth of field. That’s aperture’s second job.',
+          stages: [
+            'Watch the green band as you drag. Which way makes it narrower?',
+            'Wider apertures (low f-numbers) blur more. Head toward the wide end, then take the shot.',
+          ],
+        },
+      },
+      {
+        kind: 'dof',
+        prompt: 'Aperture’s fixed now. Distance matters too — move closer to your subject and watch the band shrink. Get it under 2 feet.',
+        controls: ['distance'],
+        lock: { focal: 50, fnum: 4 },
+        start: { distM: 7 },
+        check: ({ total }) => total <= 600,
+        feedback: {
+          correct: 'The closer you focus, the shallower the depth of field — even at the same aperture.',
+          stages: [
+            'Which direction moves the subject closer to the camera?',
+            'A closer subject means a shallower band. Slide toward the near end, then take the shot.',
+          ],
+        },
+      },
+      {
+        kind: 'dof',
+        prompt: 'Aperture and distance fixed. A longer lens blurs the background too — zoom in and watch the band shrink. Get it under 2 feet.',
+        controls: ['focal'],
+        lock: { distM: 4, fnum: 4 },
+        start: { focal: 14 },
+        check: ({ total }) => total <= 600,
+        feedback: {
+          correct: 'A longer lens gives a shallower depth of field — it’s why portrait lenses tend to be long.',
+          stages: [
+            'Which way is a longer lens — more millimetres, or fewer?',
+            'Longer (more mm) blurs more. Zoom toward the long end, then take the shot.',
+          ],
+        },
+      },
+      {
+        kind: 'dof',
+        prompt: 'Now all three are yours (plus sensor size). Make the background truly melt — shrink the band under 1 foot, any way you like.',
+        controls: ['aperture', 'distance', 'focal', 'sensor'],
+        start: { focal: 85, fnum: 5.6, distM: 3 },
+        check: ({ total }) => total <= 305,
         feedback: {
           correct:
-            'Shallow depth of field — only your subject stays sharp, the rest falls away. And notice: you got there by opening the aperture, moving closer, OR using a longer lens. All three control depth of field — it was never just the aperture.',
+            'A creamy, shallow depth of field — built from all four controls together. Aperture was never the whole story.',
           stages: [
-            'The green band is what comes out sharp. How do you make that band narrower?',
-            'A wider aperture, a longer lens, or a closer subject each shrink the band — try one and watch the readout.',
-            'Open the aperture wide, zoom the lens in, and step closer — then Check.',
+            'Stack the effects: open the aperture, step closer, AND zoom in.',
+            'Push all three toward shallow — wide aperture, close subject, long lens — then take the shot.',
           ],
         },
       },
@@ -187,10 +232,9 @@ const lessons = [
         options: ['Move closer to your subject', 'Use a narrower aperture (higher f-number)', 'Use a longer lens'],
         answer: 1,
         feedback: {
-          correct:
-            'A narrower aperture deepens the depth of field. Moving closer or zooming in would do the opposite — they make it shallower.',
+          correct: 'A narrower aperture deepens the depth of field. Moving closer or zooming in would do the opposite.',
           byOption: {
-            0: 'In the playground, when you moved the subject CLOSER, did the green band grow or shrink? You want it to grow.',
+            0: 'When you moved the subject CLOSER, did the band grow or shrink? You want it to grow.',
             2: 'A longer lens — did that widen the sharp band, or narrow it? You need the opposite.',
           },
           stages: [
@@ -218,7 +262,7 @@ const lessons = [
       },
       {
         kind: 'motion',
-        prompt: 'The car is speeding past, smeared into a blur. Freeze it razor-sharp.',
+        prompt: 'A car is speeding past — sharp to your eyes. Set a shutter speed, then take the shot. Freeze it razor-sharp.',
         start: 5,
         check: (si) => si <= 1,
         feedback: {

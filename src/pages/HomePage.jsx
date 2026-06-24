@@ -5,6 +5,7 @@ import { Button, Card, Logo } from '../components/ui.jsx'
 import PixelScene from '../sim/PixelScene.jsx'
 
 function ShotThumb({ shot, size = 88 }) {
+  const keeper = shot.verdict !== 'experiment'
   return (
     <div
       className="shrink-0 rounded-tile overflow-hidden border border-hairline relative"
@@ -12,14 +13,21 @@ function ShotThumb({ shot, size = 88 }) {
       title={shot.lessonTitle}
     >
       <PixelScene scene={shot.scene} size={size} rounded={false} {...shot.params} />
-      {shot.verdict === 'experiment' && (
-        <span
-          className="absolute bottom-0 inset-x-0 text-[9px] text-center text-white py-0.5"
-          style={{ background: 'rgba(20,20,20,0.6)' }}
-        >
-          experiment
-        </span>
-      )}
+      <span
+        className="absolute bottom-0 inset-x-0 text-[9px] text-center py-0.5 text-white"
+        style={{ background: keeper ? 'rgba(31,138,59,0.74)' : 'rgba(20,20,20,0.6)' }}
+      >
+        {keeper ? 'keeper' : 'experiment'}
+      </span>
+    </div>
+  )
+}
+
+function MetricChip({ label, value }) {
+  return (
+    <div className="flex-1 bg-surface rounded-tile px-3 py-2.5 text-center">
+      <div className="text-[20px] font-semibold leading-none">{value}</div>
+      <div className="text-[11px] text-muted mt-1">{label}</div>
     </div>
   )
 }
@@ -33,59 +41,37 @@ export default function HomePage() {
   const correctCount = Object.values(lessonsMap).reduce((a, l) => a + (l.correct || 0), 0)
   const shots = progress.shots || []
   const recentShots = shots.slice().reverse()
-  const keeperCount = shots.filter((s) => s.verdict === 'keeper').length
-  const expCount = shots.filter((s) => s.verdict === 'experiment').length
+  const keeperCount = shots.filter((s) => s.verdict !== 'experiment').length
+  const expCount = shots.length - keeperCount
   const resume = progress.lastLesson
   const resumeLesson = resume ? getLesson(resume.lessonId) : null
   const firstName = user?.displayName?.split(' ')[0]
+  const nextLesson = course.lessons.find((l) => !done.includes(l.id)) || course.lessons[0]
 
   return (
-    <div className="min-h-[100dvh] max-w-col w-full mx-auto px-5 py-6 flex flex-col">
-      <header className="flex items-center justify-between mb-8">
+    <div className="min-h-[100dvh] max-w-col w-full mx-auto px-5 py-6 flex flex-col gap-6">
+      <header className="flex items-center justify-between">
         <Logo />
-        <div className="flex items-center gap-3">
-          <span className="text-[13px] font-medium bg-surface px-3 py-1.5 rounded-full">
-            {progress.totalXp} XP
-          </span>
-          <button onClick={logOut} className="text-[13px] text-muted hover:text-ink transition">
-            Log out
-          </button>
-        </div>
+        <button onClick={logOut} className="text-[13px] text-muted hover:text-ink transition">
+          Log out
+        </button>
       </header>
 
-      <h1 className="text-[26px] font-semibold tracking-tight mb-3">
-        {firstName ? `Hi, ${firstName}.` : 'Welcome.'} Ready to make a photo?
-      </h1>
-      <div className="flex gap-4 text-[13px] text-muted mb-6">
-        <span>
-          <span className="text-correct font-medium">{correctCount}</span> answered correctly
-        </span>
-        <span>
-          <span className="text-ink font-medium">
-            {done.length}/{totalLessons}
-          </span>{' '}
-          lessons done
-        </span>
+      <div>
+        <h1 className="text-[27px] font-semibold tracking-tight leading-tight">
+          {firstName ? `Hi, ${firstName}.` : 'Welcome.'}
+        </h1>
+        <p className="text-muted text-[15px] mt-1">Ready to make a photo?</p>
       </div>
 
-      {recentShots.length > 0 && (
-        <div className="mb-5">
-          <div className="flex items-baseline justify-between mb-2">
-            <h2 className="text-[15px] font-semibold">Your roll</h2>
-            <span className="text-[12px] text-muted">
-              {keeperCount} {keeperCount === 1 ? 'keeper' : 'keepers'} · {expCount} experiments
-            </span>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-            {recentShots.map((s) => (
-              <ShotThumb key={s.key + s.createdAt} shot={s} />
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="flex gap-2">
+        <MetricChip label="XP" value={progress.totalXp} />
+        <MetricChip label="Answered right" value={correctCount} />
+        <MetricChip label="Lessons" value={`${done.length}/${totalLessons}`} />
+      </div>
 
       {resumeLesson ? (
-        <Card className="p-5 mb-4">
+        <Card className="p-5">
           <p className="text-[12px] uppercase tracking-wide text-muted font-medium mb-1">
             Pick up where you left off
           </p>
@@ -95,16 +81,38 @@ export default function HomePage() {
           </Button>
         </Card>
       ) : (
-        <Card className="p-5 mb-4 overflow-hidden">
-          <div className="flex justify-center mb-4">
-            <PixelScene scene="landscape" size={220} />
-          </div>
-          <h2 className="text-[19px] font-semibold mb-1">Start the course</h2>
-          <p className="text-muted text-[15px] mb-4">Begin with how a photo is actually made.</p>
-          <Button className="w-full" onClick={() => navigate(`/lesson/${course.lessons[0].id}`)}>
-            Start Lesson 1
+        <Card className="p-5">
+          {done.length === 0 && (
+            <div className="flex justify-center mb-4">
+              <PixelScene scene="landscape" size={200} />
+            </div>
+          )}
+          <h2 className="text-[19px] font-semibold mb-1">{done.length ? 'Keep going' : 'Start the course'}</h2>
+          <p className="text-muted text-[15px] mb-4">
+            {done.length ? 'Pick up the next lesson.' : 'Begin with how a photo is actually made — and start your roll.'}
+          </p>
+          <Button className="w-full" onClick={() => navigate(`/lesson/${nextLesson.id}`)}>
+            {done.length ? `Next: ${nextLesson.title}` : 'Start Lesson 1'}
           </Button>
         </Card>
+      )}
+
+      {recentShots.length > 0 && (
+        <div>
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-[15px] font-semibold">Your roll</h2>
+            <span className="text-[12px] text-muted">
+              {keeperCount} {keeperCount === 1 ? 'keeper' : 'keepers'} · {expCount}{' '}
+              {expCount === 1 ? 'experiment' : 'experiments'}
+            </span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 items-start">
+            <ShotThumb shot={recentShots[0]} size={132} />
+            {recentShots.slice(1).map((s) => (
+              <ShotThumb key={s.key + s.createdAt} shot={s} size={88} />
+            ))}
+          </div>
+        </div>
       )}
 
       <button

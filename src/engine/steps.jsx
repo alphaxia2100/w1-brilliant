@@ -573,6 +573,16 @@ function ReadoutCard({ label, value }) {
   )
 }
 
+// A held (non-adjustable) factor — shown so the learner knows it's fixed this step.
+function FixedRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between mb-2 text-[13px] text-muted/70">
+      <span>{label}</span>
+      <span className="font-mono">{value} · fixed</span>
+    </div>
+  )
+}
+
 function Silhouette({ kind, x, groundY, h, color, blur, opacity }) {
   const style = { filter: blur ? `blur(${blur}px)` : undefined, opacity }
   if (kind === 'flower')
@@ -610,12 +620,13 @@ function Silhouette({ kind, x, groundY, h, color, blur, opacity }) {
 }
 
 function DofView({ step, status, onResult }) {
-  const [fi, setFi] = useState(Math.max(0, FOCALS.indexOf(step.start?.focal ?? 50)))
-  const [ai, setAi] = useState(Math.max(0, APS_D.indexOf(step.start?.fnum ?? 5.6)))
-  const [distM, setDistM] = useState(step.start?.distM ?? 3)
-  const [sensorKey, setSensorKey] = useState(step.start?.sensor ?? 'Full frame')
+  const init = { focal: 50, fnum: 5.6, distM: 3, sensor: 'Full frame', ...(step.lock || {}), ...(step.start || {}) }
+  const controls = step.controls || ['distance', 'focal', 'aperture']
+  const [fi, setFi] = useState(Math.max(0, FOCALS.indexOf(init.focal)))
+  const [ai, setAi] = useState(Math.max(0, APS_D.indexOf(init.fnum)))
+  const [distM, setDistM] = useState(init.distM)
+  const [sensorKey, setSensorKey] = useState(init.sensor)
   const [imperial, setImperial] = useState(true)
-  const [adv, setAdv] = useState(false)
   const locked = status === 'correct'
 
   const focal = FOCALS[fi]
@@ -709,26 +720,37 @@ function DofView({ step, status, onResult }) {
         </div>
       </div>
 
-      <SliderRow label="Distance" value={dist(u)}>
-        <Slider value={distM} min={0.5} max={12} step={0.1} onChange={setDistM} ariaLabel="Subject distance" />
-      </SliderRow>
-      <SliderRow label="Focal length" value={`${focal}mm`}>
-        <Slider value={fi} min={0} max={FOCALS.length - 1} step={1} onChange={setFi} ariaLabel="Focal length" />
-      </SliderRow>
-      <SliderRow label="Aperture" value={`f/${fnum % 1 === 0 ? fnum : fnum.toFixed(1)}`}>
-        <Slider value={ai} min={0} max={APS_D.length - 1} step={1} onChange={setAi} ariaLabel="Aperture" />
-      </SliderRow>
-
-      <button onClick={() => setAdv(!adv)} className="text-[12px] text-link mb-3">
-        {adv ? '− Hide sensor size' : '+ Sensor size'}
-      </button>
-      {adv && (
-        <div className="flex gap-1.5 flex-wrap mb-3">
-          {Object.keys(SENSORS).map((k) => (
-            <button key={k} onClick={() => setSensorKey(k)} className="px-2.5 py-1 rounded-[8px] text-[12px]" style={{ background: k === sensorKey ? '#141414' : '#F2F2F2', color: k === sensorKey ? '#fff' : '#666' }}>
-              {k}
-            </button>
-          ))}
+      {controls.includes('aperture') ? (
+        <SliderRow label="Aperture" value={`f/${fnum % 1 === 0 ? fnum : fnum.toFixed(1)}`}>
+          <Slider value={ai} min={0} max={APS_D.length - 1} step={1} onChange={setAi} ariaLabel="Aperture" />
+        </SliderRow>
+      ) : (
+        <FixedRow label="Aperture" value={`f/${fnum % 1 === 0 ? fnum : fnum.toFixed(1)}`} />
+      )}
+      {controls.includes('distance') ? (
+        <SliderRow label="Distance" value={dist(u)}>
+          <Slider value={distM} min={0.5} max={12} step={0.1} onChange={setDistM} ariaLabel="Subject distance" />
+        </SliderRow>
+      ) : (
+        <FixedRow label="Distance" value={dist(u)} />
+      )}
+      {controls.includes('focal') ? (
+        <SliderRow label="Focal length" value={`${focal}mm`}>
+          <Slider value={fi} min={0} max={FOCALS.length - 1} step={1} onChange={setFi} ariaLabel="Focal length" />
+        </SliderRow>
+      ) : (
+        <FixedRow label="Focal length" value={`${focal}mm`} />
+      )}
+      {controls.includes('sensor') && (
+        <div className="mb-3">
+          <div className="text-[13px] text-muted mb-1">Sensor size</div>
+          <div className="flex gap-1.5 flex-wrap">
+            {Object.keys(SENSORS).map((k) => (
+              <button key={k} onClick={() => setSensorKey(k)} className="px-2.5 py-1 rounded-[8px] text-[12px]" style={{ background: k === sensorKey ? '#141414' : '#F2F2F2', color: k === sensorKey ? '#fff' : '#666' }}>
+                {k}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -764,13 +786,41 @@ function drawCar(ctx, cx, baseY, h) {
   ctx.fill()
 }
 
+// One frame of the road scene. The LIVE preview always draws the car sharp (si=0)
+// — your eyes don't see motion blur. Blur only appears in a CAPTURED frame.
+function drawRoad(ctx, W, H, x, si, dashOff) {
+  ctx.clearRect(0, 0, W, H)
+  ctx.fillStyle = '#CFE6F5'
+  ctx.fillRect(0, 0, W, H * 0.6)
+  ctx.fillStyle = '#5C6168'
+  ctx.fillRect(0, H * 0.6, W, H * 0.4)
+  ctx.fillStyle = '#E9E9E9'
+  for (let i = -1; i * 72 - dashOff < W; i++) ctx.fillRect(i * 72 - dashOff, H * 0.78, 38, 5)
+  const carH = H * 0.17
+  const baseY = H * 0.73
+  const blurLen = (si / 7) * W * 0.45
+  const steps = Math.max(1, Math.round(blurLen / 6))
+  ctx.fillStyle = '#1E2230'
+  for (let i = steps; i >= 1; i--) {
+    ctx.globalAlpha = 0.1
+    drawCar(ctx, x - (i / steps) * blurLen, baseY, carH)
+  }
+  ctx.globalAlpha = si === 0 ? 1 : 0.92
+  drawCar(ctx, x, baseY, carH)
+  ctx.globalAlpha = 1
+}
+
 function MotionView({ step, status, onResult }) {
   const [si, setSi] = useState(step.start ?? 5)
-  const locked = status === 'correct'
+  const [captured, setCaptured] = useState(null) // { x, si, dashOff } once the shutter fires
   const ref = useRef(null)
   const raf = useRef(null)
   const siRef = useRef(si)
   siRef.current = si
+  const capRef = useRef(null)
+  capRef.current = captured
+  const xRef = useRef(-80)
+  const dashRef = useRef(0)
 
   useEffect(() => {
     const canvas = ref.current
@@ -779,61 +829,75 @@ function MotionView({ step, status, onResult }) {
     const W = canvas.width
     const H = canvas.height
     let startT = null
-    const speed = (W + 160) / 2600 // px per ms
+    const speed = (W + 160) / 2600
     const frame = (now) => {
       if (startT == null) startT = now
-      const t = now - startT
-      const x = ((t * speed) % (W + 160)) - 80
-      const dashOff = (t * speed) % 72
-      const s = siRef.current
-      ctx.clearRect(0, 0, W, H)
-      ctx.fillStyle = '#CFE6F5'
-      ctx.fillRect(0, 0, W, H * 0.6)
-      ctx.fillStyle = '#5C6168'
-      ctx.fillRect(0, H * 0.6, W, H * 0.4)
-      ctx.fillStyle = '#E9E9E9'
-      for (let i = -1; i * 72 - dashOff < W; i++) ctx.fillRect(i * 72 - dashOff, H * 0.78, 38, 5)
-      const carH = H * 0.17
-      const baseY = H * 0.73
-      const blurLen = (s / 7) * W * 0.45
-      const steps = Math.max(1, Math.round(blurLen / 6))
-      ctx.fillStyle = '#1E2230'
-      for (let i = steps; i >= 1; i--) {
-        ctx.globalAlpha = 0.1
-        drawCar(ctx, x - (i / steps) * blurLen, baseY, carH)
+      if (capRef.current) {
+        drawRoad(ctx, W, H, capRef.current.x, capRef.current.si, capRef.current.dashOff) // frozen photo, with blur
+      } else {
+        const t = now - startT
+        const x = ((t * speed) % (W + 160)) - 80
+        const dashOff = (t * speed) % 72
+        xRef.current = x
+        dashRef.current = dashOff
+        drawRoad(ctx, W, H, x, 0, dashOff) // live: sharp, like your eyes see it
       }
-      ctx.globalAlpha = s === 0 ? 1 : 0.9
-      drawCar(ctx, x, baseY, carH)
-      ctx.globalAlpha = 1
       raf.current = requestAnimationFrame(frame)
     }
     raf.current = requestAnimationFrame(frame)
     return () => raf.current && cancelAnimationFrame(raf.current)
   }, [])
 
-  const frozen = si <= 1
+  function shoot() {
+    const s = siRef.current
+    setCaptured({ x: xRef.current, si: s, dashOff: dashRef.current })
+    onResult(step.check(s), { chosen: s, shot: { scene: 'portrait', params: { motion: Math.round(s * 0.85) } } })
+  }
+
+  const frozen = captured && captured.si <= 1
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
-      <div className="rounded-tile overflow-hidden border border-hairline mb-4">
+      <div className="rounded-tile overflow-hidden border border-hairline mb-3 relative">
         <canvas ref={ref} width={600} height={300} className="w-full block" style={{ aspectRatio: '2 / 1' }} />
+        {captured && (
+          <span className="absolute top-2 left-2 text-[11px] font-medium text-white px-2 py-0.5 rounded-full" style={{ background: 'rgba(20,20,20,0.6)' }}>
+            your photo
+          </span>
+        )}
       </div>
-      <div className="flex items-center gap-4 mb-3">
-        <span className="font-mono text-[26px] font-medium leading-none">{TRI_SHUT[si]}s</span>
-        <span className="text-[13px]" style={{ color: frozen ? '#1F8A3B' : '#666' }}>{frozen ? 'Frozen sharp' : 'Motion blur'}</span>
-      </div>
-      <Slider value={si} min={0} max={7} step={1} onChange={setSi} ariaLabel="Shutter speed" />
-      <div className="flex justify-between text-[11px] text-muted mb-5 mt-2">
-        <span>1/1000 · freeze</span>
-        <span>1/8 · blur</span>
-      </div>
-      {!locked && (
-        <Button
-          className="w-full"
-          onClick={() => onResult(step.check(si), { chosen: si, shot: { scene: 'portrait', params: { motion: Math.round(si * 0.85) } } })}
-        >
-          <Shutter /> Take the shot
-        </Button>
+
+      {captured ? (
+        <>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="font-mono text-[20px] font-medium">{TRI_SHUT[captured.si]}s</span>
+            <span className="text-[13px]" style={{ color: frozen ? '#1F8A3B' : '#666' }}>
+              {frozen ? 'Frozen sharp' : 'The car moved while the shutter was open — motion blur'}
+            </span>
+          </div>
+          {status !== 'correct' && (
+            <Button variant="ghost" className="w-full" onClick={() => setCaptured(null)}>
+              Retake
+            </Button>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="text-[13px] text-muted mb-3">
+            Your eyes see the car sharp. Set the shutter speed, then take the shot.
+          </p>
+          <div className="flex items-center gap-3 mb-1">
+            <span className="font-mono text-[22px] font-medium">{TRI_SHUT[si]}s</span>
+          </div>
+          <Slider value={si} min={0} max={7} step={1} onChange={setSi} ariaLabel="Shutter speed" />
+          <div className="flex justify-between text-[11px] text-muted mb-4 mt-2">
+            <span>1/1000 · freeze</span>
+            <span>1/8 · blur</span>
+          </div>
+          <Button className="w-full" onClick={shoot}>
+            <Shutter /> Take the shot
+          </Button>
+        </>
       )}
     </div>
   )
