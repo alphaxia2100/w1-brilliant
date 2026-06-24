@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PixelScene from '../sim/PixelScene.jsx'
 import { meanBrightness, histogram } from '../sim/scene.js'
+import { dofCalc, fmtDist, dofTag, SENSORS } from '../sim/dof.js'
 import { Slider, Button, ApertureIris } from '../components/ui.jsx'
 
 const fmtF = (f) => (f % 1 === 0 ? String(f) : f.toFixed(1))
@@ -530,6 +531,292 @@ function ComposeView({ step, status, onResult, onActivity }) {
   )
 }
 
+/* ---------- dof (Lesson 3: side-view depth-of-field diagram, four factors) ---------- */
+const FOCALS = [14, 24, 35, 50, 85, 135, 200]
+const APS_D = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22]
+
+function SliderRow({ label, value, children }) {
+  return (
+    <div className="mb-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[13px] text-muted">{label}</span>
+        {value && <span className="font-mono text-[14px] font-medium">{value}</span>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function ReadoutCard({ label, value }) {
+  return (
+    <div className="flex-1 bg-surface rounded-tile px-2 py-2 text-center min-w-0">
+      <div className="text-[10px] uppercase tracking-wide text-muted truncate">{label}</div>
+      <div className="text-[17px] font-semibold font-mono leading-tight mt-0.5">{value}</div>
+    </div>
+  )
+}
+
+function Silhouette({ kind, x, groundY, h, color, blur, opacity }) {
+  const style = { filter: blur ? `blur(${blur}px)` : undefined, opacity }
+  if (kind === 'flower')
+    return (
+      <g style={style}>
+        <rect x={x - h * 0.018} y={groundY - h * 0.6} width={h * 0.036} height={h * 0.6} fill={color} />
+        <circle cx={x} cy={groundY - h * 0.64} r={h * 0.13} fill={color} />
+        <circle cx={x - h * 0.11} cy={groundY - h * 0.56} r={h * 0.07} fill={color} />
+        <circle cx={x + h * 0.11} cy={groundY - h * 0.56} r={h * 0.07} fill={color} />
+      </g>
+    )
+  if (kind === 'tree')
+    return (
+      <g style={style}>
+        <rect x={x - h * 0.05} y={groundY - h * 0.45} width={h * 0.1} height={h * 0.45} fill={color} />
+        <circle cx={x} cy={groundY - h * 0.6} r={h * 0.3} fill={color} />
+      </g>
+    )
+  if (kind === 'hill')
+    return (
+      <g style={style}>
+        <ellipse cx={x} cy={groundY + h * 0.25} rx={h * 1.3} ry={h * 0.8} fill={color} />
+      </g>
+    )
+  const w = h * 0.44
+  return (
+    <g style={style}>
+      <circle cx={x} cy={groundY - h * 0.85} r={h * 0.15} fill={color} />
+      <path
+        d={`M ${x - w * 0.5} ${groundY} L ${x - w * 0.4} ${groundY - h * 0.62} Q ${x} ${groundY - h * 0.8} ${x + w * 0.4} ${groundY - h * 0.62} L ${x + w * 0.5} ${groundY} Z`}
+        fill={color}
+      />
+    </g>
+  )
+}
+
+function DofView({ step, status, onResult }) {
+  const [fi, setFi] = useState(Math.max(0, FOCALS.indexOf(step.start?.focal ?? 50)))
+  const [ai, setAi] = useState(Math.max(0, APS_D.indexOf(step.start?.fnum ?? 5.6)))
+  const [distM, setDistM] = useState(step.start?.distM ?? 3)
+  const [sensorKey, setSensorKey] = useState(step.start?.sensor ?? 'Full frame')
+  const [imperial, setImperial] = useState(true)
+  const [adv, setAdv] = useState(false)
+  const locked = status === 'correct'
+
+  const focal = FOCALS[fi]
+  const fnum = APS_D[ai]
+  const coc = SENSORS[sensorKey]
+  const d = dofCalc({ focal, fnum, distM, coc })
+  const u = d.u
+  const dist = (mm) => fmtDist(mm, imperial)
+
+  const W = 960
+  const H = 300
+  const originX = 130
+  const rightX = 940
+  const span = rightX - originX
+  const groundY = 248
+  const midY = 150
+  const xOf = (mm) => Math.max(originX, Math.min(rightX, originX + (span * mm) / (mm + u)))
+  const xn = xOf(d.near)
+  const xf = d.far === Infinity ? rightX : xOf(d.far)
+  const coneHalf = Math.max(34, Math.min(116, span * Math.tan(Math.atan(12 / focal))))
+
+  const objects = [
+    { kind: 'flower', dist: u * 0.5 },
+    { kind: 'person', dist: u },
+    { kind: 'tree', dist: u * 2.4 },
+    { kind: 'hill', dist: u * 7 },
+  ]
+    .map((o) => {
+      const inBand = o.dist >= d.near && o.dist <= d.far
+      const out = inBand ? 0 : o.dist < d.near ? (d.near - o.dist) / d.near : (o.dist - d.far) / Math.max(d.far, 1)
+      return { ...o, x: xOf(o.dist), h: Math.max(15, Math.min(196, 96 * (u / o.dist))), inBand, blur: inBand ? 0 : Math.min(2 + out * 9, 11) }
+    })
+    .sort((a, b) => b.dist - a.dist)
+
+  function check() {
+    onResult(step.check({ total: d.total, near: d.near, far: d.far, focal, fnum, distM }), {})
+  }
+
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+
+      <div className="rounded-tile overflow-hidden border border-hairline mb-3 bg-white">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full block" style={{ aspectRatio: `${W} / ${H}` }} aria-hidden="true">
+          <polygon points={`${originX - 36},${midY} ${rightX},${midY - coneHalf} ${rightX},${midY + coneHalf}`} fill="#14141410" />
+          <rect x={xn} y="8" width={Math.max(2, xf - xn)} height={groundY - 8} fill="rgba(41,204,87,0.16)" />
+          <line x1={xn} y1="8" x2={xn} y2={groundY} stroke="#29CC57" strokeWidth="1.5" />
+          <line x1={xf} y1="8" x2={xf} y2={groundY} stroke="#29CC57" strokeWidth="1.5" strokeDasharray={d.far === Infinity ? '5 4' : undefined} />
+          <line x1={xOf(u)} y1="0" x2={xOf(u)} y2={groundY} stroke="#FF5D5D" strokeWidth="2" strokeDasharray="6 4" />
+          <line x1="0" y1={groundY} x2={W} y2={groundY} stroke="#E5E5E5" strokeWidth="2" />
+          {objects.map((o, i) => (
+            <Silhouette key={i} kind={o.kind} x={o.x} groundY={groundY} h={o.h} blur={o.blur} opacity={o.inBand ? 0.92 : 0.5} color={o.inBand ? '#2A2E3A' : '#9AA0AC'} />
+          ))}
+          <g>
+            <rect x="38" y={midY - 24} width="60" height="44" rx="6" fill="#141414" />
+            <rect x="92" y={midY - 12} width="22" height="22" rx="4" fill="#141414" />
+            <circle cx="68" cy={midY - 1} r="10" fill="#3A3F4C" stroke="#fff" strokeWidth="1.5" />
+          </g>
+          <text x="36" y={midY - 34} fill="#141414" fontSize="17" fontWeight="600" fontFamily="monospace">
+            {focal}mm f/{fnum % 1 === 0 ? fnum : fnum.toFixed(1)}
+          </text>
+          <text x={xn - 5} y={groundY + 22} fill="#1F8A3B" fontSize="13" textAnchor="end" fontFamily="monospace">{dist(d.near)}</text>
+          {d.far !== Infinity && (
+            <text x={xf + 5} y={groundY + 22} fill="#1F8A3B" fontSize="13" textAnchor="start" fontFamily="monospace">{dist(d.far)}</text>
+          )}
+        </svg>
+      </div>
+
+      <div className="flex gap-2 mb-2">
+        <ReadoutCard label="Near" value={dist(d.near)} />
+        <ReadoutCard label="Far" value={dist(d.far)} />
+        <ReadoutCard label="Total DoF" value={dist(d.total)} />
+        <ReadoutCard label="Hyperfocal" value={dist(d.H)} />
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[12px] font-semibold tracking-wide px-3 py-1 rounded-full" style={{ background: '#EEEDFE', color: '#3C3489' }}>
+          {dofTag(d.total)}
+        </span>
+        <div className="flex gap-1 text-[12px]">
+          {['m', 'ft'].map((un) => {
+            const on = (un === 'ft') === imperial
+            return (
+              <button key={un} onClick={() => setImperial(un === 'ft')} className="px-2.5 py-1 rounded-[8px]" style={{ background: on ? '#141414' : '#F2F2F2', color: on ? '#fff' : '#666' }}>
+                {un}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <SliderRow label="Distance" value={dist(u)}>
+        <Slider value={distM} min={0.5} max={12} step={0.1} onChange={setDistM} ariaLabel="Subject distance" />
+      </SliderRow>
+      <SliderRow label="Focal length" value={`${focal}mm`}>
+        <Slider value={fi} min={0} max={FOCALS.length - 1} step={1} onChange={setFi} ariaLabel="Focal length" />
+      </SliderRow>
+      <SliderRow label="Aperture" value={`f/${fnum % 1 === 0 ? fnum : fnum.toFixed(1)}`}>
+        <Slider value={ai} min={0} max={APS_D.length - 1} step={1} onChange={setAi} ariaLabel="Aperture" />
+      </SliderRow>
+
+      <button onClick={() => setAdv(!adv)} className="text-[12px] text-link mb-3">
+        {adv ? '− Hide sensor size' : '+ Sensor size'}
+      </button>
+      {adv && (
+        <div className="flex gap-1.5 flex-wrap mb-3">
+          {Object.keys(SENSORS).map((k) => (
+            <button key={k} onClick={() => setSensorKey(k)} className="px-2.5 py-1 rounded-[8px] text-[12px]" style={{ background: k === sensorKey ? '#141414' : '#F2F2F2', color: k === sensorKey ? '#fff' : '#666' }}>
+              {k}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!locked && (
+        <Button className="w-full mt-1" onClick={check}>
+          Check
+        </Button>
+      )}
+    </div>
+  )
+}
+
+/* ---------- motion (Lesson 4: a moving subject + shutter-driven blur) ---------- */
+function drawCar(ctx, cx, baseY, h) {
+  const w = h * 2.0
+  const x = cx - w / 2
+  ctx.beginPath()
+  ctx.moveTo(x, baseY)
+  ctx.lineTo(x + w, baseY)
+  ctx.lineTo(x + w, baseY - h * 0.5)
+  ctx.lineTo(x + w * 0.74, baseY - h * 0.5)
+  ctx.lineTo(x + w * 0.6, baseY - h)
+  ctx.lineTo(x + w * 0.32, baseY - h)
+  ctx.lineTo(x + w * 0.2, baseY - h * 0.5)
+  ctx.lineTo(x, baseY - h * 0.5)
+  ctx.closePath()
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(x + w * 0.26, baseY, h * 0.17, 0, 7)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(x + w * 0.74, baseY, h * 0.17, 0, 7)
+  ctx.fill()
+}
+
+function MotionView({ step, status, onResult }) {
+  const [si, setSi] = useState(step.start ?? 5)
+  const locked = status === 'correct'
+  const ref = useRef(null)
+  const raf = useRef(null)
+  const siRef = useRef(si)
+  siRef.current = si
+
+  useEffect(() => {
+    const canvas = ref.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    const W = canvas.width
+    const H = canvas.height
+    let startT = null
+    const speed = (W + 160) / 2600 // px per ms
+    const frame = (now) => {
+      if (startT == null) startT = now
+      const t = now - startT
+      const x = ((t * speed) % (W + 160)) - 80
+      const dashOff = (t * speed) % 72
+      const s = siRef.current
+      ctx.clearRect(0, 0, W, H)
+      ctx.fillStyle = '#CFE6F5'
+      ctx.fillRect(0, 0, W, H * 0.6)
+      ctx.fillStyle = '#5C6168'
+      ctx.fillRect(0, H * 0.6, W, H * 0.4)
+      ctx.fillStyle = '#E9E9E9'
+      for (let i = -1; i * 72 - dashOff < W; i++) ctx.fillRect(i * 72 - dashOff, H * 0.78, 38, 5)
+      const carH = H * 0.17
+      const baseY = H * 0.73
+      const blurLen = (s / 7) * W * 0.45
+      const steps = Math.max(1, Math.round(blurLen / 6))
+      ctx.fillStyle = '#1E2230'
+      for (let i = steps; i >= 1; i--) {
+        ctx.globalAlpha = 0.1
+        drawCar(ctx, x - (i / steps) * blurLen, baseY, carH)
+      }
+      ctx.globalAlpha = s === 0 ? 1 : 0.9
+      drawCar(ctx, x, baseY, carH)
+      ctx.globalAlpha = 1
+      raf.current = requestAnimationFrame(frame)
+    }
+    raf.current = requestAnimationFrame(frame)
+    return () => raf.current && cancelAnimationFrame(raf.current)
+  }, [])
+
+  const frozen = si <= 1
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="rounded-tile overflow-hidden border border-hairline mb-4">
+        <canvas ref={ref} width={600} height={300} className="w-full block" style={{ aspectRatio: '2 / 1' }} />
+      </div>
+      <div className="flex items-center gap-4 mb-3">
+        <span className="font-mono text-[26px] font-medium leading-none">{TRI_SHUT[si]}s</span>
+        <span className="text-[13px]" style={{ color: frozen ? '#1F8A3B' : '#666' }}>{frozen ? 'Frozen sharp' : 'Motion blur'}</span>
+      </div>
+      <Slider value={si} min={0} max={7} step={1} onChange={setSi} ariaLabel="Shutter speed" />
+      <div className="flex justify-between text-[11px] text-muted mb-5 mt-2">
+        <span>1/1000 · freeze</span>
+        <span>1/8 · blur</span>
+      </div>
+      {!locked && (
+        <Button className="w-full" onClick={() => onResult(step.check(si), { chosen: si })}>
+          Check
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export const STEP_VIEWS = {
   intro: IntroView,
   predict: PredictView,
@@ -537,4 +824,6 @@ export const STEP_VIEWS = {
   'slider-sim': SliderSimView,
   triangle: TriangleView,
   compose: ComposeView,
+  dof: DofView,
+  motion: MotionView,
 }
