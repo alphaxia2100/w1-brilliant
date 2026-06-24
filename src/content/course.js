@@ -126,6 +126,15 @@ const lessons = [
         },
       },
       {
+        kind: 'intro',
+        scene: 'room',
+        title: 'Why the backwards numbers?',
+        body: [
+          'Here’s the twist you just felt: the f-number is a fraction — the lens’s focal length divided by the opening’s width.',
+          'f/2 means the hole is half the focal length across; f/16, a sixteenth. So a bigger number is a smaller hole — and less light.',
+        ],
+      },
+      {
         kind: 'predict',
         prompt: 'Which aperture lets in more light: f/2 or f/16?',
         options: ['f/16', 'f/2'],
@@ -144,6 +153,20 @@ const lessons = [
             params: { a: 2, b: 16 },
             caption: 'f/2 vs f/16 — the bar shows how much light each opening lets through.',
           },
+        },
+      },
+      {
+        kind: 'predict',
+        prompt: 'You’re indoors and your photo is too dark. Which aperture lets in the most light?',
+        options: ['f/16', 'f/8', 'f/1.4'],
+        answer: 2,
+        feedback: {
+          correct: 'f/1.4 — the smallest number, the widest hole, the most light. Made for dim rooms.',
+          byOption: {
+            0: 'f/16 is the smallest opening of the three — the least light, not the most.',
+            1: 'f/8 is middling. One of these is much wider — and wider means a smaller f-number.',
+          },
+          stages: ['Smaller f-number = wider hole = more light. Which option is the smallest number?'],
         },
       },
     ],
@@ -304,8 +327,8 @@ const lessons = [
         scene: 'night',
         title: 'ISO: the volume knob',
         body: [
-          'When there isn’t enough light — indoors, at night — you can turn up the ISO. It amplifies the signal and brightens the photo.',
-          'But amplifying the signal also amplifies the noise. Keep an eye on the shadows.',
+          'When there isn’t enough light — indoors, at night — you can turn up the ISO. Think of it as a volume knob that amplifies the little light you’ve gathered.',
+          'It doesn’t collect more light; it just turns up what’s there. Let’s brighten this dark scene.',
         ],
       },
       {
@@ -326,6 +349,35 @@ const lessons = [
             'Can you make out the scene yet? Which way turns the ISO up?',
             'Higher ISO amplifies the signal brighter. Keep raising it.',
             'Raise the ISO higher until the scene is readable, then Check.',
+          ],
+        },
+      },
+      {
+        kind: 'intro',
+        scene: 'night',
+        title: 'The cost: grain',
+        body: [
+          'You brightened the photo — but since ISO amplifies the signal, it amplifies the noise right along with it.',
+          'Look at the loupe: the shadows are speckled with grain. The higher the ISO, the more grain.',
+        ],
+      },
+      {
+        kind: 'slider-sim',
+        scene: 'night',
+        prompt: 'So use as little ISO as you can. Find the lowest setting that still lets you make out the scene — keeping grain to a minimum.',
+        control: { stops: ISO_STOPS, start: 7 },
+        toParams: (iso) => ({ exposure: isoToExposure(iso), iso: isoToNoise(iso) }),
+        format: (iso) => 'ISO ' + iso,
+        label: 'ISO',
+        ends: ['ISO 100 · clean', 'ISO 12800 · noisy'],
+        ariaLabel: 'ISO sensitivity',
+        loupe: { cx: 4, cy: 25, cells: 6 },
+        check: (iso) => iso === 1600,
+        feedback: {
+          correct: 'ISO 1600 is the lowest that still reveals this scene — minimum grain for the job. Pros always use the lowest ISO they can get away with.',
+          stages: [
+            'Drop the ISO as low as you can while still making out the scene — too low and it’s dark, too high and it’s grainy.',
+            'The sweet spot is the lowest readable setting — around the middle of the range. Take the shot there.',
           ],
         },
       },
