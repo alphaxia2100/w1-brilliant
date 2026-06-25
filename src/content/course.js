@@ -108,7 +108,6 @@ const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'exposure-triangle',
-    number: 1,
     title: 'The exposure triangle',
     blurb: 'Three controls, one job: gather the right light.',
     steps: [
@@ -247,7 +246,6 @@ const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'depth-of-field',
-    number: 2,
     title: 'Depth of field',
     blurb: 'Make your subject pop off a soft background.',
     steps: [
@@ -380,11 +378,102 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
-  // L3 — METERING (read the light with the histogram)
+  // SHUTTER SPEED & MOTION — the shutter as a CREATIVE axis (freeze vs blur).
+  // Distinct from L1's single freeze beat (shutter-as-light-lever) and L7 long-exposure
+  // (gathering light over time): this lesson is about motion-blur as a creative choice.
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'shutter-motion',
+    title: 'Shutter speed & motion',
+    blurb: 'Freeze the action — or blur it on purpose.',
+    steps: [
+      // BEAT 1 — predict by doing: lead with the SURPRISING half (blur conveys speed)
+      {
+        kind: 'motion',
+        prompt:
+          'This car is flying past — but frozen, it looks parked. A photo can SHOW the speed your eyes feel: slow the shutter down, hold it open longer, until the car streaks across the frame.',
+        start: 0, // frozen — looks parked → fails until they slow it down
+        check: (si) => si >= 5,
+        feedback: {
+          correct:
+            'That streak IS the speed. With the shutter open longer, the car kept moving while the photo was taken, so it smears across the frame — and a still photo suddenly feels fast. Blur isn’t always a mistake; sometimes it’s the whole point.',
+          stages: [
+            'A frozen car looks parked. To show motion the shutter must stay open LONGER — which way is that?',
+            'Drag toward the slow end (1/8) so the car moves while the shutter is open, then take the shot.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm: the shutter is a slice of time; fast freezes, slow blurs
+      {
+        kind: 'intro',
+        title: 'A slice of time',
+        body: [
+          'The shutter is a curtain that opens for a slice of time. A LONG slice — and anything moving travels across the frame while it’s open, so it blurs. A SHORT slice is over before the subject can move, so it freezes.',
+          'Same control, two creative ends: freeze to catch a moment crisp, or blur to show motion and energy.',
+        ],
+      },
+      // BEAT 3 — the opposite pole: freeze it razor-sharp
+      {
+        kind: 'motion',
+        prompt:
+          'Now the opposite call: you want this car caught crisp — every detail sharp, no smear. Pick a shutter fast enough to freeze it, then take the shot.',
+        start: 6, // slow/blurred → fails until they speed it up
+        check: (si) => si <= 1,
+        feedback: {
+          correct:
+            'Frozen solid. A slice of time too short for the car to travel — so it’s pinned sharp. Fast shutter to catch action crisp; slow shutter to let it flow. You’re choosing between them now, not just turning a dial.',
+          stages: [
+            'It’s still smearing — the shutter’s open too long. Which way is faster?',
+            'Push toward the fast end (1/1000) — the shortest slice of time — then take the shot.',
+          ],
+        },
+      },
+      // BEAT 4 — transfer: rank real subjects by the shutter speed they demand (tray is shuffled)
+      {
+        kind: 'rank',
+        prompt:
+          'Different subjects move at different speeds — and each needs a different shutter. Order these by the shutter speed they demand, FASTEST first.',
+        scale: ['fastest shutter', 'slowest shutter'],
+        items: [
+          { label: 'A person walking the street' }, // 0
+          { label: 'A hummingbird’s beating wings' }, // 1
+          { label: 'A waterfall blurred to silk' }, // 2
+          { label: 'A sprinter crossing the line' }, // 3
+        ],
+        solution: [1, 3, 0, 2], // hummingbird → sprinter → walker → silky waterfall (slowest)
+        feedback: {
+          correct:
+            'Match the shutter to the motion. Blink-fast wings need the fastest shutter of all to freeze; a sprinter nearly as fast; a walker far less. And the silky waterfall wants the OPPOSITE — a slow shutter, so the water blurs into a smooth ribbon. The subject decides.',
+          stages: [
+            'The faster it moves (and the sharper you want it), the faster the shutter. The silky waterfall is the odd one — it WANTS blur, so it needs the slowest.',
+            'Fastest → slowest: hummingbird wings, sprinter, walker, then the silky waterfall last.',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: commit to a look (crisp OR streaked — not the muddy middle)
+      {
+        kind: 'motion',
+        prompt:
+          'Your call now — but COMMIT. A crisp freeze says “caught it.” A bold streak says “speed.” A half-blur in between just looks like a mistake. Pick a clear look and take a shot you’d keep.',
+        start: 4, // the muddy middle → fails until they commit one way or the other
+        check: (si) => si <= 1 || si >= 6,
+        feedback: {
+          correct:
+            'That’s a decision, not an accident. You committed — pin-sharp or boldly streaked — instead of leaving it in the mushy middle where it reads as a missed shot. Owning the shutter is owning whether a moment is held still or set in motion.',
+          stages: [
+            'A little blur looks like a mistake. Go one way or the other: all the way fast for crisp, or well into the slow end for a bold streak.',
+            'Pick a clear look — 1/1000 to freeze, or 1/15–1/8 to streak — not the middle.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // METERING (read the light with the histogram)
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'metering',
-    number: 3,
     title: 'Metering: read the light',
     blurb: 'The histogram tells you if your exposure is right.',
     steps: [
@@ -529,7 +618,6 @@ const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'white-balance',
-    number: 4,
     title: 'White balance: the color of light',
     blurb: 'Make the colors read true — or warm on purpose.',
     steps: [
@@ -644,7 +732,6 @@ const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'rule-of-thirds',
-    number: 5,
     title: 'Composition: framing the shot',
     blurb: 'Where you place things changes how the photo feels.',
     steps: [
@@ -747,7 +834,6 @@ const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'light-direction',
-    number: 6,
     title: 'Light & direction',
     blurb: 'Where light comes from — and its color — shapes everything.',
     steps: [
@@ -868,7 +954,6 @@ const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'long-exposure-night',
-    number: 7,
     title: 'Long exposure: painting with time',
     blurb: 'When the light runs out, let time do the gathering.',
     steps: [
@@ -992,7 +1077,6 @@ const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
   {
     id: 'iso-and-noise',
-    number: 8,
     title: 'ISO & noise: the price of light',
     blurb: 'ISO buys brightness with grain. Spend it only when the dark forces you.',
     steps: [
@@ -1124,6 +1208,12 @@ const lessons = [
     ],
   },
 ]
+
+// Lesson numbers are derived from position, so inserting/reordering a lesson never
+// requires hand-renumbering (the course grows often). Display only: progress is keyed by id.
+lessons.forEach((l, i) => {
+  l.number = i + 1
+})
 
 export const course = {
   id: 'exposure',

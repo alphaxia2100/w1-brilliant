@@ -998,6 +998,9 @@ function MotionView({ step, status, onResult }) {
   }
 
   const frozen = captured && captured.si <= 1
+  // Green when the shot meets THIS beat's goal (freeze OR blur), not just when frozen —
+  // so a blur-goal beat doesn't falsely green a frozen shot. Falls back to "frozen = good".
+  const hitGoal = captured && (step.check ? step.check(captured.si) : frozen)
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
@@ -1014,7 +1017,7 @@ function MotionView({ step, status, onResult }) {
         <>
           <div className="flex items-center gap-3 mb-3">
             <span className="font-mono text-[20px] font-medium">{TRI_SHUT[captured.si]}s</span>
-            <span className="text-[13px]" style={{ color: frozen ? '#1F8A3B' : '#666' }}>
+            <span className="text-[13px]" style={{ color: hitGoal ? '#1F8A3B' : '#666' }}>
               {frozen ? 'Frozen sharp' : 'The car moved while the shutter was open — motion blur'}
             </span>
           </div>
