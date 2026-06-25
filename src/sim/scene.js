@@ -238,6 +238,38 @@ function buildSnow(N) {
   return { cells, subject }
 }
 
+// A high-dynamic-range scene: a brilliant near-clipping sky over near-black land,
+// wider than one exposure can hold. Used by the metering "blinkies" beat — you can
+// quiet the sky OR lift the land, not perfectly both.
+function buildBacklit(N) {
+  const rnd = mulberry32(707)
+  const horizon = Math.floor(N * 0.46)
+  const cells = []
+  const subject = []
+  for (let r = 0; r < N; r++) {
+    cells[r] = []
+    subject[r] = []
+    for (let c = 0; c < N; c++) {
+      let col
+      if (r < horizon) {
+        col = [250, 250, 250] // brilliant sky, sitting right at the clipping point
+        const dx = c - N * 0.5
+        const dy = r - horizon * 0.72
+        if (dx * dx + dy * dy < N * N * 0.012) col = [255, 255, 255] // a hot sun
+      } else {
+        col = [20, 20, 24] // dark, silhouetted land
+        // a couple of taller hills so the silhouette reads as land, not a bar
+        const h = Math.sin((c / N) * 7) * N * 0.05
+        if (r < horizon + Math.abs(h)) col = [12, 12, 16]
+      }
+      col = col.map((v) => v + (rnd() - 0.5) * 6)
+      cells[r][c] = col
+      subject[r][c] = false
+    }
+  }
+  return { cells, subject }
+}
+
 const GENERATORS = {
   landscape: buildLandscape,
   portrait: buildPortrait,
@@ -245,6 +277,7 @@ const GENERATORS = {
   seascape: buildSeascape,
   room: buildRoom,
   snow: buildSnow,
+  backlit: buildBacklit,
 }
 const cache = new Map()
 
@@ -379,10 +412,18 @@ export function drawScene(ctx, params) {
   const oR = crop ? crop.cy : 0
   const oC = crop ? crop.cx : 0
   const cw = ctx.canvas.width / span
+  // Blinkies: when on, paint clipped cells with a warning colour (red = blown
+  // highlight, blue = crushed shadow) — the same edges the histogram counts as clipped.
+  const blink = params.blinkies && params.blinkOn
   for (let i = 0; i < span; i++)
     for (let j = 0; j < span; j++) {
       const px = grid[Math.min(oR + i, N - 1)][Math.min(oC + j, N - 1)]
-      ctx.fillStyle = `rgb(${clamp(px[0], 0, 255) | 0},${clamp(px[1], 0, 255) | 0},${clamp(px[2], 0, 255) | 0})`
+      const R = clamp(px[0], 0, 255)
+      const G = clamp(px[1], 0, 255)
+      const B = clamp(px[2], 0, 255)
+      if (blink && (R + G + B) / 3 >= 243) ctx.fillStyle = '#FF3B3B'
+      else if (blink && (R + G + B) / 3 <= 12) ctx.fillStyle = '#3B7BFF'
+      else ctx.fillStyle = `rgb(${R | 0},${G | 0},${B | 0})`
       ctx.fillRect(Math.floor(j * cw), Math.floor(i * cw), Math.ceil(cw), Math.ceil(cw))
     }
 }

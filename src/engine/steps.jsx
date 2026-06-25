@@ -321,7 +321,15 @@ function SliderSimView({ step, status, onResult, onActivity }) {
   const stops = step.control.stops
   const useIndex = Array.isArray(stops)
   const [raw, setRaw] = useState(step.control.start)
+  const [blinkOn, setBlinkOn] = useState(true)
   const locked = status === 'correct'
+
+  // Blinkies blink: toggle a flag a couple times a second so clipped cells flash.
+  useEffect(() => {
+    if (!step.blinkies) return
+    const id = setInterval(() => setBlinkOn((b) => !b), 430)
+    return () => clearInterval(id)
+  }, [step.blinkies])
 
   const value = useIndex ? stops[raw] : raw
   const params = step.toParams(value)
@@ -330,7 +338,7 @@ function SliderSimView({ step, status, onResult, onActivity }) {
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
       <div className="relative flex justify-center mb-4">
-        <PixelScene scene={step.scene} size={300} live={!!params.iso} {...params} />
+        <PixelScene scene={step.scene} size={300} live={!!params.iso} blinkies={!!step.blinkies} blinkOn={blinkOn} {...params} />
         {step.loupe && (
           <div className="absolute bottom-3 right-3 w-[88px] h-[88px] rounded-tile overflow-hidden border-2 border-white shadow-rest">
             <PixelScene

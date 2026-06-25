@@ -46,6 +46,14 @@ function shadowsCrushed(scene, exposure) {
   return c[0] / total > 0.12
 }
 
+// Within the sensor's range = NEITHER edge meaningfully clipped — the compromise an
+// over-contrasty (high dynamic range) scene allows, where you can't perfectly hold both.
+function withinRange(scene, exposure) {
+  const c = histogram({ scene, exposure })
+  const total = c.reduce((a, b) => a + b, 0) || 1
+  return c[0] / total <= 0.06 && c[c.length - 1] / total <= 0.06
+}
+
 // High-key well-exposed = bright overall AND not clipped — the histogram sits RIGHT.
 function highKeyOK(scene, exposure) {
   const c = histogram({ scene, exposure })
@@ -428,7 +436,30 @@ const lessons = [
           ],
         },
       },
-      // 5 — high-key: the "correct" histogram is NOT always centered
+      // 5 — blinkies: clipping is spatial, and one exposure can't hold a high-DR scene
+      {
+        kind: 'slider-sim',
+        scene: 'backlit',
+        blinkies: true,
+        prompt: 'Cameras paint a warning right onto clipped pixels — “blinkies”. This scene has a brilliant sky over dark land. Drag the exposure to stop the SKY from blinking red, without making the LAND blink blue.',
+        control: { min: -2, max: 2, step: 0.1, start: 0.6 },
+        toParams: (v) => ({ exposure: v }),
+        format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV',
+        label: 'Exposure',
+        ends: ['darker', 'brighter'],
+        ariaLabel: 'Exposure compensation',
+        histogram: true,
+        check: (v) => withinRange('backlit', v),
+        feedback: {
+          correct:
+            'Blinkies show you WHERE detail is clipping — on the photo, not just on the graph. And feel the catch: on a scene this contrasty you can save the sky OR the land, never perfectly both. That gap is dynamic range — the reason photographers bracket, use grad filters, or expose for the highlights and lift the shadows later.',
+          stages: [
+            'The red flashing in the sky is blown highlights. Which way pulls the exposure back from them?',
+            'Bring the exposure down until the sky stops flashing red — but stop before the land starts flashing blue.',
+          ],
+        },
+      },
+      // 6 — high-key: the "correct" histogram is NOT always centered
       {
         kind: 'slider-sim',
         scene: 'snow',
@@ -449,7 +480,7 @@ const lessons = [
           ],
         },
       },
-      // 6 — transfer: histograms are scene-dependent
+      // 7 — transfer: histograms are scene-dependent
       {
         kind: 'rank',
         prompt: 'Order these scenes by where their tones naturally sit — most to the LEFT (darkest) first.',

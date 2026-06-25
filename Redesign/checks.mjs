@@ -111,7 +111,7 @@ if (apStep) {
   }
   ok('L1 aperture: brightness descends monotonically f/1.4 -> f/16', mono)
 }
-for (const scene of ['landscape', 'portrait', 'night', 'seascape', 'room', 'snow']) {
+for (const scene of ['landscape', 'portrait', 'night', 'seascape', 'room', 'snow', 'backlit']) {
   const g = computeGrid({ scene, exposure: 0, iso: 40 })
   ok(`scene ${scene}: computeGrid all-finite`, g.every((row) => row.every((c) => c.every(Number.isFinite))))
 }
