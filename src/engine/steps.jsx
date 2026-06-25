@@ -416,6 +416,9 @@ function TriRow({ label, value, raw, setRaw, onActivity, locked, ends }) {
   )
 }
 
+// A creative GOAL for a reciprocity beat: hit a look on ONE lever, then trade the
+// light back on another to keep the meter level. lever ∈ aperture|shutter|iso.
+const GOAL_IDX = { aperture: (a) => a, shutter: (_, s) => s, iso: (_, __, i) => i }
 function TriangleView({ step, status, onResult, onActivity }) {
   const [ai, setAi] = useState(step.start.aperture)
   const [si, setSi] = useState(step.start.shutter)
@@ -435,17 +438,23 @@ function TriangleView({ step, status, onResult, onActivity }) {
   const angle = clampN(sum * 5, -28, 28)
   const balanced = Math.abs(sum) < 0.5
 
+  // Reciprocity goal (optional): the shot must ALSO hit a creative look on one lever.
+  const goal = step.goal
+  const goalMet = !goal || goal.test(goal.lever === 'aperture' ? ai : goal.lever === 'shutter' ? si : ii)
+  const pass = balanced && goalMet
+
   function check() {
     const shot = { scene: step.scene, params }
-    if (balanced) onResult(true, { shot })
-    else
-      onResult(false, {
-        shot,
-        override:
-          sum > 0
-            ? 'Overexposed — too much light. Trade some away: narrow the aperture, speed up the shutter, or lower the ISO.'
-            : 'Underexposed — too little light. Add some: open the aperture, slow the shutter, or raise the ISO.',
-      })
+    if (pass) return onResult(true, { shot })
+    if (goal && !goalMet && balanced)
+      return onResult(false, { shot, override: goal.unmet })
+    onResult(false, {
+      shot,
+      override:
+        sum > 0
+          ? `Overexposed — too much light. ${goal ? 'Keep your look and trade light away: ' : 'Trade some away: '}narrow the aperture, speed up the shutter, or lower the ISO.`
+          : `Underexposed — too little light. ${goal ? 'Keep your look and add light back: ' : 'Add some: '}open the aperture, slow the shutter, or raise the ISO.`,
+    })
   }
 
   return (
@@ -475,6 +484,17 @@ function TriangleView({ step, status, onResult, onActivity }) {
           {balanced ? 'Level — correctly exposed' : sum > 0 ? 'Overexposed' : 'Underexposed'}
         </p>
       </div>
+
+      {goal && (
+        <div className="flex items-center justify-between rounded-tile px-3 py-2 mb-3" style={{ background: goalMet ? '#D4F5DD' : '#F2F2F2' }}>
+          <span className="text-[13px] font-medium" style={{ color: goalMet ? '#1F8A3B' : '#555' }}>
+            Your look: {goal.label}
+          </span>
+          <span className="text-[12px] font-mono" style={{ color: goalMet ? '#1F8A3B' : '#999' }}>
+            {goalMet ? '✓ got it' : 'not yet'}
+          </span>
+        </div>
+      )}
 
       <TriRow label="Aperture" value={'f/' + (TRI_APS[ai] % 1 === 0 ? TRI_APS[ai] : TRI_APS[ai].toFixed(1))} raw={ai} setRaw={setAi} onActivity={onActivity} locked={locked} />
       <TriRow label="Shutter" value={TRI_SHUT[si] + 's'} raw={si} setRaw={setSi} onActivity={onActivity} locked={locked} />

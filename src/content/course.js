@@ -174,6 +174,23 @@ const lessons = [
         },
       },
       {
+        kind: 'triangle',
+        scene: 'portrait',
+        goal: {
+          lever: 'aperture',
+          test: (ai) => ai <= 2,
+          label: 'a soft, melted background',
+          unmet:
+            'Your exposure is level — but the background is still sharp. Open the aperture WIDE for that soft look, then trade the extra light away on the shutter or ISO to bring the meter back to level.',
+        },
+        prompt: 'Now make a creative call. You want a dreamy, soft background — that takes a wide aperture. But opening up floods the sensor with light. Open it wide for the blur, then trade that light away elsewhere to keep the meter level.',
+        start: { aperture: 4, shutter: 4, iso: 4 },
+        feedback: {
+          correct:
+            'That’s reciprocity — the engine of the whole triangle. You opened up for the soft background, then paid the light back with a faster shutter or lower ISO. Same exposure, the look you chose. Every creative decision is a trade.',
+        },
+      },
+      {
         kind: 'rank',
         prompt: 'These three settings all give the SAME brightness — equivalent exposures. Order them by background blur, most blur first.',
         scale: ['most blur', 'all sharp'],

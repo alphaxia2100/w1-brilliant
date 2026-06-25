@@ -58,6 +58,22 @@ for (const lesson of course.lessons) {
           for (let w = -0.4; w <= 1.0001 && !reach; w += 0.2)
             if (s.check({ angle: a, soft: sf, warmth: w })) reach = true
       ok(`${tag}: reachable`, reach)
+    } else if (s.kind === 'triangle') {
+      // Replicates TriangleView: balanced (|sum|<0.5) AND, if a reciprocity goal is
+      // set, the goal lever passes its test. Assert start fails and a pass exists.
+      const triPass = (a, si, ii) => {
+        const sum = 4 - a + (si - 4) + (ii - 4)
+        const balanced = Math.abs(sum) < 0.5
+        if (!s.goal) return balanced
+        const idx = s.goal.lever === 'aperture' ? a : s.goal.lever === 'shutter' ? si : ii
+        return balanced && s.goal.test(idx)
+      }
+      ok(`${tag}: fails at start`, !triPass(s.start.aperture, s.start.shutter, s.start.iso))
+      let reach = false
+      for (let a = 0; a < 8 && !reach; a++)
+        for (let si = 0; si < 8 && !reach; si++)
+          for (let ii = 0; ii < 8 && !reach; ii++) if (triPass(a, si, ii)) reach = true
+      ok(`${tag}: reachable`, reach)
     } else if (s.kind === 'rank') {
       const sorted = [...s.solution].sort((a, b) => a - b)
       ok(`${tag}: solution is a permutation`, s.solution.length === s.items.length && sorted.every((v, idx) => v === idx))
