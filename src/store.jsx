@@ -26,6 +26,24 @@ function emptyProgress() {
   }
 }
 
+// Firestore rejects ANY `undefined` field value — and setDoc() validates
+// synchronously, so a stray undefined (e.g. a compose shot with no `facing`) throws
+// inside the setProgress updater and white-screens the app via the error boundary.
+// Strip undefined recursively so a write can never crash render. (Local mode is
+// immune because JSON.stringify already drops undefined.)
+function pruneUndefined(value) {
+  if (Array.isArray(value)) return value.map(pruneUndefined)
+  if (value && typeof value === 'object') {
+    const out = {}
+    for (const [k, v] of Object.entries(value)) {
+      if (v === undefined) continue
+      out[k] = pruneUndefined(v)
+    }
+    return out
+  }
+  return value
+}
+
 function course(progress, courseId = COURSE) {
   if (!progress.courses[courseId]) {
     progress.courses[courseId] = { completedLessonIds: [], lessons: {} }
@@ -126,20 +144,26 @@ export function AppProvider({ children }) {
   function persist(u, next) {
     if (!u) return
     if (firebaseEnabled) {
-      setDoc(
-        doc(db, 'users', u.uid),
-        {
-          email: u.email || null,
-          displayName: u.displayName || null,
-          isAnonymous: u.isAnonymous,
-          updatedAt: Date.now(),
-          totalXp: next.totalXp,
-          lastLesson: next.lastLesson,
-          shots: next.shots || [],
-          courses: next.courses,
-        },
-        { merge: true },
-      ).catch(() => {})
+      // try/catch: setDoc validates synchronously, so a malformed payload must not
+      // be allowed to throw out of the render-phase updater that calls persist().
+      try {
+        setDoc(
+          doc(db, 'users', u.uid),
+          pruneUndefined({
+            email: u.email || null,
+            displayName: u.displayName || null,
+            isAnonymous: u.isAnonymous,
+            updatedAt: Date.now(),
+            totalXp: next.totalXp,
+            lastLesson: next.lastLesson,
+            shots: next.shots || [],
+            courses: next.courses,
+          }),
+          { merge: true },
+        ).catch(() => {})
+      } catch {
+        /* never let a bad write crash the app */
+      }
     } else {
       localStore.writeJSON(lsKey(u.uid), next)
     }
