@@ -21,21 +21,26 @@ So: the branch has the newest work and is **unpushed + undeployed**. Decide whet
 `lesson-factory` → `main`, push, and redeploy. Nothing destructive has touched `main` or `origin`.
 
 ## TL;DR
-The course grew from 6 → **8 lessons**, gained an **AI photo grader** and **try-before-signup**
-onboarding, and now has a working **lesson factory** (autonomous lesson generation with two verification
-loops) plus a self-paced **improvement loop** (4 iterations done). `npm test` = **92/92 green**, build clean.
+The course is **9 lessons and growing** — Sky redirected (2026-06-25) to **CURRICULUM EXPANSION**
+(more topics, broad lessons broken up, gaps filled; researched online → a 15-lesson / 6-module plan,
+**content-first**, in `Factory/IMPROVEMENTS-LOG.md`). Also has an **AI photo grader**, **try-before-signup**
+onboarding, a **lesson factory**, and the **BET** pedagogy primitive. `npm test` = **99/99 green**, build clean.
 
-## The course now — 8 lessons (verified from `src/content/course.js`)
+## The course now — 9 lessons (verified from `src/content/course.js`; `number` is derived from order)
 | # | id | what it teaches |
 |---|----|------|
 | 1 | `exposure-triangle` | capture-light → aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9 beats) |
 | 2 | `depth-of-field` | forward flower-bokeh, 4 levers, night-bokeh, synthesis keeper (8) |
-| 3 | `metering` | histogram: spread · clip highs/lows · **blinkies** + dynamic range (backlit, now with a silhouette tree) · high-key snow · rank (7) |
-| 4 | `white-balance` | **BET: predict where neutral is (snow), be wrong, correct** · cool/warm casts · **click-WB eyedropper** · creative warmth (5) |
-| 5 | `rule-of-thirds` | thirds · lead-room · **leading lines** · horizon · keeper (6) |
-| 6 | `light-direction` | reveal-form · backlight · hard/soft (now feathered) · **warmth** · flattering recipe · **dramatic** keeper (7) |
-| 7 | `long-exposure-night` | **factory-made.** gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
-| 8 | `iso-and-noise` | **factory-made.** max-crank cost · the floor · expose-to-the-right · when-forced rank · keeper (6) |
+| 3 | `shutter-motion` | **NEW (expansion 1/5).** shutter as a creative axis: blur=speed → freeze → rank by shutter → commit-keeper (5) |
+| 4 | `metering` | histogram: spread · clip highs/lows · **blinkies** + dynamic range (backlit) · high-key snow · rank (7) |
+| 5 | `white-balance` | **BET: predict where neutral is (snow), be wrong, correct** · cool/warm casts · **click-WB eyedropper** · creative warmth (5) |
+| 6 | `rule-of-thirds` | thirds · lead-room · **leading lines** · horizon · keeper (6) |
+| 7 | `light-direction` | reveal-form · backlight · hard/soft (now feathered) · **warmth** · flattering recipe · **dramatic** keeper (7) |
+| 8 | `long-exposure-night` | **factory-made.** gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
+| 9 | `iso-and-noise` | **factory-made.** max-crank cost · the floor · expose-to-the-right · when-forced rank · keeper (6) |
+
+**Next (content-first expansion, buildable now):** Composition II (lines/balance) → When-the-meter-is-fooled
+→ Portrait → Landscape. Then small-sim: Focus, Flash. Then (if greenlit) the major focal-length/perspective sim.
 
 All predict-first, no multiple choice, calm feedback, success mints a polaroid keepsake.
 
@@ -77,12 +82,12 @@ primitives (so output is renderable + gate-checkable). **Two loops:**
 
 ## The improvement loop (`Factory/IMPROVEMENTS-LOG.md` — the live ledger)
 A self-paced research → revise → verify → commit → log → reschedule loop (peer authority). 3 iterations
-done: **#1 shipped L7**, **#2 shipped L8** (fixed real check-band bugs), **#3 rejected silhouettes
-[engine-proven false] + shipped cold-start**, **#4 shipped the pedagogy "BET" primitive** (new `bet` step
-kind: predict-with-a-commit → be-wrong → correct, on WB beat 1; a 4-lens adversarial critic caught a truth
-blocker + 4 majors, all fixed). **⚠️ No cron/wakeup is active now (verified 2026-06-25);** the loop is
-paused, not auto-firing — restart deliberately. Next backlog item: a 2nd BET (L3 snow-histogram) or the WB
-Kelvin truth-fix. To **stop the loop**, just don't reschedule (omit the ScheduleWakeup). Backlog (meatier now): BET slice →
+done: **#1 L7**, **#2 L8**, **#3 rejected silhouettes + cold-start**, **#4 the "BET" primitive** (a 4-lens
+critic caught a truth blocker + 4 majors, all fixed), **#5 DIRECTION PIVOT → curriculum expansion** (Sky
+wants breadth: more topics, broad lessons split, gaps filled — researched online → a 15-lesson/6-module
+content-first plan; shipped lesson 1/5 "Shutter speed & motion" as L3). **⚠️ No cron/wakeup active
+(2026-06-25)** — not auto-firing. **NEXT: keep building the content-first list** — Composition II →
+meter-fooled → Portrait → Landscape (all buildable now), per the DIRECTION block in the ledger. Backlog (meatier now): BET slice →
 shutter-motion redesign (needs a panning sim) → free-play Studio. Parked: silhouettes.
 
 ## How to run / verify

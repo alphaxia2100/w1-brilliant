@@ -8,24 +8,29 @@ the backlog from what it learns, and stops scheduling when the backlog runs dry 
 Verification bar (every shipped change): `npm test` green · `npm run build` clean · walked live in the
 browser (the critic's lesson: an automated gate keeps passing prose/pixel divergence — eyeball it).
 
-## Backlog (ranked by leverage × shippability — re-rank each iteration)
-The cheap factory wins (L7, L8) and the first BET (iter #4) are shipped. What remains is meatier — new
-engine work per item. Keep verifying live + run the adversarial critic after building (it caught a truth
-blocker on iter #4); stop scheduling when nothing high-value is left.
-1. **Second BET — extend the primitive to another lesson's most counter-intuitive beat.** The `bet` kind
-   exists + is proven now, so this is cheaper. Best target: L3 metering "brighten the snow and the mass
-   piles hard RIGHT, past where you'd center it" (blueprint B5) — needs a histogram-track variant of the
-   bet view (the bet is on the histogram, not a temp slider). Alt: L1 "bet where the car freezes"
-   (MotionView ghost tick). Highest pedagogical leverage left; **one bet per lesson — don't overuse.**
-2. **WB Kelvin reads backwards (truth debt, found by the iter-#4 critic).** `wbResultK` (beats 3 & 5)
-   shows warmer→LOWER K, the inverse of every real camera/Lightroom (warmer→higher K). Beat 1 sidesteps
-   it (Kelvin dropped). Fix the rest: flip the sign (warmer→higher K) OR demote the number per blueprint
-   shift #6. Small + high-truth-value; verify all WB beats read in the real-world direction after.
-3. **shutter-motion** (factory candidate, needs redesign — NOT a quick fix). Its panning beat is a
-   fabricated interaction the motion sim can't do (it only translates the car). Would need a genuinely
-   new sim capability (a panning / world-streak mode) to be true + distinct. Park unless that's built.
-4. **Free-play Studio** — pick scene/subject/settings, shoot freely, collect to the roll. Locked
-   north-star deliverable; larger build.
+## ⭐ DIRECTION (2026-06-25, from Sky): CURRICULUM EXPANSION — breadth now, not refinement
+Sky redirected: "i wanted another topic. break up the current lessons into more, and fill in the rest.
+look online for how you should structure it." A 4-lens web-research workflow (35 sources) produced a
+**15-lesson structure in 6 modules** (proposal in the wf result / synthesized below). Sky chose
+**content-first**: add the gap LESSONS into the flat list now, then add a chapter/Review nav layer after.
+Keep exposure as ONE lesson (his prior call + transfer evidence); skip prose-y RAW/critique (no sim);
+defer the one major new sim (focal-length compression). **Build order (buildable-now first):**
+1. ✅ **Shutter speed & motion** — DONE (commit d77c6d3), L3.
+2. **Composition II: lines, balance & negative space** — split from L5 (rule-of-thirds); compose canvas.
+3. **When the meter is fooled** — split/deepen from L3 metering (pushes to grey → exposure compensation).
+4. **Portrait (genre capstone)** — recombine bokeh + light-direction + portrait scene + focus-on-eye.
+5. **Landscape (genre capstone)** — deep DoF + horizon + protect-the-sky + golden light.
+Then needs-small-sim: **Focus & the focus point** (tap-to-focus on bokeh), **Flash** (fill vs ambient).
+Then needs-major-sim: **Focal length & perspective** (compression) — only if Sky greenlights the sim.
+Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) · Reading&Colour
+(Metering,Meter-fooled,WB) · Composition(I placing, II lines/balance) · Light(Direction,Flash) ·
+Genre(Portrait,LongExposure,Landscape).
+
+## Deferred (lower priority than the curriculum breadth Sky asked for)
+- **Second BET** (L3 snow-histogram ghost-tick) — the `bet` kind is proven; revisit after breadth.
+- **WB Kelvin reads backwards** (truth debt, iter-#4 critic): `wbResultK` beats 3 & 5 show warmer→LOWER
+  K (inverse of real cameras). Beat 1 sidesteps it (Kelvin dropped). Flip the sign or demote per shift #6.
+- **Free-play Studio** — locked north-star deliverable; larger build.
 
 ## Parked (need new engine capability — don't ship until built)
 - **silhouettes** — REJECTED as L9 (iter #3). The `backlit` scene's tree↔sky separation (~2.3 stops) is
@@ -58,6 +63,15 @@ BEAT 6's keeper copied the night's `>=1600` floor onto the BRIGHTER room, which 
 the floor) and tightened BEAT 3 to the exact floor (1600). Real gate 90/90, build clean, both claims
 confirmed live (grain blizzard at max ISO; shadows lift + de-noise on expose-to-the-right). Course now
 8 lessons. Next: silhouettes → L9 (unblocked by the new backlit tree subject).
+
+### #5 — 2026-06-25 — DIRECTION PIVOT to curriculum expansion; shipped "Shutter speed & motion" (L3)  ✓ (commit d77c6d3)
+Sky redirected from refinement (iter #4) to BREADTH — more topics, broken-up + gap-filled (see DIRECTION
+above). Researched the structure online (35 sources, 4 lenses) → a 15-lesson / 6-module plan; Sky chose
+content-first. Built lesson #1 of 5: **Shutter speed & motion** — shutter as a creative axis (lead with
+blur=speed → confirm → freeze → rank subjects by shutter → commit-keeper). Reused the motion sim; made its
+success caption goal-aware so a blur-goal beat greens (was freeze-only). Made lesson `number` derive from
+position so inserts don't need renumbering. Gate 99/99, build clean, full live walk both widths, no errors.
+Distinct from L1's freeze beat + L7 long-exposure. Next: Composition II → meter-fooled → portrait → landscape.
 
 ### #4 — 2026-06-25 — shipped the BET primitive (predict → be-wrong) on WB beat 1  ✓ (commits 614e623, 7ca7722)
 The blueprint's #1 highest-ROI shift: a committed, falsifiable prediction before the reveal. New engine
