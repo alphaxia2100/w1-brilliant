@@ -17,6 +17,13 @@ export function composeEval(target, pos) {
     const ok = ahead >= 60
     return { ok, cue: ok ? 'room to move into' : 'boxed in — no space ahead' }
   }
+  if (target.kind === 'leadinglines') {
+    // Lines in the scene converge on a point; place the subject where they LEAD the eye.
+    const conv = target.point || { x: 66.66, y: 38 }
+    const d = hypot(conv.x - pos.x, conv.y - pos.y)
+    const ok = d < (target.band || 12)
+    return { ok, cue: ok ? 'right where the lines lead — the eye lands on the subject' : 'follow the lines to where they meet, and put the subject there' }
+  }
   if (target.kind === 'horizon') {
     const onThird = Math.min(Math.abs(pos.y - 33.33), Math.abs(pos.y - 66.66)) < (target.band || 9)
     const bisecting = Math.abs(pos.y - 50) < 8

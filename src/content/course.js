@@ -606,7 +606,23 @@ const lessons = [
           ],
         },
       },
-      // BEAT 4 — horizon
+      // BEAT 4 — leading lines: place the subject where the lines lead the eye
+      {
+        kind: 'compose',
+        scene: 'seascape',
+        target: { kind: 'leadinglines', point: { x: 66.66, y: 38 } },
+        start: { x: 50, y: 50 },
+        prompt: 'A path, a shoreline, a row of posts — lines like these pull the eye along the frame. Place your subject where these lines lead.',
+        feedback: {
+          correct:
+            'Leading lines carry the eye straight to wherever they converge. Park your subject on that spot and the whole frame points at it — a powerful, almost invisible trick.',
+          stages: [
+            'The lines all rush toward one meeting point. Your subject is sitting off it, so the eye slides past them.',
+            'Trace the lines to where they converge and drop the subject right there, then take the shot.',
+          ],
+        },
+      },
+      // BEAT 5 — horizon
       {
         kind: 'compose',
         scene: 'seascape',
@@ -622,7 +638,7 @@ const lessons = [
           ],
         },
       },
-      // BEAT 5 — synthesis keeper
+      // BEAT 6 — synthesis keeper
       {
         kind: 'compose',
         scene: 'seascape',

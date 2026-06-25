@@ -67,6 +67,7 @@ for (const lesson of course.lessons) {
       let good
       if (t.kind === 'leadroom') good = t.facing === 'left' ? { x: 80, y: 50 } : { x: 20, y: 50 }
       else if (t.kind === 'horizon') good = { x: 50, y: 33.33 }
+      else if (t.kind === 'leadinglines') good = t.point || { x: 66.66, y: 38 }
       else good = { x: 33.33, y: 33.33 }
       ok(`${tag}: reachable`, composeEval(t, good).ok)
     } else if (s.kind === 'capture') {

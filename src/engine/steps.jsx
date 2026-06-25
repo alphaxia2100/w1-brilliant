@@ -520,6 +520,8 @@ export function ComposeShot({ scene, x, y, facing, size = 228, rounded = true, f
 function ComposeView({ step, status, onResult, onActivity }) {
   const target = step.target || { kind: 'thirds' }
   const horizon = target.kind === 'horizon'
+  const leading = target.kind === 'leadinglines'
+  const conv = target.point || { x: 66.66, y: 38 }
   const [pos, setPos] = useState(step.start || { x: 50, y: 50 })
   const [moved, setMoved] = useState(false)
   const frame = useRef(null)
@@ -560,20 +562,27 @@ function ComposeView({ step, status, onResult, onActivity }) {
         >
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden="true">
             {/* a "cramped" vignette when the frame reads static — the felt cue */}
-            {!ok && moved && !horizon && (
+            {!ok && moved && !horizon && !leading && (
               <>
                 <rect x="0" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
                 <rect x="83" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
               </>
             )}
+            {/* leading lines: rails/path converging on a point the eye is drawn to */}
+            {leading &&
+              [{ x: 0, y: 100 }, { x: 34, y: 100 }, { x: 66, y: 100 }, { x: 100, y: 100 }, { x: 0, y: 64 }, { x: 100, y: 64 }].map((p, i) => (
+                <line key={'L' + i} x1={p.x} y1={p.y} x2={conv.x} y2={conv.y} stroke={ok ? 'rgba(41,204,87,0.7)' : 'rgba(255,255,255,0.55)'} strokeWidth="0.5" />
+              ))}
             <g style={{ opacity: moved ? 1 : 0, transition: 'opacity 0.3s' }}>
-              {[33.33, 66.66].map((v) => (
-                <line key={'v' + v} x1={v} y1="0" x2={v} y2="100" stroke="rgba(255,255,255,0.62)" strokeWidth="0.4" />
-              ))}
-              {[33.33, 66.66].map((h) => (
-                <line key={'h' + h} x1="0" y1={h} x2="100" y2={h} stroke="rgba(255,255,255,0.62)" strokeWidth="0.4" />
-              ))}
-              {!horizon &&
+              {!leading &&
+                [33.33, 66.66].map((v) => (
+                  <line key={'v' + v} x1={v} y1="0" x2={v} y2="100" stroke="rgba(255,255,255,0.62)" strokeWidth="0.4" />
+                ))}
+              {!leading &&
+                [33.33, 66.66].map((h) => (
+                  <line key={'h' + h} x1="0" y1={h} x2="100" y2={h} stroke="rgba(255,255,255,0.62)" strokeWidth="0.4" />
+                ))}
+              {!horizon && !leading &&
                 THIRDS.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="1.4" fill="rgba(255,255,255,0.85)" />)}
             </g>
             {horizon ? (
@@ -595,7 +604,7 @@ function ComposeView({ step, status, onResult, onActivity }) {
         <Button
           className="w-full"
           onClick={() =>
-            onResult(ok, step.keeper ? { shot: { kind: 'compose', scene: step.scene, x: pos.x, y: pos.y, facing: target.facing } } : undefined)
+            onResult(ok, step.keeper ? { shot: { kind: 'compose', scene: step.scene, x: pos.x, y: pos.y, ...(target.facing ? { facing: target.facing } : {}) } } : undefined)
           }
         >
           {step.keeper ? <><Shutter /> Take the shot</> : 'Check'}
