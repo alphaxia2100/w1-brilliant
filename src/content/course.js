@@ -823,6 +823,130 @@ const lessons = [
       },
     ],
   },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // L7 — LONG EXPOSURE (painting with time). Produced by the lesson factory,
+  // then fixed (BEAT 3 gates on a brightness BAND so overshoot fails) + verified
+  // against the real gate and a live playthrough. Uses only existing primitives.
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'long-exposure-night',
+    number: 7,
+    title: 'Long exposure: painting with time',
+    blurb: 'When the light runs out, let time do the gathering.',
+    steps: [
+      // BEAT 1 — predict by doing: a fast shutter can't drink enough light here
+      {
+        kind: 'capture',
+        scene: 'night',
+        prompt:
+          'It’s nearly black out here, and the shutter’s at its fastest — take the shot and you get almost nothing. A quick snap can’t drink enough light from a night this dark. So stop snapping and start GATHERING: drag the shutter time open, hold it longer and longer, and watch the dead-black scene fill until it glows in the green.',
+        start: -3,
+        targetExp: { min: 1.2, max: 1.8 },
+        feedback: {
+          correct:
+            'There it is. A fast shutter could never drink enough light from a scene this dark — you had to hold it open and let the light PILE UP over time. Time is the lever tonight.',
+        },
+      },
+      // BEAT 2 — confirm: light is cumulative; on a dark scene, time replaces brightness
+      {
+        kind: 'intro',
+        scene: 'night',
+        title: 'Light piles up over time',
+        body: [
+          'A photo is light gathered over time. In daylight a sliver of a second is plenty. In the dark, that same sliver gathers almost nothing — so you keep the shutter open for whole seconds and let the light accumulate.',
+          'That is a long exposure: trading TIME for the light the scene is too dark to give you all at once.',
+        ],
+      },
+      // BEAT 3 — match the SAME night glow the impatient way (ISO) and feel the cost
+      {
+        kind: 'slider-sim',
+        scene: 'night',
+        prompt:
+          'You already lit this same night cleanly with a long shutter. Now reach that SAME brightness the impatient way — no waiting, just ISO. Crank it up to match that glow, then look hard at the loupe and compare what you got.',
+        control: { stops: ISO_STOPS, start: 0 },
+        toParams: (iso) => ({ exposure: isoToExposure(iso), iso: isoToNoise(iso) }),
+        format: (iso) => 'ISO ' + iso,
+        label: 'ISO',
+        ends: ['ISO 100 · clean', 'ISO 12800 · noisy'],
+        ariaLabel: 'ISO sensitivity',
+        loupe: { cx: 4, cy: 25, cells: 6 },
+        // Gate on the brightness MATCH (the long-exposure glow band), not just on noise:
+        // overshoot blows past the glow, undershoot never reaches it — both fail with a hint.
+        check: (iso) => {
+          const exp = isoToExposure(iso)
+          return exp >= 1.2 && exp <= 1.8
+        },
+        feedback: {
+          correct:
+            'Same brightness as the long exposure — but look at the difference. The shutter version was clean; this one is crawling with grain. Identical glow, two prices: the long shutter gathered MORE real light; ISO only amplified the little you had, noise and all. When you can afford the time, time wins.',
+          stages: [
+            'The goal is to MATCH the brightness of the long exposure you already shot — not just to brighten the scene. Nudge the ISO toward that exact glow, no brighter.',
+            'Watch the brightness, not only the dial: too dim and you haven’t reached the glow — push ISO UP; too bright and you blew past it — ease ISO DOWN. Land it ON the glow, then study the grain.',
+          ],
+        },
+      },
+      // BEAT 4 — confirm the contrast, and name the catch (everything must hold still)
+      {
+        kind: 'intro',
+        scene: 'night',
+        title: 'Real light beats amplified light',
+        body: [
+          'Same brightness, two very different images: a long exposure collects MORE real light, so it stays clean. High ISO just turns up the volume on the faint signal you already have — and the grain comes up with it.',
+          'But holding the shutter open for whole seconds has a price: anything that moves during those seconds smears — including the CAMERA, so a long exposure always rides on a tripod, locked dead still. And if the SUBJECT moves, the trick is off — which is the next shot.',
+        ],
+      },
+      // BEAT 5 — the catch: a moving subject forces a fast shutter + ISO instead
+      {
+        kind: 'motion',
+        prompt:
+          'A car is racing through your night scene — so the long-exposure trick is off the table. With the SUBJECT moving, you can’t pay for light with time. Make the call: set the shutter for a sharp car, then take the shot.',
+        start: 6,
+        check: (si) => si <= 1,
+        feedback: {
+          correct:
+            'That was the decision, not just the dial. A long exposure needs EVERYTHING still — the camera AND the subject. The moment the subject moves, you flip the trade: a fast shutter to freeze it, and ISO to buy back the lost light. Static scene → long exposure. Moving subject → fast shutter + ISO.',
+          stages: [
+            'You can’t hold the shutter open for a moving subject — so which lever instead? Push toward less time.',
+            'A moving subject forces the fast end: pick the tiniest slice of time, then take the shot.',
+          ],
+        },
+      },
+      // BEAT 6 — transfer: rank night scenes by how long you'd hold the shutter
+      {
+        kind: 'rank',
+        prompt: 'Order these night shots by how LONG you should hold the shutter — the one that wants the longest exposure first.',
+        scale: ['hold it open for minutes', 'freeze in an instant'],
+        items: [
+          { label: 'Star trails — sky wheeling over a still ridge' },
+          { label: 'A calm, empty city skyline' },
+          { label: 'A dog sprinting across a dark yard' },
+        ],
+        solution: [0, 1, 2],
+        feedback: {
+          correct:
+            'Right. Nothing moving but the slow-turning stars? Hold it open for minutes. A still skyline? Seconds. But the sprinting dog won’t sit still for any of it — that one demands a fast shutter, and ISO to pay for the light. Match the shutter to what’s moving.',
+          stages: [
+            'The stiller the scene, the longer you can keep the shutter open to gather light.',
+            'Stars and a still skyline can soak up time; a sprinting dog cannot — order longest-hold to instant.',
+          ],
+        },
+      },
+      // BEAT 7 — keeper: author the clean long-exposure night shot yourself
+      {
+        kind: 'capture',
+        scene: 'night',
+        prompt:
+          'Your keeper. Camera locked on its tripod, nothing moving in the frame — dead still all around, and dark. No shortcuts: drag the shutter time out until the night drinks in enough light to glow cleanly in the green, then take the shot.',
+        start: -2.5,
+        targetExp: { min: 1.2, max: 1.8 },
+        feedback: {
+          correct:
+            'A clean, glowing night — built from time, not noise. That is painting with time: when the light runs out, you stop cranking ISO and let the shutter gather it, second by second. The shot is yours to keep.',
+        },
+      },
+    ],
+  },
 ]
 
 export const course = {
