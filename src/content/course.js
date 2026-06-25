@@ -649,8 +649,9 @@ const lessons = [
     id: 'light-direction',
     number: 6,
     title: 'Light & direction',
-    blurb: 'Where the light comes from shapes everything.',
+    blurb: 'Where light comes from — and its color — shapes everything.',
     steps: [
+      // BEAT 1 — predict by doing: move the light to reveal form
       {
         kind: 'light-direction',
         control: 'angle',
@@ -666,6 +667,7 @@ const lessons = [
           ],
         },
       },
+      // BEAT 2 — confirm
       {
         kind: 'intro',
         title: 'Direction shapes form',
@@ -674,6 +676,7 @@ const lessons = [
           'Where the light comes from is often a bigger creative choice than how much of it there is.',
         ],
       },
+      // BEAT 3 — backlight → rim / silhouette
       {
         kind: 'light-direction',
         control: 'angle',
@@ -689,6 +692,7 @@ const lessons = [
           ],
         },
       },
+      // BEAT 4 — hard vs soft (the SIZE of the source)
       {
         kind: 'light-direction',
         control: 'soft',
@@ -702,6 +706,55 @@ const lessons = [
           stages: [
             'Hard light gives a crisp, abrupt shadow edge. Which way makes the source larger and softer?',
             'Push toward the soft end until the shadow edge turns gradual, then take the shot.',
+          ],
+        },
+      },
+      // BEAT 5 — warmth / golden hour (light has a COLOR, not just a direction)
+      {
+        kind: 'light-direction',
+        control: 'warmth',
+        fixed: { angle: 68, soft: 0.55 },
+        prompt: 'Midday sun is white and harsh. The “golden hour” after sunrise and before sunset is warm and low — the light photographers chase. Warm this light until it glows golden.',
+        start: { warmth: -0.2 },
+        check: ({ warmth }) => warmth >= 0.5,
+        feedback: {
+          correct:
+            'Golden-hour light is warm AND directional — it wraps the subject in a flattering glow. The colour of the light is a creative tool in its own right, not only its direction.',
+          stages: [
+            'The light still reads cold and flat. Which way pushes it toward a warm, golden colour?',
+            'Warm it up toward the golden end, then take the shot.',
+          ],
+        },
+      },
+      // BEAT 6 — transfer: combine direction + softness + warmth into a recipe
+      {
+        kind: 'light-direction',
+        controls: ['angle', 'soft', 'warmth'],
+        prompt: 'A portrait client wants soft, flattering, golden-hour light. Set all three — direction, softness, and warmth — to give it to them.',
+        start: { angle: 12, soft: 0.18, warmth: -0.2 },
+        check: ({ angle, soft, warmth }) => angle >= 45 && angle <= 120 && soft >= 0.55 && warmth >= 0.25,
+        feedback: {
+          correct:
+            'That is the flattering-portrait recipe: light from the side so the face keeps its form, softened so the shadows stay gentle, and warmed so the skin glows. Three dials, one look.',
+          stages: [
+            'Flattering means side-on (not flat front, not full silhouette), softened, and warm. One of the three is still off.',
+            'Aim the light to the side, spread it soft, and warm it toward golden — then take the shot.',
+          ],
+        },
+      },
+      // BEAT 7 — keeper: your signature lit portrait, your call
+      {
+        kind: 'light-direction',
+        controls: ['angle', 'soft', 'warmth'],
+        prompt: 'Your shot to keep: light this portrait however you like — flattering and warm, or dramatic and hard. Just don’t leave it flat. Then take the shot.',
+        start: { angle: 8, soft: 0.4, warmth: 0 },
+        check: ({ angle }) => angle >= 35,
+        feedback: {
+          correct:
+            'A portrait lit with intent — you chose where the light falls, how hard it is, and what colour it carries. That is lighting: not a rule to obey, but a look you can now author.',
+          stages: [
+            'Flat, front-on light is the one lifeless choice. Move the light somewhere with shape — side, back, anywhere off dead-center.',
+            'Swing the light off dead-center into any direction with form, then take the shot.',
           ],
         },
       },

@@ -50,11 +50,13 @@ for (const lesson of course.lessons) {
       ok(`${tag}: fails at start`, !s.check(s.start))
       ok(`${tag}: reachable`, [0, 1, 2, 3, 4, 5, 6, 7].some((si) => s.check(si)))
     } else if (s.kind === 'light-direction' && s.check) {
-      const init = { angle: 90, soft: 0.4, ...(s.fixed || {}), ...(s.start || {}) }
+      const init = { angle: 90, soft: 0.4, warmth: 0, ...(s.fixed || {}), ...(s.start || {}) }
       ok(`${tag}: fails at start`, !s.check(init))
       let reach = false
       for (let a = 0; a <= 180 && !reach; a += 5)
-        for (let sf = 0; sf <= 1.0001 && !reach; sf += 0.1) if (s.check({ angle: a, soft: sf })) reach = true
+        for (let sf = 0; sf <= 1.0001 && !reach; sf += 0.1)
+          for (let w = -0.4; w <= 1.0001 && !reach; w += 0.2)
+            if (s.check({ angle: a, soft: sf, warmth: w })) reach = true
       ok(`${tag}: reachable`, reach)
     } else if (s.kind === 'rank') {
       const sorted = [...s.solution].sort((a, b) => a - b)

@@ -154,7 +154,7 @@ export function PolaroidReveal({ shot, onDone }) {
             </div>
           ) : shot.kind === 'light' ? (
             <div className="polaroid-develop">
-              <LightDirection angle={shot.angle} soft={shot.soft} size={228} rounded={false} />
+              <LightDirection angle={shot.angle} soft={shot.soft} warmth={shot.warmth} size={228} rounded={false} />
             </div>
           ) : shot.kind === 'motion' ? (
             <div className="polaroid-develop">
@@ -1144,34 +1144,48 @@ function BokehView({ step, status, onResult }) {
   )
 }
 
-/* ---------- light-direction (Light & Direction: front→side→behind + hard/soft) ---------- */
+/* ---------- light-direction (Light & Direction: direction · softness · warmth) ---------- */
+const LD_CFG = {
+  angle: { min: 0, max: 180, step: 1, label: 'Light direction', ends: ['front · flat', 'behind · rim'], readout: (v) => `${Math.round(v)}°` },
+  soft: { min: 0, max: 1, step: 0.02, label: 'Softness', ends: ['hard · crisp', 'soft · gentle'], readout: (v) => `${Math.round(v * 100)}%` },
+  warmth: { min: -0.4, max: 1, step: 0.02, label: 'Warmth', ends: ['cool · midday', 'warm · golden'], readout: (v) => (v >= 0.45 ? 'golden' : v <= -0.1 ? 'cool' : 'neutral') },
+}
 function LightDirView({ step, status, onResult }) {
-  const init = { angle: 90, soft: 0.4, ...(step.fixed || {}), ...(step.start || {}) }
-  const ctrl = step.control || 'angle'
+  const init = { angle: 90, soft: 0.4, warmth: 0, ...(step.fixed || {}), ...(step.start || {}) }
+  const controls = step.controls || [step.control || 'angle']
   const [angle, setAngle] = useState(init.angle)
   const [soft, setSoft] = useState(init.soft)
+  const [warmth, setWarmth] = useState(init.warmth)
   const locked = status === 'correct'
-  const isAngle = ctrl === 'angle'
-  const cfg = isAngle
-    ? { value: angle, set: setAngle, min: 0, max: 180, step: 1, label: 'Light direction', readout: `${angle}°`, ends: ['front · flat', 'behind · rim'] }
-    : { value: soft, set: setSoft, min: 0, max: 1, step: 0.02, label: 'Softness', readout: `${Math.round(soft * 100)}%`, ends: ['hard · crisp', 'soft · gentle'] }
+  const val = { angle, soft, warmth }
+  const setter = { angle: setAngle, soft: setSoft, warmth: setWarmth }
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
       <div className="flex justify-center mb-4">
-        <LightDirection angle={angle} soft={soft} size={300} />
+        <LightDirection angle={angle} soft={soft} warmth={warmth} size={300} />
       </div>
-      <div className="flex items-center gap-3 mb-1">
-        <span className="font-mono text-[22px] font-medium">{cfg.readout}</span>
-        <span className="text-[12px] text-muted">{cfg.label}</span>
-      </div>
-      <Slider value={cfg.value} min={cfg.min} max={cfg.max} step={cfg.step} onChange={cfg.set} ariaLabel={cfg.label} valueText={cfg.readout} />
-      <div className="flex justify-between text-[11px] text-muted mb-5 mt-1">
-        <span>{cfg.ends[0]}</span>
-        <span>{cfg.ends[1]}</span>
-      </div>
+      {controls.map((c) => {
+        const cfg = LD_CFG[c]
+        return (
+          <div key={c} className="mb-3">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="font-mono text-[18px] font-medium">{cfg.readout(val[c])}</span>
+              <span className="text-[12px] text-muted">{cfg.label}</span>
+            </div>
+            <Slider value={val[c]} min={cfg.min} max={cfg.max} step={cfg.step} onChange={setter[c]} ariaLabel={cfg.label} valueText={String(cfg.readout(val[c]))} />
+            <div className="flex justify-between text-[11px] text-muted mt-1">
+              <span>{cfg.ends[0]}</span>
+              <span>{cfg.ends[1]}</span>
+            </div>
+          </div>
+        )
+      })}
       {!locked && (
-        <Button className="w-full" onClick={() => onResult(step.check({ angle, soft }), { chosen: cfg.value, shot: { kind: 'light', angle, soft } })}>
+        <Button
+          className="w-full mt-2"
+          onClick={() => onResult(step.check(val), { chosen: controls.map((c) => val[c]).join(','), shot: { kind: 'light', angle, soft, warmth } })}
+        >
           <Shutter /> Take the shot
         </Button>
       )}

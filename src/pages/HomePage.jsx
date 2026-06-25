@@ -20,7 +20,7 @@ function ShotThumb({ shot, size = 88 }) {
       ) : shot.kind === 'bokeh' ? (
         <DofBokeh f={shot.f} subjectDist={shot.subjectDist} bgDist={shot.bgDist} focal={shot.focal} bg={shot.bg} size={size} rounded={false} />
       ) : shot.kind === 'light' ? (
-        <LightDirection angle={shot.angle} soft={shot.soft} size={size} rounded={false} />
+        <LightDirection angle={shot.angle} soft={shot.soft} warmth={shot.warmth} size={size} rounded={false} />
       ) : shot.kind === 'motion' ? (
         <MotionShot si={shot.si} size={size} rounded={false} fill />
       ) : shot.kind === 'compose' ? (
