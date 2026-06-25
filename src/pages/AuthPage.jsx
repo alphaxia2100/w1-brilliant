@@ -15,7 +15,7 @@ function GoogleG() {
 }
 
 export default function AuthPage() {
-  const { user, signUp, logIn, logInWithGoogle, tryAnonymously, firebaseEnabled } = useApp()
+  const { user, signUp, logIn, logInWithGoogle, firebaseEnabled } = useApp()
   const navigate = useNavigate()
   const [mode, setMode] = useState('signup')
   const [name, setName] = useState('')
@@ -58,23 +58,6 @@ export default function AuthPage() {
             : err?.message?.replace('Firebase: ', '') || 'Couldn’t sign in with Google.',
         )
       }
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function guest() {
-    setError('')
-    setBusy(true)
-    try {
-      await tryAnonymously()
-    } catch (err) {
-      const code = err?.code || ''
-      setError(
-        code === 'auth/operation-not-allowed' || code === 'auth/admin-restricted-operation'
-          ? 'Guest mode isn’t enabled yet — sign up with an email instead (or enable Anonymous sign-in in Firebase).'
-          : err?.message?.replace('Firebase: ', '') || 'Couldn’t start a guest session.',
-      )
     } finally {
       setBusy(false)
     }
@@ -162,8 +145,8 @@ export default function AuthPage() {
         </button>
       )}
 
-      <Button variant="ghost" className="w-full" disabled={busy} onClick={guest}>
-        Try a lesson without an account
+      <Button variant="ghost" className="w-full" onClick={() => navigate('/try')}>
+        Try the first lesson — no sign-up
       </Button>
 
       {!firebaseEnabled && (
