@@ -9,21 +9,23 @@ Verification bar (every shipped change): `npm test` green · `npm run build` cle
 browser (the critic's lesson: an automated gate keeps passing prose/pixel divergence — eyeball it).
 
 ## Backlog (ranked by leverage × shippability — re-rank each iteration)
-1. **silhouettes → L9** (factory candidate, now UNBLOCKED). The `backlit` scene gained a real silhouette
-   subject (the tree), which was its main blocker. Rework: open by exposing THAT subject to black; keep
-   the labels beat; fix-or-cut the un-renderable rim-glow beat; make the keeper exposure-driven (not a
-   reskin of L6's swing-behind).
-2. **Cold-start onboarding** — let a visitor play the first lesson with NO account (lazy-load Firebase),
-   prompt sign-up only at the first save. The documented highest-leverage onboarding/funnel win; also
-   removes the Anonymous-sign-in console dependency for "try it".
-3. **shutter-motion → Lx** (factory candidate, needs redesign). Kill the fabricated panning beat the
-   engine can't render; promote the handheld-shake floor (1/focal-length) into a real interaction;
-   differentiate the keeper. Harder — needs genuinely distinct interactions.
-4. **Pedagogy blueprint slice** (see `Redesign/PEDAGOGY-REDESIGN.md`) — add a predict-with-a-commit
-   "BET" (a draggable ghost-tick before the reveal) to one lesson's most counter-intuitive beat. Needs a
-   small new interaction primitive; high pedagogical leverage.
-5. **Free-play Studio** — pick scene/subject/settings, shoot freely, collect to the roll. Locked
+The cheap, high-confidence factory wins are shipped (L7, L8). What remains is meatier — new engine work
+per item, so higher risk/iteration. Keep verifying live; stop scheduling when nothing high-value is left.
+1. **Pedagogy BET slice** (see `Redesign/PEDAGOGY-REDESIGN.md`) — add a predict-with-a-commit "BET" (a
+   draggable ghost-tick before the reveal) to one lesson's most counter-intuitive beat (e.g. WB "where is
+   neutral?", or the snow histogram piling right). Needs a small new interaction primitive; the highest
+   pedagogical leverage left, and the approved direction.
+2. **shutter-motion** (factory candidate, needs redesign — NOT a quick fix). Its panning beat is a
+   fabricated interaction the motion sim can't do (it only translates the car). Would need a genuinely
+   new sim capability (a panning / world-streak mode) to be true + distinct. Park unless that's built.
+3. **Free-play Studio** — pick scene/subject/settings, shoot freely, collect to the roll. Locked
    north-star deliverable; larger build.
+
+## Parked (need new engine capability — don't ship until built)
+- **silhouettes** — REJECTED as L9 (iter #3). The `backlit` scene's tree↔sky separation (~2.3 stops) is
+  too small for a true silhouette: engine sweep showed NO exposure makes the tree black (<25) while the
+  sky stays bright (>150). Needs a dedicated high-contrast scene (bright sky ~250, subject ~10) — then the
+  factory's design (expose-for-background + profile rank + rim) becomes shippable and distinct from L3.
 
 ## Watch / debt
 - **ISO-on-night appears in L1, L7, L8.** Each teaches a distinct facet (ISO-as-brightness-lever /
@@ -45,3 +47,13 @@ BEAT 6's keeper copied the night's `>=1600` floor onto the BRIGHTER room, which 
 the floor) and tightened BEAT 3 to the exact floor (1600). Real gate 90/90, build clean, both claims
 confirmed live (grain blizzard at max ISO; shadows lift + de-noise on expose-to-the-right). Course now
 8 lessons. Next: silhouettes → L9 (unblocked by the new backlit tree subject).
+
+### #3 — 2026-06-25 — REJECTED silhouettes; shipped cold-start onboarding  ✓ (commit 66d9d59)
+Verified silhouettes in-engine before trusting it: no exposure on the `backlit` scene yields a black
+tree (<25) against a bright sky (>150) — they never co-occur — so the lesson's central claim is a
+prose/pixel divergence; plus its exposure spine overlaps L3. Rejected + parked (needs a dedicated
+high-contrast scene). Pivoted to the next backlog item: **cold-start onboarding** — an unguarded /try
+route lets a visitor play Lesson 1 with no account (store persistence already no-ops without a user),
+asking for the account only at the end. Verified live: logged-out /try renders Lesson 1, guarded routes
+still gate. Gate 90/90, build clean. The loops + an engine check kept a plausible-but-false lesson out.
+Next: the pedagogy BET slice (a predict-with-a-commit ghost-tick) — the highest-leverage item left.
