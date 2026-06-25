@@ -248,25 +248,46 @@ function buildBacklit(N) {
   const horizon = Math.floor(N * 0.46)
   const cells = []
   const subject = []
+  // A DISCRETE silhouette subject: a lone tree standing on the ridge against the
+  // brilliant sky. It starts a touch lit — a murky mid-grey lump you can just read —
+  // so pulling the exposure DOWN is what crushes IT (the subject) to solid black.
+  // This is the thing the whole lesson is about; it must actually be on screen.
+  const trunkC = Math.round(N * 0.62) // tree sits off-centre, clear of the sun
+  const trunkW = Math.max(1, Math.round(N * 0.03))
+  const canopyCx = trunkC + trunkW / 2
+  const canopyCy = horizon - N * 0.16 // canopy floats above the horizon, in open sky
+  const canopyR = N * 0.13
+  const SUBJ = [52, 48, 58] // mid-dark: reads as a grey lump lit, blacks out when pulled down
   for (let r = 0; r < N; r++) {
     cells[r] = []
     subject[r] = []
     for (let c = 0; c < N; c++) {
       let col
+      let isSubject = false
       if (r < horizon) {
         col = [250, 250, 250] // brilliant sky, sitting right at the clipping point
-        const dx = c - N * 0.5
-        const dy = r - horizon * 0.72
-        if (dx * dx + dy * dy < N * N * 0.012) col = [255, 255, 255] // a hot sun
+        const dx = c - N * 0.28
+        const dy = r - horizon * 0.7
+        if (dx * dx + dy * dy < N * N * 0.012) col = [255, 255, 255] // a hot sun (left, clear of the tree)
       } else {
         col = [8, 8, 11] // very dark land — crushes once the sky is pulled back
         // a couple of taller hills so the silhouette reads as land, not a bar
         const h = Math.sin((c / N) * 7) * N * 0.05
         if (r < horizon + Math.abs(h)) col = [5, 5, 8]
       }
+      // the tree: a spiky canopy above the ridge plus a trunk down to it
+      const tx = c - canopyCx
+      const ty = (r - canopyCy) * 1.15
+      const spiky = canopyR * (0.82 + 0.18 * Math.sin(c * 1.9) * Math.cos(r * 1.7))
+      const inCanopy = tx * tx + ty * ty < spiky * spiky && r < horizon + 1
+      const inTrunk = c >= trunkC && c < trunkC + trunkW && r >= canopyCy && r < horizon + 2
+      if (inCanopy || inTrunk) {
+        col = SUBJ.slice()
+        isSubject = true
+      }
       col = col.map((v) => v + (rnd() - 0.5) * 3)
       cells[r][c] = col
-      subject[r][c] = false
+      subject[r][c] = isSubject
     }
   }
   return { cells, subject }

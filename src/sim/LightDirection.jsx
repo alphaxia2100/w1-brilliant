@@ -25,6 +25,13 @@ export default function LightDirection({ angle = 90, soft = 0.4, warmth = 0, siz
   const cy = 45
   const R = 25
   const shadowCx = cx + (1 - lit) * 15 // cast shadow swings away from the light
+  // Rim feathering: a HARD source (soft→0) draws a thin, crisp line that traces the
+  // edge; a BIG soft source (soft→1) spreads it into a broad, blurred glow. The
+  // width grows substantially AND a blur softens it, so the change is plainly visible
+  // — what real backlight does, and what the lesson's feedback promises.
+  const rimWidth = 0.8 + soft * 6 // ~0.8 (crisp line) → ~6.8 (broad band)
+  const rimBlur = soft * 2.6 // hard = no blur; soft = strongly feathered halo
+  const rimId = `ld-rim-${Math.round(angle)}-${Math.round(soft * 100)}-${Math.round(warmth * 100)}`
   return (
     <div
       className={`relative overflow-hidden ${rounded ? 'rounded-tile' : ''} ${className}`}
@@ -43,21 +50,28 @@ export default function LightDirection({ angle = 90, soft = 0.4, warmth = 0, siz
             <stop offset="0%" stopColor={tint('#3B3552', warmth, 0.5)} />
             <stop offset="100%" stopColor={tint('#181520', warmth, 0.5)} />
           </radialGradient>
+          {backlit > 0 && rimBlur > 0.01 && (
+            <filter id={rimId} x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation={rimBlur} />
+            </filter>
+          )}
         </defs>
         <rect width="100" height="100" fill="url(#ld-bg)" />
         {/* ground + cast shadow */}
         <ellipse cx={shadowCx} cy={cy + R + 7} rx={24 + soft * 9} ry={5 + soft * 3} fill="#0C0A12" opacity={0.3 * (0.4 + lit)} />
         {/* the subject */}
         <circle cx={cx} cy={cy} r={R} fill="url(#ld-face)" />
-        {/* rim light catching the edge when lit from behind */}
+        {/* rim light catching the edge when lit from behind — thin & crisp from a hard
+            source, a broad blurred halo from a big soft one */}
         {backlit > 0 && (
           <path
             d={`M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx} ${cy - R}`}
             fill="none"
             stroke={tint('#FBEFD6', warmth)}
-            strokeWidth={1.6 + soft}
+            strokeWidth={rimWidth}
             strokeLinecap="round"
-            opacity={backlit * 0.9}
+            opacity={backlit * (0.95 - soft * 0.35)}
+            filter={rimBlur > 0.01 ? `url(#${rimId})` : undefined}
           />
         )}
       </svg>
