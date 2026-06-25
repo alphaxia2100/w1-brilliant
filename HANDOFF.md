@@ -2,8 +2,9 @@
 
 **Updated:** 2026-06-25 (session 3) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore +
 Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real photos.
-**Read order:** this file → `Factory/IMPROVEMENTS-LOG.md` (the live loop) → `Redesign/PEDAGOGY-REDESIGN.md`
-(the approved direction) → the memory files.
+**Read order:** `WORKING-PROTOCOL.md` (how we work — git *is* memory) → this file → `Factory/IMPROVEMENTS-LOG.md`
+(the live loop) → `Redesign/PEDAGOGY-REDESIGN.md` (the approved direction) → the memory files.
+**Rehydrate fast:** `./tools/git-memory.sh state` (where we are) · `loop` (iteration history) · `recall <term>` (the reasoning behind any past change).
 
 > Everything below was verified against git + the code on 2026-06-25, not recalled. RE-READ a file
 > before asserting its contents or editing it (stale mental models have caused real bugs here).
@@ -77,9 +78,10 @@ primitives (so output is renderable + gate-checkable). **Two loops:**
 ## The improvement loop (`Factory/IMPROVEMENTS-LOG.md` — the live ledger)
 A self-paced research → revise → verify → commit → log → reschedule loop (peer authority). 3 iterations
 done: **#1 shipped L7**, **#2 shipped L8** (fixed real check-band bugs), **#3 rejected silhouettes
-[engine-proven false] + shipped cold-start.** **A wakeup is scheduled (~17:03) for iteration #4: the
-pedagogy "BET" primitive** (a predict-with-a-commit ghost-tick before the reveal). The loop self-fires;
-to **stop it**, just don't reschedule (omit the ScheduleWakeup). Backlog (meatier now): BET slice →
+[engine-proven false] + shipped cold-start.** **⚠️ The session-3 wakeup LAPSED — no cron/wakeup is active
+now (verified 2026-06-25);** the loop is paused, not running. Iteration **#4 = the pedagogy "BET"
+primitive** (a predict-with-a-commit ghost-tick before the reveal) is the next item; restart the loop
+deliberately (don't assume it's firing). To **stop it**, just don't reschedule (omit the ScheduleWakeup). Backlog (meatier now): BET slice →
 shutter-motion redesign (needs a panning sim) → free-play Studio. Parked: silhouettes.
 
 ## How to run / verify

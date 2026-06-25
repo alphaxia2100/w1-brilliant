@@ -1,0 +1,14 @@
+# <tag>: <imperative summary, ≤72 chars>
+# tags: lesson | factory | loop | fix | engine | docs | memory | chore
+#
+# WHAT changed:
+#   -
+# WHY (leverage, or the bug this fixes):
+#   -
+# VERIFIED (npm test count · build · live walkthrough · engine sweep w/ numbers):
+#   -
+#
+# Commit = a memory write. A future session reads this to reconstruct what/why/how-verified
+# without re-running the work. See WORKING-PROTOCOL.md. Keep `loop:` subjects greppable.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
