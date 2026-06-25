@@ -23,7 +23,7 @@ So: the branch has the newest work and is **unpushed + undeployed**. Decide whet
 ## TL;DR
 The course grew from 6 → **8 lessons**, gained an **AI photo grader** and **try-before-signup**
 onboarding, and now has a working **lesson factory** (autonomous lesson generation with two verification
-loops) plus a self-paced **improvement loop** that's mid-run. `npm test` = **90/90 green**, build clean.
+loops) plus a self-paced **improvement loop** (4 iterations done). `npm test` = **92/92 green**, build clean.
 
 ## The course now — 8 lessons (verified from `src/content/course.js`)
 | # | id | what it teaches |
@@ -31,7 +31,7 @@ loops) plus a self-paced **improvement loop** that's mid-run. `npm test` = **90/
 | 1 | `exposure-triangle` | capture-light → aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9 beats) |
 | 2 | `depth-of-field` | forward flower-bokeh, 4 levers, night-bokeh, synthesis keeper (8) |
 | 3 | `metering` | histogram: spread · clip highs/lows · **blinkies** + dynamic range (backlit, now with a silhouette tree) · high-key snow · rank (7) |
-| 4 | `white-balance` | cool/warm casts · **click-WB eyedropper** · creative warmth (5) |
+| 4 | `white-balance` | **BET: predict where neutral is (snow), be wrong, correct** · cool/warm casts · **click-WB eyedropper** · creative warmth (5) |
 | 5 | `rule-of-thirds` | thirds · lead-room · **leading lines** · horizon · keeper (6) |
 | 6 | `light-direction` | reveal-form · backlight · hard/soft (now feathered) · **warmth** · flattering recipe · **dramatic** keeper (7) |
 | 7 | `long-exposure-night` | **factory-made.** gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
@@ -78,14 +78,15 @@ primitives (so output is renderable + gate-checkable). **Two loops:**
 ## The improvement loop (`Factory/IMPROVEMENTS-LOG.md` — the live ledger)
 A self-paced research → revise → verify → commit → log → reschedule loop (peer authority). 3 iterations
 done: **#1 shipped L7**, **#2 shipped L8** (fixed real check-band bugs), **#3 rejected silhouettes
-[engine-proven false] + shipped cold-start.** **⚠️ The session-3 wakeup LAPSED — no cron/wakeup is active
-now (verified 2026-06-25);** the loop is paused, not running. Iteration **#4 = the pedagogy "BET"
-primitive** (a predict-with-a-commit ghost-tick before the reveal) is the next item; restart the loop
-deliberately (don't assume it's firing). To **stop it**, just don't reschedule (omit the ScheduleWakeup). Backlog (meatier now): BET slice →
+[engine-proven false] + shipped cold-start**, **#4 shipped the pedagogy "BET" primitive** (new `bet` step
+kind: predict-with-a-commit → be-wrong → correct, on WB beat 1; a 4-lens adversarial critic caught a truth
+blocker + 4 majors, all fixed). **⚠️ No cron/wakeup is active now (verified 2026-06-25);** the loop is
+paused, not auto-firing — restart deliberately. Next backlog item: a 2nd BET (L3 snow-histogram) or the WB
+Kelvin truth-fix. To **stop the loop**, just don't reschedule (omit the ScheduleWakeup). Backlog (meatier now): BET slice →
 shutter-motion redesign (needs a panning sim) → free-play Studio. Parked: silhouettes.
 
 ## How to run / verify
-- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (90/90).
+- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (92/92).
   **Build:** `npm run build`. **Deploy:** `npm run deploy`. **Functions deps:** `cd functions && npm install`.
 - **Verify a lesson:** full beat walkthrough in the UI, mobile 375 + desktop, test wrong paths, confirm the
   keepsake matches the lesson. **Preview gotcha:** the `capture` beat's rAF exposure animation can stall in
