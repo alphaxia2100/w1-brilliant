@@ -5,6 +5,7 @@ import AuthPage from './pages/AuthPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import CoursePathPage from './pages/CoursePathPage.jsx'
 import LessonPage from './pages/LessonPage.jsx'
+import GradePage from './pages/GradePage.jsx'
 
 function Splash() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/" element={guard(<HomePage />)} />
       <Route path="/course" element={guard(<CoursePathPage />)} />
+      <Route path="/grade" element={guard(<GradePage />)} />
       <Route path="/lesson/:id" element={guard(<LessonRoute />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

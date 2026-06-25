@@ -1,0 +1,14 @@
+{
+  "name": "aperture-functions",
+  "description": "Cloud Functions for Aperture — the AI photo grader",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^7.2.5"
+  },
+  "private": true
+}

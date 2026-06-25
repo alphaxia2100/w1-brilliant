@@ -129,6 +129,21 @@ export default function HomePage() {
       )}
 
       <button
+        onClick={() => navigate('/grade')}
+        className="text-left bg-surface rounded-big p-5 transition hover:bg-hairline/60 flex items-center gap-4"
+      >
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#141414" strokeWidth="1.7" aria-hidden="true" className="shrink-0">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <circle cx="12" cy="12" r="3.2" />
+          <path d="M8 5l1.2-2h5.6L16 5" />
+        </svg>
+        <div>
+          <h3 className="text-[17px] font-semibold">Grade my photo</h3>
+          <p className="text-muted text-[14px]">Upload a shot — an AI coach grades it on the fundamentals.</p>
+        </div>
+      </button>
+
+      <button
         onClick={() => navigate('/course')}
         className="text-left bg-surface rounded-big p-5 transition hover:bg-hairline/60"
       >

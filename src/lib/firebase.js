@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
+import { getFunctions } from 'firebase/functions'
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,14 +18,16 @@ export const firebaseEnabled = Boolean(config.apiKey && config.projectId)
 
 let auth = null
 let db = null
+let functions = null
 
 if (firebaseEnabled) {
   const app = initializeApp(config)
   auth = getAuth(app)
   db = getFirestore(app)
+  functions = getFunctions(app)
 }
 
 // Google OAuth provider (null in LOCAL mode — social login needs real Firebase).
 export const googleProvider = firebaseEnabled ? new GoogleAuthProvider() : null
 
-export { auth, db }
+export { auth, db, functions }
