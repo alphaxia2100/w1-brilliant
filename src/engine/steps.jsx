@@ -1301,25 +1301,19 @@ function BetView({ step, status, onResult, onActivity }) {
   const castValue = step.castValue ?? 0
   const [phase, setPhase] = useState('predict')
   const [bet, setBet] = useState(step.bet?.start ?? ctrl.start)
+  const [moved, setMoved] = useState(false)
   const [raw, setRaw] = useState(step.bet?.start ?? ctrl.start)
   const locked = status === 'correct'
 
   const cast = step.toParams(0).baseTemp || 0 // the baked-in cast; neutral sits at -cast
-  const vNeutral = -cast
   const pctOf = (v) => ((v - ctrl.min) / (ctrl.max - ctrl.min)) * 100
+  // A native 28px range thumb travels inset half-its-width at each end, so a pinned marker
+  // must track that range, not the full container — else the "gap" the lesson hinges on lies.
+  const markLeft = (v) => `calc(14px + ${(pctOf(v) / 100).toFixed(4)} * (100% - 28px))`
 
-  function betContrast(b) {
-    const dir = vNeutral < 0 ? 'blue / cooler' : 'orange / warmer'
-    if (Math.abs(b) < 0.12)
-      return `You bet the middle of the dial — but neutral was a real shove toward ${dir}. You cancel a colour cast by adding its OPPOSITE, and a strong cast needs a strong correction.`
-    const under = vNeutral < 0 ? b > vNeutral + 0.12 : b < vNeutral - 0.12
-    if (under)
-      return `Right instinct — toward ${dir} — but neutral sat even FURTHER than you bet. A strong cast takes a bigger correction than it feels like it should.`
-    return `Sharp bet — you felt how far toward ${dir} neutral really sits. Most people guess the middle; you didn't.`
-  }
-
-  // PHASE 1 — predict (photo frozen at the cast; no readout to give it away)
+  // PHASE 1 — predict (photo frozen at the cast; no readout to give the answer away)
   if (phase === 'predict') {
+    const side = bet < -0.02 ? 'toward cooler, blue' : bet > 0.02 ? 'toward warmer, orange' : 'centre of the dial'
     return (
       <div className="animate-risein">
         <Prompt>{step.bet?.prompt || step.prompt}</Prompt>
@@ -1330,24 +1324,26 @@ function BetView({ step, status, onResult, onActivity }) {
           Predict first — the photo won’t move until you lock your bet.
         </p>
         <div className="relative mb-2 pt-4">
-          <div className="absolute -top-0 pointer-events-none" style={{ left: `${pctOf(bet)}%` }}>
-            <span className="-translate-x-1/2 block text-[9px] uppercase tracking-wide text-muted whitespace-nowrap">your bet</span>
+          <div className="absolute top-0 pointer-events-none" style={{ left: markLeft(bet), transform: 'translateX(-50%)' }}>
+            <span className="block text-[10px] uppercase tracking-wide text-muted whitespace-nowrap">your bet</span>
           </div>
           <Slider
+            key="bet-predict"
             value={bet}
             min={ctrl.min}
             max={ctrl.max}
             step={ctrl.step || 1}
-            ariaLabel={(step.ariaLabel || 'prediction') + ' — your bet'}
-            onChange={(v) => { setBet(v); onActivity?.() }}
+            ariaLabel={(step.ariaLabel || 'prediction') + ' — place your bet'}
+            valueText={side}
+            onChange={(v) => { setBet(v); setMoved(true); onActivity?.() }}
           />
         </div>
         <div className="flex justify-between text-[11px] text-muted mb-5">
           <span>{step.ends?.[0]}</span>
           <span>{step.ends?.[1]}</span>
         </div>
-        <Button className="w-full" onClick={() => { setRaw(bet); setPhase('correct') }}>
-          Lock in my bet
+        <Button className="w-full" disabled={!moved} onClick={() => { setRaw(bet); setPhase('correct') }}>
+          {moved ? 'Lock in my bet' : 'Drag the marker to bet'}
         </Button>
       </div>
     )
@@ -1358,34 +1354,33 @@ function BetView({ step, status, onResult, onActivity }) {
   const params = step.toParams(value)
   const eff = cast + value
   const read = Math.abs(eff) < 0.12 ? { t: 'reads neutral', c: '#1F8A3B' } : eff > 0 ? { t: 'still warm', c: '#9A6A2F' } : { t: 'too cool', c: '#3A5A9A' }
+  const override = step.betMessages?.[step.betKind?.(bet)] || step.feedback?.correct
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
       <div className="relative flex justify-center mb-4">
         <PixelScene scene={step.scene} size={300} {...params} />
       </div>
-      <div className="flex items-center gap-4 mb-3">
-        <div className="flex flex-col">
-          <span className="font-mono text-[26px] font-medium leading-none">{step.format(value)}</span>
-          {step.label && <span className="text-[12px] text-muted mt-1">{step.label}</span>}
-        </div>
-        <span className="text-[13px] font-medium ml-auto" style={{ color: read.c }}>{read.t}</span>
+      <div className="flex items-baseline gap-3 mb-3">
+        <span className="text-[18px] font-semibold leading-none" style={{ color: read.c }}>{read.t}</span>
+        {step.label && <span className="text-[12px] text-muted">{step.label}</span>}
       </div>
       <div className="relative mb-2 pt-4">
         {/* the pinned "your bet" ghost tick — the gap to true neutral is the lesson */}
-        <div className="absolute top-0 pointer-events-none z-10" style={{ left: `${pctOf(bet)}%` }}>
-          <span className="-translate-x-1/2 block text-[9px] uppercase tracking-wide text-muted whitespace-nowrap">your bet</span>
+        <div className="absolute top-0 pointer-events-none z-10" style={{ left: markLeft(bet), transform: 'translateX(-50%)' }}>
+          <span className="block text-[10px] uppercase tracking-wide text-muted whitespace-nowrap">your bet</span>
         </div>
-        <div className="absolute pointer-events-none z-10" style={{ left: `${pctOf(bet)}%`, top: 18, transform: 'translateX(-50%)' }}>
-          <span className="block w-[2px] h-5 rounded bg-ink/45" />
+        <div className="absolute pointer-events-none z-10" style={{ left: markLeft(bet), top: 20, transform: 'translateX(-50%)' }}>
+          <span className="block w-[2px] h-5 rounded bg-ink/70" />
         </div>
         <Slider
+          key="bet-live"
           value={value}
           min={ctrl.min}
           max={ctrl.max}
           step={ctrl.step || 1}
           ariaLabel={step.ariaLabel || 'adjust'}
-          valueText={step.format ? step.format(value) : undefined}
+          valueText={read.t}
           onChange={(v) => { if (!locked) { setRaw(v); onActivity?.() } }}
         />
       </div>
@@ -1400,7 +1395,7 @@ function BetView({ step, status, onResult, onActivity }) {
             onResult(step.check(value), {
               chosen: value,
               shot: { scene: step.scene, params },
-              override: step.check(value) ? betContrast(bet) : undefined,
+              override: step.check(value) ? override : undefined,
             })
           }
         >

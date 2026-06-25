@@ -76,6 +76,31 @@ const wbWarmKept = (cast) => (v) => {
   const e = cast + v
   return e >= 0.22 && e <= 0.55
 }
+// A WB bet's relationship to where neutral actually sits (-cast). PURE + gate-tested
+// (Redesign/checks.mjs) so the success copy can NEVER tell a learner their wrong-direction
+// guess was "right" — the pedagogy blueprint's #1 named risk. center=bet the middle;
+// wrong=bet the same way as the cast; near=nailed it; short=right way but not far enough;
+// over=right way but past neutral.
+const wbBetKind = (cast) => (bet) => {
+  const vNeutral = -cast
+  const band = 0.12
+  if (Math.abs(bet) < band) return 'center'
+  const towardCast = vNeutral < 0 ? bet > 0 : bet < 0
+  if (towardCast) return 'wrong'
+  if (Math.abs(bet - vNeutral) <= band) return 'near'
+  return Math.abs(bet) < Math.abs(vNeutral) ? 'short' : 'over'
+}
+// WB_WARM-specific copy (the only bet beat today). The fix for a warm cast is toward blue.
+const WB_BET_MSG = {
+  center:
+    'You bet the middle of the dial — but neutral was a real shove toward blue. You cancel a colour cast by adding its OPPOSITE, and a strong cast needs a strong correction.',
+  wrong:
+    'You bet toward orange — but the photo was ALREADY too orange; pushing that way only deepens the cast. Neutral lives the other direction: a real shove toward blue.',
+  short:
+    'Right instinct — toward blue — but neutral sat even FURTHER than you bet. A strong cast takes a bigger correction than it feels like it should.',
+  near: 'You called it — neutral really does sit well toward blue, not in the middle. Most people guess the centre; you didn’t.',
+  over: 'You went past it — you felt the cast was strong and over-shot into too-cool. Close, but neutral sat a touch back toward the middle.',
+}
 
 const lessons = [
   // ───────────────────────────────────────────────────────────────────────────
@@ -508,26 +533,31 @@ const lessons = [
     title: 'White balance: the color of light',
     blurb: 'Make the colors read true — or warm on purpose.',
     steps: [
-      // BEAT 1 — BET then be wrong: predict where neutral is, FEEL it's a hard shove to blue
+      // BEAT 1 — BET then be wrong: predict where neutral is, FEEL it's a hard shove to blue.
+      // Scene = snow: white is the purest cast indicator (why pros judge WB on white/grey). Verified
+      // in-engine: snow reads strongly orange under the cast (R-B≈63) AND clean/neutral when corrected
+      // (intrinsic R-B≈-12) — so "the orange lifts → clean white" is truthful both ways. No Kelvin
+      // readout — the felt cast carries it (blueprint shift #6: demote the number, judge by eye), and
+      // the displayed K ran backwards from real cameras anyway.
       {
         kind: 'bet',
-        scene: 'seascape',
+        scene: 'snow',
         bet: {
           start: 0, // the intuitive guess — the middle of the dial; the engine proves it wrong (eff 0.6, visibly orange)
           prompt:
-            'Indoor bulbs left this photo too orange. Before you fix it — place your bet: where must the White Balance slider sit to cancel the cast and make the colours read NEUTRAL? Drag the marker, then lock it in.',
+            'This snow came out orange — the camera was left on the indoor (tungsten) white-balance preset. Before you fix it — place your bet: where must the White Balance slider sit to cancel the cast so the snow reads clean WHITE? Drag the marker, then lock it in.',
         },
         prompt:
-          'Your bet is the dashed mark. Now slide for real until the orange lifts — and watch how far PAST your bet neutral actually sits.',
+          'Your bet is the dashed mark. Now slide for real until the orange lifts and the snow reads white — and watch how far PAST your bet neutral actually sits.',
         control: { min: -1, max: 1, step: 0.05, start: 0 },
         toParams: (v) => ({ temp: v, baseTemp: WB_WARM }),
-        format: wbResultK(WB_WARM),
-        label: 'White balance',
         ends: ['cooler · blue', 'warmer · orange'],
         ariaLabel: 'White balance',
         check: wbNeutral(WB_WARM),
+        betKind: wbBetKind(WB_WARM), // gate-tested classifier
+        betMessages: WB_BET_MSG, // bet-vs-actual success copy, keyed by classifier
         feedback: {
-          // The success line is overridden at runtime by the bet-vs-actual contrast; this is the fallback.
+          // Fallback only — success copy comes from betMessages[betKind(bet)] at runtime.
           correct:
             'Neutral — and the slider did NOT end in the middle. You cancel a cast by adding its OPPOSITE, and a strong orange cast needs a real shove toward blue.',
           stages: [

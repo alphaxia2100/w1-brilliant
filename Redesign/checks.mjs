@@ -39,6 +39,16 @@ for (const lesson of course.lessons) {
       for (let v = s.control.min; v <= s.control.max + 1e-9; v += s.control.step || 1) domain.push(+v.toFixed(4))
       ok(`${tag}: bet fails at start`, !s.check(s.bet?.start ?? s.control.start))
       ok(`${tag}: reachable`, domain.some((v) => s.check(v)))
+      if (s.betKind && s.betMessages) {
+        // The success copy must NEVER validate a wrong-direction guess (blueprint risk #1).
+        // Assert the classifier maps representative bets to the right outcome and each has copy.
+        const vN = -(s.toParams(0).baseTemp || 0)
+        const cases = { center: 0, wrong: -Math.sign(vN) * 0.5, near: vN, short: vN / 2, over: vN * 1.5 }
+        const mapped = Object.entries(cases).every(([want, b]) => s.betKind(b) === want)
+        const allCopy = Object.keys(cases).every((k) => !!s.betMessages[k])
+        ok(`${tag}: bet feedback classifies center/wrong/near/short/over correctly`, mapped)
+        ok(`${tag}: every bet outcome has a message`, allCopy)
+      }
     } else if (s.kind === 'bokeh' && s.check) {
       // check() takes the combined effectiveBlur; assert start fails and the most-favorable
       // setting of every active lever passes.
