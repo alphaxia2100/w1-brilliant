@@ -8,9 +8,11 @@ import {
   updateProfile,
   linkWithCredential,
   EmailAuthProvider,
+  signInWithPopup,
+  linkWithPopup,
 } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { auth, db, firebaseEnabled } from './lib/firebase.js'
+import { auth, db, firebaseEnabled, googleProvider } from './lib/firebase.js'
 
 const COURSE = 'exposure'
 
@@ -231,6 +233,34 @@ export function AppProvider({ children }) {
     setProgress(localStore.readJSON(lsKey(u.uid), emptyProgress()))
   }
 
+  async function logInWithGoogle() {
+    if (!firebaseEnabled) throw new Error('Google sign-in needs Firebase — add config in .env.')
+    const cur = auth.currentUser
+    // A guest? Upgrade the SAME account so their progress (keepers/XP) carries over.
+    if (cur && cur.isAnonymous) {
+      try {
+        const res = await linkWithPopup(cur, googleProvider)
+        // A same-uid upgrade may not re-fire onAuthStateChanged — reflect + persist manually,
+        // the same way signUp() handles the email link.
+        const fb = res.user
+        const u = { uid: fb.uid, email: fb.email, displayName: fb.displayName, isAnonymous: fb.isAnonymous }
+        setUser(u)
+        setProgress((prev) => {
+          persist(u, prev)
+          return prev
+        })
+        return
+      } catch (err) {
+        // That Google account already exists as its own user — fall through to a plain sign-in
+        // (anon progress can't be merged; that's expected Firebase behaviour).
+        if (err?.code !== 'auth/credential-already-in-use') throw err
+      }
+    }
+    // Fresh sign-in: onAuthStateChanged fires and loadRemote() loads THIS user's saved progress,
+    // so don't setProgress here (it would clobber their cloud data with the current state).
+    await signInWithPopup(auth, googleProvider)
+  }
+
   async function logOut() {
     if (firebaseEnabled) {
       await signOut(auth)
@@ -313,6 +343,7 @@ export function AppProvider({ children }) {
     tryAnonymously,
     signUp,
     logIn,
+    logInWithGoogle,
     logOut,
     saveResume,
     recordAttempt,

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
 const config = {
@@ -23,5 +23,8 @@ if (firebaseEnabled) {
   auth = getAuth(app)
   db = getFirestore(app)
 }
+
+// Google OAuth provider (null in LOCAL mode — social login needs real Firebase).
+export const googleProvider = firebaseEnabled ? new GoogleAuthProvider() : null
 
 export { auth, db }
