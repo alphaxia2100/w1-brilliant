@@ -46,12 +46,13 @@ function shadowsCrushed(scene, exposure) {
   return c[0] / total > 0.12
 }
 
-// Within the sensor's range = NEITHER edge meaningfully clipped — the compromise an
-// over-contrasty (high dynamic range) scene allows, where you can't perfectly hold both.
-function withinRange(scene, exposure) {
+// Highlights protected = the bright end is no longer clipped. On a scene wider than
+// the sensor can hold, you CAN'T clear both ends — so the rule is to protect the
+// highlights (a blown sky is gone for good; shadows can be lifted later).
+function highlightsProtected(scene, exposure) {
   const c = histogram({ scene, exposure })
   const total = c.reduce((a, b) => a + b, 0) || 1
-  return c[0] / total <= 0.06 && c[c.length - 1] / total <= 0.06
+  return c[c.length - 1] / total <= 0.05
 }
 
 // High-key well-exposed = bright overall AND not clipped — the histogram sits RIGHT.
@@ -155,7 +156,7 @@ const lessons = [
         check: (iso) => iso >= 1600,
         feedback: {
           correct:
-            'ISO amplifies the SIGNAL you’ve gathered, not the light itself — brighter, but the loupe shows the cost: grain creeps in. It doesn’t collect more light, it just turns up the volume, so it’s the lever of last resort.',
+            'ISO amplifies the signal you’ve gathered rather than collecting more light — brighter, but the loupe shows the cost: grain. It’s the lever of last resort.',
           stages: [
             'Can you make out the scene yet? Which way turns the ISO up?',
             'Higher ISO amplifies brighter. Keep raising it until the scene is readable, then take the shot.',
@@ -441,7 +442,7 @@ const lessons = [
         kind: 'slider-sim',
         scene: 'backlit',
         blinkies: true,
-        prompt: 'Cameras paint a warning right onto clipped pixels — “blinkies”. This scene has a brilliant sky over dark land. Drag the exposure to stop the SKY from blinking red, without making the LAND blink blue.',
+        prompt: 'Your camera flashes blown highlights right on the photo — “blinkies” (crushed shadows show in blue here too). This sky is clipping. Pull the exposure back until the red clears — and watch what it costs the land.',
         control: { min: -2, max: 2, step: 0.1, start: 0.6 },
         toParams: (v) => ({ exposure: v }),
         format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV',
@@ -449,13 +450,13 @@ const lessons = [
         ends: ['darker', 'brighter'],
         ariaLabel: 'Exposure compensation',
         histogram: true,
-        check: (v) => withinRange('backlit', v),
+        check: (v) => highlightsProtected('backlit', v),
         feedback: {
           correct:
-            'Blinkies show you WHERE detail is clipping — on the photo, not just on the graph. And feel the catch: on a scene this contrasty you can save the sky OR the land, never perfectly both. That gap is dynamic range — the reason photographers bracket, use grad filters, or expose for the highlights and lift the shadows later.',
+            'You protected the highlights — the right call, because a blown sky is gone for good while shadows can be lifted later. But notice the cost: holding the sky pushed the land into the blue. This scene is wider than one exposure can hold — that gap is dynamic range.',
           stages: [
-            'The red flashing in the sky is blown highlights. Which way pulls the exposure back from them?',
-            'Bring the exposure down until the sky stops flashing red — but stop before the land starts flashing blue.',
+            'The red flashing is the sky blowing out. Which way pulls the exposure back from it?',
+            'Bring the exposure down until the red blinkies clear — the sky returns, even as the land sinks into shadow.',
           ],
         },
       },
@@ -564,6 +565,8 @@ const lessons = [
         scene: 'room',
         baseTemp: WB_CARD,
         start: { temp: 0 },
+        hint: { x: '21%', y: '61%' }, // the gray card's location — pulses until first sample
+
         prompt: 'Pros don’t eyeball it — they use the eyedropper. Tap the gray card on the wall, and the camera solves the white balance to make that card read a true, colourless gray.',
         check: wbNeutral(WB_CARD),
         feedback: {
@@ -802,19 +805,19 @@ const lessons = [
           ],
         },
       },
-      // BEAT 7 — keeper: your signature lit portrait, your call
+      // BEAT 7 — keeper: the OPPOSITE pole — a hard, dramatic, near-backlit look
       {
         kind: 'light-direction',
         controls: ['angle', 'soft', 'warmth'],
-        prompt: 'Your shot to keep: light this portrait however you like — flattering and warm, or dramatic and hard. Just don’t leave it flat. Then take the shot.',
-        start: { angle: 8, soft: 0.4, warmth: 0 },
-        check: ({ angle }) => angle >= 35,
+        prompt: 'Last one — the opposite mood. Forget flattering: make it DRAMATIC. Harden the light and swing it around behind the subject for crisp-edged shadows and a rim of light. Then take the shot to keep it.',
+        start: { angle: 40, soft: 0.7, warmth: 0.3 },
+        check: ({ angle, soft }) => angle >= 110 && soft <= 0.3,
         feedback: {
           correct:
-            'A portrait lit with intent — you chose where the light falls, how hard it is, and what colour it carries. That is lighting: not a rule to obey, but a look you can now author.',
+            'Hard, raking, near-backlit — the same subject now reads moody and powerful instead of soft and warm. Flattering and dramatic are just two settings of the same three dials; you can dial in either, on purpose.',
           stages: [
-            'Flat, front-on light is the one lifeless choice. Move the light somewhere with shape — side, back, anywhere off dead-center.',
-            'Swing the light off dead-center into any direction with form, then take the shot.',
+            'Dramatic is the opposite of the soft, frontal recipe: HARD light (crisp shadow edges) coming from well around the side or behind.',
+            'Harden the light and swing it back toward behind the subject, then take the shot.',
           ],
         },
       },

@@ -238,9 +238,11 @@ function buildSnow(N) {
   return { cells, subject }
 }
 
-// A high-dynamic-range scene: a brilliant near-clipping sky over near-black land,
-// wider than one exposure can hold. Used by the metering "blinkies" beat — you can
-// quiet the sky OR lift the land, not perfectly both.
+// A genuinely high-dynamic-range scene: a brilliant near-clipping sky over very dark
+// land. The range (~250 : ~8, far past 243/12) is wider than one exposure can hold —
+// every exposure that pulls the sky back from clipping pushes the land into the
+// shadow-clip overlay, so there is NO exposure where both are clean. The metering
+// "blinkies" beat uses this to teach: protect the highlights, accept the shadows.
 function buildBacklit(N) {
   const rnd = mulberry32(707)
   const horizon = Math.floor(N * 0.46)
@@ -257,12 +259,12 @@ function buildBacklit(N) {
         const dy = r - horizon * 0.72
         if (dx * dx + dy * dy < N * N * 0.012) col = [255, 255, 255] // a hot sun
       } else {
-        col = [20, 20, 24] // dark, silhouetted land
+        col = [8, 8, 11] // very dark land — crushes once the sky is pulled back
         // a couple of taller hills so the silhouette reads as land, not a bar
         const h = Math.sin((c / N) * 7) * N * 0.05
-        if (r < horizon + Math.abs(h)) col = [12, 12, 16]
+        if (r < horizon + Math.abs(h)) col = [5, 5, 8]
       }
-      col = col.map((v) => v + (rnd() - 0.5) * 6)
+      col = col.map((v) => v + (rnd() - 0.5) * 3)
       cells[r][c] = col
       subject[r][c] = false
     }
@@ -421,8 +423,8 @@ export function drawScene(ctx, params) {
       const R = clamp(px[0], 0, 255)
       const G = clamp(px[1], 0, 255)
       const B = clamp(px[2], 0, 255)
-      if (blink && (R + G + B) / 3 >= 243) ctx.fillStyle = '#FF3B3B'
-      else if (blink && (R + G + B) / 3 <= 12) ctx.fillStyle = '#3B7BFF'
+      if (blink && (R + G + B) / 3 >= 243) ctx.fillStyle = '#E8483D' // blown-highlight warning
+      else if (blink && (R + G + B) / 3 <= 12) ctx.fillStyle = '#5478C8' // crushed-shadow overlay
       else ctx.fillStyle = `rgb(${R | 0},${G | 0},${B | 0})`
       ctx.fillRect(Math.floor(j * cw), Math.floor(i * cw), Math.ceil(cw), Math.ceil(cw))
     }

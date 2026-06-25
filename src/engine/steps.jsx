@@ -327,7 +327,7 @@ function SliderSimView({ step, status, onResult, onActivity }) {
   // Blinkies blink: toggle a flag a couple times a second so clipped cells flash.
   useEffect(() => {
     if (!step.blinkies) return
-    const id = setInterval(() => setBlinkOn((b) => !b), 430)
+    const id = setInterval(() => setBlinkOn((b) => !b), 850)
     return () => clearInterval(id)
   }, [step.blinkies])
 
@@ -1264,6 +1264,13 @@ function EyedropView({ step, status, onResult }) {
       <div className="relative mx-auto mb-3" style={{ maxWidth: 300 }}>
         <PixelScene scene={step.scene} size={300} temp={temp} baseTemp={base} />
         <div ref={frame} onClick={pick} className="absolute inset-0 rounded-tile cursor-crosshair" />
+        {/* a pulsing marker over the gray card until the first sample — discoverable on touch */}
+        {!picked && step.hint && (
+          <div className="absolute pointer-events-none" style={{ left: step.hint.x, top: step.hint.y, transform: 'translate(-50%,-50%)', width: 50, height: 42 }}>
+            <span className="absolute inset-0 rounded-[6px] border-2 border-white/85" />
+            <span className="absolute inset-0 rounded-[6px] border-2 border-white animate-ping" />
+          </div>
+        )}
       </div>
       <p className="text-[13px] text-center mb-4" style={{ color: picked ? '#1F8A3B' : '#777' }}>
         {picked ? 'Sampled — tap a different spot to try another, or take the shot.' : 'Tap the surface that should be a neutral gray.'}
