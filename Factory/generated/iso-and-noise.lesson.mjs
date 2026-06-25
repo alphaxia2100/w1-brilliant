@@ -76,7 +76,9 @@ export default {
       ends: ['ISO 100 · clean', 'ISO 12800 · noisy'],
       ariaLabel: 'ISO sensitivity',
       loupe: { cx: 3, cy: 25, cells: 6 },
-      check: (iso) => iso >= 1600 && iso <= 3200,
+      // The floor: ISO 1600 is the LOWEST that reads this night cleanly (mean ~0.42);
+      // 800 falls into the murk, 3200+ is a stop of needless grain. "Never a stop higher."
+      check: (iso) => iso === 1600,
       feedback: {
         correct:
           'There it is — the floor. You can’t drop to clean ISO 100 here: go lower than this and the scene falls back into the dark. The darkness itself sets a minimum, and your job is to sit right on it — high enough to read, never a stop higher. That’s the discipline: not "avoid grain," but "let the dark, and only the dark, decide how much you spend."',
@@ -158,10 +160,13 @@ export default {
       ends: ['ISO 100 · too dark', 'ISO 12800 · noisy'],
       ariaLabel: 'ISO sensitivity',
       loupe: { cx: 3, cy: 25, cells: 6 },
-      check: (iso) => iso >= 1600 && iso <= 3200,
+      // This room is dim but NOT pitch-dark like the night — so its floor is LOWER:
+      // ISO 800 reads it cleanly (mean ~0.46). The transfer is that the scene, not a
+      // fixed number, sets how much ISO you spend.
+      check: (iso) => iso === 800,
       feedback: {
         correct:
-          'That one’s yours. You spent exactly the ISO the dark forced and not a stop more — bright enough to read, clean enough to keep. That’s the whole discipline: ISO is the lever of last resort, and you just used it like one. Your shot’s in the gallery.',
+          'That one’s yours. You spent exactly the ISO the dark forced and not a stop more — and notice it took LESS than the pitch-dark night did, because this room isn’t as dark. The scene sets the floor; you just listen. ISO is the lever of last resort, and you used it like one. Your shot’s in the gallery.',
         stages: [
           'At ISO 100 the room is lost in the dark — it needs more gain than that. Bring the ISO up until the scene reads.',
           'Now stop the moment it reads clean — don’t keep climbing into needless grain. Lowest ISO that reads, no higher.',

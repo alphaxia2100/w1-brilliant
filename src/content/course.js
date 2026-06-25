@@ -947,6 +947,145 @@ const lessons = [
       },
     ],
   },
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // L8 — ISO & NOISE (the price of light). Factory candidate, fixed (BEAT 3 floor =
+  // exactly 1600; BEAT 6 keeper recalibrated to the brighter room's real floor, 800)
+  // and verified in-engine (ETTR shadow-grain confirmed to drop with capture light).
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'iso-and-noise',
+    number: 8,
+    title: 'ISO & noise: the price of light',
+    blurb: 'ISO buys brightness with grain. Spend it only when the dark forces you.',
+    steps: [
+      // BEAT 1 — predict-first: hit the panic button (max ISO) and meet the grain
+      {
+        kind: 'slider-sim',
+        scene: 'night',
+        prompt: 'It’s dark, so do what the panic button says: crank the ISO all the way up to be safe. Watch the loupe as you go.',
+        control: { stops: ISO_STOPS, start: 0 },
+        toParams: (iso) => ({ exposure: isoToExposure(iso), iso: isoToNoise(iso) }),
+        format: (iso) => 'ISO ' + iso,
+        label: 'ISO',
+        ends: ['ISO 100 · clean', 'ISO 12800 · noisy'],
+        ariaLabel: 'ISO sensitivity',
+        loupe: { cx: 3, cy: 25, cells: 6 },
+        check: (iso) => iso >= 6400,
+        feedback: {
+          correct:
+            'Bright — but look at the loupe. That brightness didn’t come from more light; ISO AMPLIFIED the little you had, and amplified the grain right along with it. Maxed out, the shadows are pure speckle. That’s the price, and you just overpaid it.',
+          stages: [
+            'Which way turns the ISO up? Take it toward the top.',
+            'Keep going to the very top of the range — and keep your eye on the loupe as the grain builds.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm: noise is random per-pixel error; more real light drowns it out
+      {
+        kind: 'intro',
+        scene: 'night',
+        title: 'Noise is random — light is not',
+        body: [
+          'That speckle isn’t one flaw you can dial out; it’s thousands of tiny random errors, a different wrong guess at every single pixel. The fewer photons a pixel actually caught, the more its guess is just noise.',
+          'So the cure was never “less ISO” by itself — it’s a better ratio of real light to random error. Feed the sensor more genuine light and the signal swamps the speckle. The rest of this lesson is two ways to win that ratio.',
+        ],
+      },
+      // BEAT 3 — distinct facet: find the FLOOR — the lowest ISO that still reads
+      {
+        kind: 'slider-sim',
+        scene: 'night',
+        prompt: 'You maxed it out — overkill. Now back off: find the LOWEST ISO that still lets you read the scene — clean enough to keep, bright enough to see.',
+        control: { stops: ISO_STOPS, start: 7 },
+        toParams: (iso) => ({ exposure: isoToExposure(iso), iso: isoToNoise(iso) }),
+        format: (iso) => 'ISO ' + iso,
+        label: 'ISO',
+        ends: ['ISO 100 · clean', 'ISO 12800 · noisy'],
+        ariaLabel: 'ISO sensitivity',
+        loupe: { cx: 3, cy: 25, cells: 6 },
+        // The floor: ISO 1600 is the LOWEST that reads this night cleanly (mean ~0.42);
+        // 800 falls into the murk, 3200+ is a stop of needless grain. "Never a stop higher."
+        check: (iso) => iso === 1600,
+        feedback: {
+          correct:
+            'There it is — the floor. You can’t drop to clean ISO 100 here: go lower than this and the scene falls back into the dark. The darkness itself sets a minimum, and your job is to sit right on it — high enough to read, never a stop higher. That’s the discipline: not “avoid grain,” but “let the dark, and only the dark, decide how much you spend.”',
+          stages: [
+            'Maxed out it’s readable but drowning in grain. Bring it DOWN toward clean, a stop at a time.',
+            'Keep lowering until you’re right at the edge: still clearly readable, but as clean as you can get. Drop too far and the scene falls back into the dark.',
+          ],
+        },
+      },
+      // BEAT 4 — distinct facet: expose-to-the-right AT CAPTURE — more photons up front
+      // = stronger signal before amplification (grain param scales DOWN as exposure rises).
+      {
+        kind: 'slider-sim',
+        scene: 'night',
+        prompt: 'Same ISO either way — but this time you choose how much light to give the sensor up front. The frame was left underexposed and the shadows are crawling with grain. Open the exposure at capture to feed the sensor more light, until those shadows lift up clean.',
+        control: { min: -1.6, max: 1.4, step: 0.1, start: -1.6 },
+        toParams: (v) => ({ exposure: v, iso: isoToNoise(3200) * Math.pow(2, -0.5 * (v + 1.6)) }),
+        format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV',
+        label: 'Exposure',
+        ends: ['dark · grain in shadows', 'bright · shadows lifted'],
+        ariaLabel: 'Exposure',
+        loupe: { cx: 3, cy: 25, cells: 6 },
+        check: (v) => v >= 0.6,
+        feedback: {
+          correct:
+            'Grain hides in the dark — and more light up front starves it. Exposing brighter at capture floods the sensor with real photons, so the signal stands tall over the noise before any amplification kicks in. That’s why a bright shot taken in-camera always beats a dark one you lift later: lifting later multiplies the grain right along with the picture. Give the sensor more light up front whenever you can.',
+          stages: [
+            'The loupe is sitting on a shadow — that’s where grain screams loudest. Which way feeds the sensor more light?',
+            'Open the exposure at capture until the shadow patch climbs clear of the speckle, then take the shot.',
+          ],
+        },
+      },
+      // BEAT 5 — transfer: rank scenes by how much ISO the available light forces
+      {
+        kind: 'rank',
+        prompt: 'You can’t change the light — so the scene decides how much ISO you’re forced into. Order these by the ISO they demand, LEAST first.',
+        scale: ['needs least ISO', 'needs most ISO'],
+        items: [
+          { label: 'Beach at noon' },
+          { label: 'Indoors by a window' },
+          { label: 'Dim restaurant' },
+          { label: 'Concert in the dark' },
+        ],
+        solution: [0, 1, 2, 3],
+        feedback: {
+          correct:
+            'That’s the whole lesson in one ladder: the darker the scene, the more gain it forces, and the more grain you accept to get the shot. ISO is the lever of last resort — and now you know exactly when the dark forces your hand.',
+          stages: [
+            'More available light means less ISO needed. Which scene is brightest? Which is darkest?',
+            'Brightest scene needs the least ISO (left); the dark concert forces the most (right).',
+          ],
+        },
+      },
+      // BEAT 6 — authored keeper: a dim ROOM (brighter than the night) — apply the
+      // discipline and feel that its floor is LOWER (the scene decides, not a number).
+      {
+        kind: 'slider-sim',
+        scene: 'room',
+        prompt: 'Last shot, and it’s yours to keep: a dim room, no lamp to switch on. Dial in the LOWEST ISO that reads this scene clean — the disciplined exposure you’d actually shoot — then take it.',
+        control: { stops: ISO_STOPS, start: 0 },
+        toParams: (iso) => ({ exposure: isoToExposure(iso) - 1.4, iso: isoToNoise(iso) }),
+        format: (iso) => 'ISO ' + iso,
+        label: 'ISO',
+        ends: ['ISO 100 · too dark', 'ISO 12800 · noisy'],
+        ariaLabel: 'ISO sensitivity',
+        loupe: { cx: 3, cy: 25, cells: 6 },
+        // This room is dim but NOT pitch-dark like the night — so its floor is LOWER:
+        // ISO 800 reads it cleanly (mean ~0.46). The transfer: the scene sets the floor.
+        check: (iso) => iso === 800,
+        feedback: {
+          correct:
+            'That one’s yours. You spent exactly the ISO the dark forced and not a stop more — and notice it took LESS than the pitch-dark night did, because this room isn’t as dark. The scene sets the floor; you just listen. ISO is the lever of last resort, and you used it like one. Your shot’s in the gallery.',
+          stages: [
+            'At ISO 100 the room is lost in the dark — it needs more gain than that. Bring the ISO up until the scene reads.',
+            'Now stop the moment it reads clean — don’t keep climbing into needless grain. Lowest ISO that reads, no higher.',
+          ],
+        },
+      },
+    ],
+  },
 ]
 
 export const course = {
