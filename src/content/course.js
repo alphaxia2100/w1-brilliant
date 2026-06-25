@@ -527,24 +527,20 @@ const lessons = [
           ],
         },
       },
-      // BEAT 4 — gray-card reference
+      // BEAT 4 — gray-card reference via a click-white-balance eyedropper
       {
-        kind: 'slider-sim',
+        kind: 'eyedropper',
         scene: 'room',
-        prompt: 'Pros carry a gray card. Forget the rest of the scene — balance the WB until that card on the wall reads a true, colourless gray.',
-        control: { min: -1, max: 1, step: 0.05, start: 0 },
-        toParams: (v) => ({ temp: v, baseTemp: WB_CARD }),
-        format: wbResultK(WB_CARD),
-        label: 'White balance',
-        ends: ['cooler · blue', 'warmer · orange'],
-        ariaLabel: 'White balance',
-        loupe: { cx: 3, cy: 17, cells: 7 },
+        baseTemp: WB_CARD,
+        start: { temp: 0 },
+        prompt: 'Pros don’t eyeball it — they use the eyedropper. Tap the gray card on the wall, and the camera solves the white balance to make that card read a true, colourless gray.',
         check: wbNeutral(WB_CARD),
         feedback: {
-          correct: 'When a known-neutral gray reads gray, every other colour falls into place. A gray card is the fastest, surest way to nail white balance.',
+          correct:
+            'That’s click-white-balance: you tell the camera “this should be gray,” and it solves the exact temperature to neutralise the whole scene. The fastest, surest white balance there is — as long as you tap something truly neutral.',
           stages: [
-            'Watch the card in the loupe — which way is it tinted? Push the opposite way.',
-            'Drive the card to a clean, colourless gray, then take the shot.',
+            'That surface wasn’t neutral, so the camera tinted the whole image the wrong way to compensate. Find the flat gray card.',
+            'Tap the plain gray reference card on the left wall — not the warmer wall or the floor around it.',
           ],
         },
       },

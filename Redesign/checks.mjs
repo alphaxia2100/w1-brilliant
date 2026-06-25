@@ -58,6 +58,11 @@ for (const lesson of course.lessons) {
           for (let w = -0.4; w <= 1.0001 && !reach; w += 0.2)
             if (s.check({ angle: a, soft: sf, warmth: w })) reach = true
       ok(`${tag}: reachable`, reach)
+    } else if (s.kind === 'eyedropper' && s.check) {
+      // Before any sample the cast stands (temp = start). Clicking the neutral gray
+      // card solves temp to -baseTemp (eff 0), which must neutralise.
+      ok(`${tag}: fails at start`, !s.check(s.start?.temp ?? 0))
+      ok(`${tag}: reachable`, s.check(-s.baseTemp))
     } else if (s.kind === 'triangle') {
       // Replicates TriangleView: balanced (|sum|<0.5) AND, if a reciprocity goal is
       // set, the goal lever passes its test. Assert start fails and a pass exists.

@@ -4,7 +4,7 @@ import DofBokeh from '../sim/DofBokeh.jsx'
 import { BOKEH_STOPS, effectiveBlur } from '../sim/bokehMath.js'
 import { composeEval, THIRDS } from '../sim/composeEval.js'
 import LightDirection from '../sim/LightDirection.jsx'
-import { meanBrightness, histogram } from '../sim/scene.js'
+import { meanBrightness, histogram, getScene } from '../sim/scene.js'
 import { dofCalc, fmtDist, dofTag, SENSORS } from '../sim/dof.js'
 import { Slider, Button, ApertureIris } from '../components/ui.jsx'
 import { useReducedMotion } from '../components/useReducedMotion.js'
@@ -1222,8 +1222,60 @@ function LightDirView({ step, status, onResult }) {
   )
 }
 
+/* ---------- eyedropper (White balance: click a neutral surface to set WB) ---------- */
+// Click-white-balance: sample a cell, solve the temperature that neutralises its
+// warm/cool imbalance (rF=1+0.32·eff on red, bF=1-0.32·eff on blue → eff that makes
+// the clicked cell's red = blue). Tap the gray card and the whole scene snaps neutral;
+// tap a warm wall and it tints the wrong way — the felt lesson of WHY you need a
+// known-neutral reference.
+function EyedropView({ step, status, onResult }) {
+  const base = step.baseTemp || 0
+  const [temp, setTemp] = useState(step.start?.temp ?? 0)
+  const [picked, setPicked] = useState(false)
+  const frame = useRef(null)
+  const locked = status === 'correct'
+  const N = 32
+  const cells = getScene(step.scene, N).cells
+
+  function pick(e) {
+    if (locked) return
+    const rect = frame.current.getBoundingClientRect()
+    const col = clampN(Math.floor(((e.clientX - rect.left) / rect.width) * N), 0, N - 1)
+    const row = clampN(Math.floor(((e.clientY - rect.top) / rect.height) * N), 0, N - 1)
+    const px = cells[row][col]
+    const br = px[0]
+    const bb = px[2]
+    const eff = (bb - br) / (0.32 * (br + bb) || 1) // temp that equalises this cell's red & blue
+    setTemp(clampN(eff - base, -1, 1))
+    setPicked(true)
+  }
+
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="relative mx-auto mb-3" style={{ maxWidth: 300 }}>
+        <PixelScene scene={step.scene} size={300} temp={temp} baseTemp={base} />
+        <div ref={frame} onClick={pick} className="absolute inset-0 rounded-tile cursor-crosshair" />
+      </div>
+      <p className="text-[13px] text-center mb-4" style={{ color: picked ? '#1F8A3B' : '#777' }}>
+        {picked ? 'Sampled — tap a different spot to try another, or take the shot.' : 'Tap the surface that should be a neutral gray.'}
+      </p>
+      {!locked && (
+        <Button
+          className="w-full"
+          disabled={!picked}
+          onClick={() => onResult(step.check(temp), { chosen: temp, shot: { scene: step.scene, params: { temp, baseTemp: base } } })}
+        >
+          <Shutter /> Take the shot
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export const STEP_VIEWS = {
   intro: IntroView,
+  eyedropper: EyedropView,
   capture: CaptureView,
   'slider-sim': SliderSimView,
   triangle: TriangleView,
