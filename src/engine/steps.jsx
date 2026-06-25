@@ -1288,11 +1288,135 @@ function EyedropView({ step, status, onResult }) {
   )
 }
 
+/* ---------- bet: commit a falsifiable prediction, THEN be wrong ----------
+   The pedagogy primitive (SEE -> BET -> BE WRONG; PEDAGOGY-REDESIGN.md shift #1).
+   Phase 1 PREDICT: the photo is frozen at its uncorrected cast and the learner drags a
+   marker to predict where the slider must land — a committed, uninformed, falsifiable bet
+   (no live preview, no readout, so it can't be solved by nudging). Phase 2 BE-WRONG: the
+   bet is pinned as a dashed ghost tick, the live slider starts AT the bet so the orange is
+   still there, and the learner corrects for real — the GAP between the ghost tick and where
+   the cast actually lifts is the felt lesson. The explanatory line is demoted to after the fall. */
+function BetView({ step, status, onResult, onActivity }) {
+  const ctrl = step.control
+  const castValue = step.castValue ?? 0
+  const [phase, setPhase] = useState('predict')
+  const [bet, setBet] = useState(step.bet?.start ?? ctrl.start)
+  const [raw, setRaw] = useState(step.bet?.start ?? ctrl.start)
+  const locked = status === 'correct'
+
+  const cast = step.toParams(0).baseTemp || 0 // the baked-in cast; neutral sits at -cast
+  const vNeutral = -cast
+  const pctOf = (v) => ((v - ctrl.min) / (ctrl.max - ctrl.min)) * 100
+
+  function betContrast(b) {
+    const dir = vNeutral < 0 ? 'blue / cooler' : 'orange / warmer'
+    if (Math.abs(b) < 0.12)
+      return `You bet the middle of the dial — but neutral was a real shove toward ${dir}. You cancel a colour cast by adding its OPPOSITE, and a strong cast needs a strong correction.`
+    const under = vNeutral < 0 ? b > vNeutral + 0.12 : b < vNeutral - 0.12
+    if (under)
+      return `Right instinct — toward ${dir} — but neutral sat even FURTHER than you bet. A strong cast takes a bigger correction than it feels like it should.`
+    return `Sharp bet — you felt how far toward ${dir} neutral really sits. Most people guess the middle; you didn't.`
+  }
+
+  // PHASE 1 — predict (photo frozen at the cast; no readout to give it away)
+  if (phase === 'predict') {
+    return (
+      <div className="animate-risein">
+        <Prompt>{step.bet?.prompt || step.prompt}</Prompt>
+        <div className="relative flex justify-center mb-3">
+          <PixelScene scene={step.scene} size={300} {...step.toParams(castValue)} />
+        </div>
+        <p className="text-[13px] text-center text-muted mb-4">
+          Predict first — the photo won’t move until you lock your bet.
+        </p>
+        <div className="relative mb-2 pt-4">
+          <div className="absolute -top-0 pointer-events-none" style={{ left: `${pctOf(bet)}%` }}>
+            <span className="-translate-x-1/2 block text-[9px] uppercase tracking-wide text-muted whitespace-nowrap">your bet</span>
+          </div>
+          <Slider
+            value={bet}
+            min={ctrl.min}
+            max={ctrl.max}
+            step={ctrl.step || 1}
+            ariaLabel={(step.ariaLabel || 'prediction') + ' — your bet'}
+            onChange={(v) => { setBet(v); onActivity?.() }}
+          />
+        </div>
+        <div className="flex justify-between text-[11px] text-muted mb-5">
+          <span>{step.ends?.[0]}</span>
+          <span>{step.ends?.[1]}</span>
+        </div>
+        <Button className="w-full" onClick={() => { setRaw(bet); setPhase('correct') }}>
+          Lock in my bet
+        </Button>
+      </div>
+    )
+  }
+
+  // PHASE 2 — be wrong, then correct for real
+  const value = raw
+  const params = step.toParams(value)
+  const eff = cast + value
+  const read = Math.abs(eff) < 0.12 ? { t: 'reads neutral', c: '#1F8A3B' } : eff > 0 ? { t: 'still warm', c: '#9A6A2F' } : { t: 'too cool', c: '#3A5A9A' }
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="relative flex justify-center mb-4">
+        <PixelScene scene={step.scene} size={300} {...params} />
+      </div>
+      <div className="flex items-center gap-4 mb-3">
+        <div className="flex flex-col">
+          <span className="font-mono text-[26px] font-medium leading-none">{step.format(value)}</span>
+          {step.label && <span className="text-[12px] text-muted mt-1">{step.label}</span>}
+        </div>
+        <span className="text-[13px] font-medium ml-auto" style={{ color: read.c }}>{read.t}</span>
+      </div>
+      <div className="relative mb-2 pt-4">
+        {/* the pinned "your bet" ghost tick — the gap to true neutral is the lesson */}
+        <div className="absolute top-0 pointer-events-none z-10" style={{ left: `${pctOf(bet)}%` }}>
+          <span className="-translate-x-1/2 block text-[9px] uppercase tracking-wide text-muted whitespace-nowrap">your bet</span>
+        </div>
+        <div className="absolute pointer-events-none z-10" style={{ left: `${pctOf(bet)}%`, top: 18, transform: 'translateX(-50%)' }}>
+          <span className="block w-[2px] h-5 rounded bg-ink/45" />
+        </div>
+        <Slider
+          value={value}
+          min={ctrl.min}
+          max={ctrl.max}
+          step={ctrl.step || 1}
+          ariaLabel={step.ariaLabel || 'adjust'}
+          valueText={step.format ? step.format(value) : undefined}
+          onChange={(v) => { if (!locked) { setRaw(v); onActivity?.() } }}
+        />
+      </div>
+      <div className="flex justify-between text-[11px] text-muted mb-5">
+        <span>{step.ends?.[0]}</span>
+        <span>{step.ends?.[1]}</span>
+      </div>
+      {!locked && (
+        <Button
+          className="w-full"
+          onClick={() =>
+            onResult(step.check(value), {
+              chosen: value,
+              shot: { scene: step.scene, params },
+              override: step.check(value) ? betContrast(bet) : undefined,
+            })
+          }
+        >
+          <Shutter /> Take the shot
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export const STEP_VIEWS = {
   intro: IntroView,
   eyedropper: EyedropView,
   capture: CaptureView,
   'slider-sim': SliderSimView,
+  bet: BetView,
   triangle: TriangleView,
   compose: ComposeView,
   dof: DofView,

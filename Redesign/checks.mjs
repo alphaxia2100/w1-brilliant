@@ -32,6 +32,13 @@ for (const lesson of course.lessons) {
       }
       ok(`${tag}: fails at start`, !s.check(startVal))
       ok(`${tag}: reachable`, domain.some((v) => s.check(v)))
+    } else if (s.kind === 'bet' && s.check) {
+      // A BET beat must FAIL at the learner's committed prediction's start (the intuitive
+      // guess — else the bet never fires) and have a reachable true answer in range.
+      const domain = []
+      for (let v = s.control.min; v <= s.control.max + 1e-9; v += s.control.step || 1) domain.push(+v.toFixed(4))
+      ok(`${tag}: bet fails at start`, !s.check(s.bet?.start ?? s.control.start))
+      ok(`${tag}: reachable`, domain.some((v) => s.check(v)))
     } else if (s.kind === 'bokeh' && s.check) {
       // check() takes the combined effectiveBlur; assert start fails and the most-favorable
       // setting of every active lever passes.

@@ -508,11 +508,17 @@ const lessons = [
     title: 'White balance: the color of light',
     blurb: 'Make the colors read true — or warm on purpose.',
     steps: [
-      // BEAT 1 — predict by doing: cool a warm cast; neutral is NOT at zero
+      // BEAT 1 — BET then be wrong: predict where neutral is, FEEL it's a hard shove to blue
       {
-        kind: 'slider-sim',
+        kind: 'bet',
         scene: 'seascape',
-        prompt: 'Indoor bulbs left this photo too orange. Cool it down until the colors read natural again.',
+        bet: {
+          start: 0, // the intuitive guess — the middle of the dial; the engine proves it wrong (eff 0.6, visibly orange)
+          prompt:
+            'Indoor bulbs left this photo too orange. Before you fix it — place your bet: where must the White Balance slider sit to cancel the cast and make the colours read NEUTRAL? Drag the marker, then lock it in.',
+        },
+        prompt:
+          'Your bet is the dashed mark. Now slide for real until the orange lifts — and watch how far PAST your bet neutral actually sits.',
         control: { min: -1, max: 1, step: 0.05, start: 0 },
         toParams: (v) => ({ temp: v, baseTemp: WB_WARM }),
         format: wbResultK(WB_WARM),
@@ -521,8 +527,9 @@ const lessons = [
         ariaLabel: 'White balance',
         check: wbNeutral(WB_WARM),
         feedback: {
+          // The success line is overridden at runtime by the bet-vs-actual contrast; this is the fallback.
           correct:
-            'Neutral. Notice the slider did NOT end in the middle — you cancel a cast by adding its OPPOSITE, and a strong orange cast needs a real shove toward blue.',
+            'Neutral — and the slider did NOT end in the middle. You cancel a cast by adding its OPPOSITE, and a strong orange cast needs a real shove toward blue.',
           stages: [
             'Still orange? What colour is the opposite of orange?',
             'Orange is cancelled by blue — push toward the cool end until the cast lifts.',
