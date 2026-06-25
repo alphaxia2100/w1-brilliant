@@ -1,66 +1,111 @@
 # Aperture — Handoff
 
-**Date:** 2026-06-24 (session 2 — ground-up lesson rebuild) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore + Hosting). All visuals geometric SVG / pixel-art, no real photos.
-**Read order:** this file → `/Users/sky/.claude/plans/take-a-read-through-validated-platypus.md` (the approved north star) → the memory files (below).
+**Updated:** 2026-06-25 (session 3) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore +
+Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real photos.
+**Read order:** this file → `Factory/IMPROVEMENTS-LOG.md` (the live loop) → `Redesign/PEDAGOGY-REDESIGN.md`
+(the approved direction) → the memory files.
 
-> Everything below was verified against the code on 2026-06-24, not recalled. If you edit a file,
-> RE-READ it first — a stale mental model caused a real confabulation this session (see Honest notes).
+> Everything below was verified against git + the code on 2026-06-25, not recalled. RE-READ a file
+> before asserting its contents or editing it (stale mental models have caused real bugs here).
 
----
+## ⚠️ Branch / push / deploy state — READ FIRST (three different states)
+| Where | At | Contains |
+|---|---|---|
+| **GitHub `origin/main`** (pushed) | `0b64028` | 6 lessons + Google sign-in + pedagogy blueprint |
+| **local `main`** (NOT pushed) | `c6b8061` | the above **+ the AI photo grader** |
+| **local `lesson-factory`** (current, NOT pushed) | `7d0a98d` | main **+ 8 commits**: lesson factory, **L7 + L8**, cold-start onboarding, the improvement loop |
+| **Deployed** `aperture-dac66.web.app` | ~`0b64028` | **6 lessons + Google login only.** The grader, L7/L8, and cold-start are NOT live. |
+
+So: the branch has the newest work and is **unpushed + undeployed**. Decide whether to merge
+`lesson-factory` → `main`, push, and redeploy. Nothing destructive has touched `main` or `origin`.
 
 ## TL;DR
-The course was rebuilt from a reactive 9-lesson sprawl into **6 deep, predict-first topic-lessons with ZERO multiple choice**, each verified by an automatic test gate (`npm test`) and live in the browser. New rendering primitives replaced the disliked DoF calculator. A small **dev-system of skills + memory** now governs the build loop. The remaining big item is **deploying** (needs you).
+The course grew from 6 → **8 lessons**, gained an **AI photo grader** and **try-before-signup**
+onboarding, and now has a working **lesson factory** (autonomous lesson generation with two verification
+loops) plus a self-paced **improvement loop** that's mid-run. `npm test` = **90/90 green**, build clean.
 
-## Current state — the 6 lessons (verified from `src/content/course.js`)
-| # | id | beats | what it teaches |
-|---|----|------|-----------------|
-| 1 | `exposure-triangle` | **8** | capture light→target · aperture · shutter(motion) · ISO · "stops" · balance puzzle · equivalent-exposures rank |
-| 2 | `depth-of-field` | **8** | forward flower bokeh via 4 real levers: aperture · subject-distance · background-distance · focal length · night-lights bloom · rank · 4-slider synthesis keeper |
-| 3 | `metering` | **6** | histogram: spread · blow highlights · crush shadows · high-key **snow** (right-piled) · scene rank (no single "correct" shape) |
-| 4 | `white-balance` | **5** | warm→cool correct · cool→warm correct · **gray-card** reference · creative-warm (neutral is *wrong*); uses a baked-in cast so neutral is a NON-zero slider |
-| 5 | `rule-of-thirds` | **5** | responsive frame: thirds · lead-room (facing subject) · horizon · synthesis keeper — the subject is a figure that MOVES and the frame reacts |
-| 6 | `light-direction` | **4** | sphere lit front→side(reveals form)→behind(rim/silhouette) + hard/soft |
+## The course now — 8 lessons (verified from `src/content/course.js`)
+| # | id | what it teaches |
+|---|----|------|
+| 1 | `exposure-triangle` | capture-light → aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9 beats) |
+| 2 | `depth-of-field` | forward flower-bokeh, 4 levers, night-bokeh, synthesis keeper (8) |
+| 3 | `metering` | histogram: spread · clip highs/lows · **blinkies** + dynamic range (backlit, now with a silhouette tree) · high-key snow · rank (7) |
+| 4 | `white-balance` | cool/warm casts · **click-WB eyedropper** · creative warmth (5) |
+| 5 | `rule-of-thirds` | thirds · lead-room · **leading lines** · horizon · keeper (6) |
+| 6 | `light-direction` | reveal-form · backlight · hard/soft (now feathered) · **warmth** · flattering recipe · **dramatic** keeper (7) |
+| 7 | `long-exposure-night` | **factory-made.** gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
+| 8 | `iso-and-noise` | **factory-made.** max-crank cost · the floor · expose-to-the-right · when-forced rank · keeper (6) |
 
-All are **predict-first** (do → surprise → confirm), calm-gray feedback (never red on a learner mistake), and a success mints a polaroid "keepsake" saved to the Home "roll".
+All predict-first, no multiple choice, calm feedback, success mints a polaroid keepsake.
 
-## What changed this session
-**Restructure:** 9 lessons → 6; the six old exposure lessons compressed into the one 8-beat anchor; `PredictView` (multiple choice) removed entirely.
+## What's new this session (on `lesson-factory`, unless noted)
+- **AI photo grader** (`/grade`, on `main` too): upload a photo → a Firebase callable function
+  (`functions/gradePhoto`) sends it to **Claude vision (`claude-opus-4-8`)** with a json_schema and
+  returns a grade on the six fundamentals + strengths/improvements + a "practice this next" lesson link.
+  Key is a Secret Manager secret, never client-side. See `functions/index.js` + `src/pages/GradePage.jsx`.
+- **Google sign-in** (on `main`/origin): `add-google-login` skill + the wiring; anon→Google linking keeps
+  guest progress. `src/lib/firebase.js`, `src/store.jsx`, `src/pages/AuthPage.jsx`.
+- **Cold-start onboarding** (branch): unguarded `/try` route lets a visitor play Lesson 1 with **no
+  account** (store persistence no-ops without a user); sign-up CTA at the end. `src/pages/TryPage.jsx`.
+  This **removed the Anonymous-sign-in dependency** the old guest button had.
+- **The lesson factory** (branch, `Factory/`): see below.
+- **The improvement loop** (branch, `Factory/IMPROVEMENTS-LOG.md`): see below — it's mid-run.
 
-**New rendering primitives (the DoF calculator + box-blur are gone from the lessons):**
-- `src/sim/DofBokeh.jsx` + `src/sim/bokehMath.js` — forward flower, layered **CSS blur** (clean bokeh), driven by `effectiveBlur({f, subjectDist, bgDist, focal})`. Renders the lesson AND the keepsake.
-- `src/sim/LightDirection.jsx` — directional sphere shading (angle + softness).
-- `src/sim/composeEval.js` + responsive `ComposeView`/`ComposeFigure`/`ComposeShot` in `steps.jsx` — the image responds to placement (thirds / leadroom / horizon targets).
-- `MotionShot` keepsake renders from `si` (the base64 JPEG that was being written into the Firestore doc is gone — a self-DoS risk).
-- `scene.js`: `baseTemp` intrinsic-cast support for white balance + a neutral **gray card** in the `room` scene; a `snow` high-key scene (used by metering).
+## Pending USER actions (Firebase console / billing — can't be done from code)
+1. **Grader (to go live):** enable **Blaze** plan → `firebase functions:secrets:set ANTHROPIC_API_KEY`
+   → `firebase deploy --only functions`. The grader UI degrades gracefully until then.
+2. **Google sign-in:** enable Google in Firebase → Authentication → Sign-in method (else the button
+   returns a friendly "not enabled yet").
+3. **Anonymous sign-in:** no longer needed — cold-start `/try` replaced it.
+4. **Deploy the new work:** after merging the branch, `npm run deploy` (Hosting + rules). The live site
+   is still the 6-lesson version.
 
-**Hardening / correctness:**
-- React **error boundary** (`src/components/ErrorBoundary.jsx`, wraps the app in `main.jsx`) — no more white-screen on a render throw.
-- **Keepers-only** (wrong answers no longer saved; failure count removed from Home).
-- Deterministic, seeded **ISO grain** (`scene.js` `hashNoise`/`noiseSeed`; `PixelScene` varies the seed per frame only when live) — saved shots round-trip.
-- `prefers-reduced-motion` honored for the JS rAF sims (`src/components/useReducedMotion.js`; gates the car + ISO shimmer). MotionView's rAF now stops on capture.
-- `store.jsx`: `recordAttempt` persists immediately; the debounced `saveResume` timer is cleared on `saveShot`/`recordAttempt` (was clobbering fresh keepers).
-- `Slider` got `aria-valuetext`; histogram clipping recolored out of the danger-red; sticky feedback panel polished + a one-frame green-flash on step transitions fixed; rank tiles no longer clip at 375px.
+## The lesson factory (`Factory/`, docs in `Factory/FACTORY.md`)
+Autonomous pipeline that generates NEW lessons in the house style, composing ONLY existing engine
+primitives (so output is renderable + gate-checkable). **Two loops:**
+- **Correctness loop (automated):** `Factory/verify-lesson.mjs` imports the real engine and runs the gate's
+  invariants (fails-at-start, reachable, finite scenes) + structural guards (predict-first, no MC, valid
+  kinds, ends-on-keeper) on a candidate. Builder agents loop write→verify→fix until `PASS`.
+- **Quality loop (adversarial):** a Sky-critic judges each passing lesson (substance, distinctness,
+  craft-truth) and a fixer re-greens. Run via `Workflow({scriptPath: "Factory/lesson-factory.workflow.mjs"})`.
+- **First run:** 4 candidates, all PASSED correctness, 0 cleared the critic on first pass (the bar working).
+  L7 + L8 were salvaged + shipped after human fixes + live verification. Raw candidates in
+  `Factory/generated/`. `shutter-motion` (fabricated panning) + `silhouettes` (see Parked, below) remain.
+- **To integrate a delivered lesson:** move the object into `course.js` (real `number`, drop dup consts) →
+  `npm test` → build → **walk it live** (the gate can't see prose/pixel divergence — eyeball it).
 
-## The test gate (use it — `npm test`)
-`Redesign/checks.mjs` (run via `npm test`, dependency-free Node). Asserts that **every checked beat fails at its start and is reachable in range**, rank solutions are permutations, aperture brightness is monotonic, no scene yields NaN. **Currently 59/59 green.** Extend it whenever you add a checked beat — a retuned scene can't then silently make a lesson unpassable. (`Redesign/gate.mjs` still covers L2 brightness + L7 metering monotonicity.)
-
-## The dev system (skills + memory)
-- **Skills** — `.claude/skills/aperture-lesson/` (repo: how to author + verify a lesson), `~/.claude/skills/shimmering-personas/` (10–20 unconventional Opus personas → triangulated synthesis; now hardened against confabulation), `~/.claude/skills/what-would-sky-do/` (model Sky's judgment; predict → self-critique as Sky at max power → revise → test → escalate only if uncertain → learn).
-- **Memory** (`.../memory/`): `project-northstar-redesign`, `working-style-high-caliber`, `sky-model` (Sky's values + catalog of his catches + corrections log), plus the older `project-brilliant-photography-clone`, `brilliant-research-findings`, `testing-discipline`. Read for SPIRIT, not letter.
+## The improvement loop (`Factory/IMPROVEMENTS-LOG.md` — the live ledger)
+A self-paced research → revise → verify → commit → log → reschedule loop (peer authority). 3 iterations
+done: **#1 shipped L7**, **#2 shipped L8** (fixed real check-band bugs), **#3 rejected silhouettes
+[engine-proven false] + shipped cold-start.** **A wakeup is scheduled (~17:03) for iteration #4: the
+pedagogy "BET" primitive** (a predict-with-a-commit ghost-tick before the reveal). The loop self-fires;
+to **stop it**, just don't reschedule (omit the ScheduleWakeup). Backlog (meatier now): BET slice →
+shutter-motion redesign (needs a panning sim) → free-play Studio. Parked: silhouettes.
 
 ## How to run / verify
-- **Dev:** `npm run dev` → :5173 (or Claude_Preview MCP, server "aperture"). **Gate:** `npm test`. **Build:** `npm run build`.
-- **Verify a lesson:** walk the FULL beat sequence in the UI (click Continue/Take-the-shot between beats), test wrong paths, at **mobile 375px** and desktop; confirm the keepsake matches what the lesson taught. Don't say "done" on a narrow check.
+- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (90/90).
+  **Build:** `npm run build`. **Deploy:** `npm run deploy`. **Functions deps:** `cd functions && npm install`.
+- **Verify a lesson:** full beat walkthrough in the UI, mobile 375 + desktop, test wrong paths, confirm the
+  keepsake matches the lesson. **Preview gotcha:** the `capture` beat's rAF exposure animation can stall in
+  the headless preview (not a bug — it's shipped in L1 and runs in a real browser); slider-sim beats are fine.
 
 ## Open / next (prioritized)
-1. **DEPLOY — P0, needs YOU.** `firebase login` (interactive), then `npm run deploy` (Hosting + rules → `aperture-dac66.web.app`). Enable **Anonymous** sign-in in the Firebase console (else "try without an account" stays disabled). Then walk the graded scenario (signup → lesson → progress → logout → resume) on the **live URL**, mobile + desktop — that is success criterion #1 and is still unverified in its graded form.
-2. **Dead code:** delete `DofView` + `Silhouette` + `src/sim/dof.js` and the `dof` entry in `STEP_VIEWS` — no lesson uses `kind: 'dof'` (verify: `grep "kind: 'dof'"` is empty; gate stays green). Deferred this session; benign but should go.
-3. **Light & Direction (4 beats)** is the lightest lesson — deepen toward ~6 (light height/position, golden-hour warmth, a flattering-vs-dramatic transfer). `LightDirection.jsx` would need height + warmth params.
-4. **Accessibility (real, deferred per "core first"):** every sim is `aria-hidden` — add an `aria-live` text readout of each sim's already-computed state; `ComposeView` is pointer-only — add keyboard (tap-to-place + arrow-nudge, like RankView).
-5. **Cold-start (persona insight, not built):** render the first lesson beat with ZERO auth + lazy-load Firebase; ask for an account only at the first save. Highest-leverage onboarding fix.
-6. **Optional depth:** metering "meter-fooled" causal spine (watch the reflective meter be confidently wrong on snow, then override it); WB green/magenta tint (engine is a single warm/cool `temp` axis today).
+1. **Merge + push + deploy decision (YOU):** `lesson-factory` (8 lessons + grader + cold-start + factory)
+   is unpushed/undeployed. Merge to `main`, push, redeploy when you're happy.
+2. **Grader go-live (YOU):** Blaze + API-key secret + `firebase deploy --only functions`, then walk a real
+   photo through it live (the live Claude call is the one thing not yet exercised end-to-end).
+3. **Improvement loop:** continues autonomously (iteration #4 scheduled). Let it run or steer it.
+4. **Pedagogy blueprint** (`Redesign/PEDAGOGY-REDESIGN.md`): the bigger SEE→BET→BE-WRONG rebuild; the BET
+   slice (iter #4) is the first piece.
 
 ## Honest notes
-- **Verify ground truth, including your own memory.** This session I confidently told the user "metering is 3 thin beats / the personas hallucinated it" — wrong; metering is 6 deep beats and the personas were right. Re-read files before asserting or editing. The `sky-model` corrections log records this.
-- The build loop is meant to **self-govern** via `what-would-sky-do` (catch what Sky would catch before he has to) + `shimmering-personas` for evaluation — both run at Opus/max effort, web-researched.
-- Nothing is committed yet this session — `git status` shows the working tree; commit when ready.
+- **Verify in-engine before trusting a quantitative claim.** The factory's quality loop + a node sweep
+  caught a *false* lesson (silhouettes — the backlit scene physically can't make a black subject against a
+  bright sky) and real check-band bugs in L8. The automated gate keeps passing prose/pixel divergence — the
+  live/engine check is the load-bearing last mile.
+- **Distinctness watch:** ISO-on-night now appears in L1/L7/L8 (each a distinct facet, like exposure recurs)
+  — note before adding a 4th. Logged in the ledger.
+- **Nothing is pushed past `0b64028`.** The grader (on `main`) and all branch work await your push/deploy.
+- The dev system: skills (`.claude/skills/aperture-lesson`, `add-google-login`; `~/.claude/skills/`
+  shimmering-personas, what-would-sky-do), memory (`.../memory/`), the factory, and the improvement-loop
+  ledger. Read for SPIRIT, not letter.
