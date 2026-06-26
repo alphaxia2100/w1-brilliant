@@ -154,7 +154,7 @@ export function PolaroidReveal({ shot, onDone }) {
             </div>
           ) : shot.kind === 'light' ? (
             <div className="polaroid-develop">
-              <LightDirection angle={shot.angle} soft={shot.soft} warmth={shot.warmth} size={228} rounded={false} />
+              <LightDirection angle={shot.angle} soft={shot.soft} warmth={shot.warmth} fill={shot.fill} size={228} rounded={false} />
             </div>
           ) : shot.kind === 'motion' ? (
             <div className="polaroid-develop">
@@ -1198,21 +1198,23 @@ const LD_CFG = {
   angle: { min: 0, max: 180, step: 1, label: 'Light direction', ends: ['front · flat', 'behind · rim'], readout: (v) => `${Math.round(v)}°` },
   soft: { min: 0, max: 1, step: 0.02, label: 'Softness', ends: ['hard · crisp', 'soft · gentle'], readout: (v) => `${Math.round(v * 100)}%` },
   warmth: { min: -0.4, max: 1, step: 0.02, label: 'Warmth', ends: ['cool · midday', 'warm · golden'], readout: (v) => (v >= 0.45 ? 'golden' : v <= -0.1 ? 'cool' : 'neutral') },
+  fill: { min: 0, max: 1, step: 0.02, label: 'Fill flash', ends: ['no flash · harsh', 'full · flat'], readout: (v) => (v <= 0.05 ? 'off' : v >= 0.85 ? 'over-flashed' : `${Math.round(v * 100)}%`) },
 }
 function LightDirView({ step, status, onResult }) {
-  const init = { angle: 90, soft: 0.4, warmth: 0, ...(step.fixed || {}), ...(step.start || {}) }
+  const init = { angle: 90, soft: 0.4, warmth: 0, fill: 0, ...(step.fixed || {}), ...(step.start || {}) }
   const controls = step.controls || [step.control || 'angle']
   const [angle, setAngle] = useState(init.angle)
   const [soft, setSoft] = useState(init.soft)
   const [warmth, setWarmth] = useState(init.warmth)
+  const [fill, setFill] = useState(init.fill)
   const locked = status === 'correct'
-  const val = { angle, soft, warmth }
-  const setter = { angle: setAngle, soft: setSoft, warmth: setWarmth }
+  const val = { angle, soft, warmth, fill }
+  const setter = { angle: setAngle, soft: setSoft, warmth: setWarmth, fill: setFill }
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
       <div className="flex justify-center mb-4">
-        <LightDirection angle={angle} soft={soft} warmth={warmth} size={300} />
+        <LightDirection angle={angle} soft={soft} warmth={warmth} fill={fill} size={300} />
       </div>
       {controls.map((c) => {
         const cfg = LD_CFG[c]
@@ -1233,7 +1235,7 @@ function LightDirView({ step, status, onResult }) {
       {!locked && (
         <Button
           className="w-full mt-2"
-          onClick={() => onResult(step.check(val), { chosen: controls.map((c) => val[c]).join(','), shot: { kind: 'light', angle, soft, warmth } })}
+          onClick={() => onResult(step.check(val), { chosen: controls.map((c) => val[c]).join(','), shot: { kind: 'light', angle, soft, warmth, fill } })}
         >
           <Shutter /> Take the shot
         </Button>

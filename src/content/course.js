@@ -1041,6 +1041,104 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
+  // FLASH — adding your own light (fill flash) · expansion 3. Distinct from Light &
+  // Direction (natural light: direction/softness/warmth): this adds the `fill` dimension
+  // to the light sim — opening harsh shadows, and the over-flash-goes-flat balance.
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'flash-fill',
+    title: 'Flash: adding your own light',
+    blurb: 'When the light is harsh, add your own — but keep it natural.',
+    steps: [
+      // BEAT 1 — predict by doing: harsh side-sun crushes the shadow side; open it with fill
+      {
+        kind: 'light-direction',
+        control: 'fill',
+        fixed: { angle: 95, soft: 0.12, warmth: 0.12 },
+        start: { fill: 0 },
+        prompt:
+          'Harsh midday sun rakes this face from the side — one half is bright, the other crushed into hard black shadow. You can ADD your own light: pop a fill flash from the camera and open those shadows.',
+        check: ({ fill }) => fill >= 0.45,
+        feedback: {
+          correct:
+            'The shadows lift. A fill flash throws light back INTO the shadows the sun left behind — the dark side opens up and the face reads evenly, no harsh black pit. You added the light that wasn’t there.',
+          stages: [
+            'The shadow side is still crushed black. The fill flash ADDS light — push it up.',
+            'Bring the fill flash up until the dark side of the face opens and you can see into it.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm
+      {
+        kind: 'intro',
+        title: 'You can add your own light',
+        body: [
+          'Natural light is what you’re GIVEN; flash is light you ADD. Its most common job isn’t to light a dark room — it’s “fill”: throwing a little light into harsh shadows so a face isn’t half-black under hard sun.',
+          'But there’s a catch — add too much and you wash the whole scene flat.',
+        ],
+      },
+      // BEAT 3 — the over-flash trap: back off until dimension returns
+      {
+        kind: 'light-direction',
+        control: 'fill',
+        fixed: { angle: 95, soft: 0.12, warmth: 0.12 },
+        start: { fill: 1 },
+        prompt:
+          'This one’s blasted at full flash — and the face has gone flat and lifeless, like an ID photo. Back the flash OFF until the shadows return just enough to give the face shape again.',
+        check: ({ fill }) => fill >= 0.4 && fill <= 0.7,
+        feedback: {
+          correct:
+            'That’s the balance. Enough fill to open the harsh shadows, but not so much that you erase them — a little shadow is what gives a face its shape. Fill flash balances AGAINST the sun; it doesn’t replace it.',
+          stages: [
+            'Full flash is flat and shapeless. Bring it DOWN to let some shadow back in.',
+            'Ease toward the middle — open the shadows, but keep enough to model the face. Not off, not full.',
+          ],
+        },
+      },
+      // BEAT 4 — transfer: which scenes even NEED fill?
+      {
+        kind: 'rank',
+        prompt:
+          'Fill flash earns its place when the light is HARSH and uneven. Order these by how much fill they need — the one that needs the MOST first.',
+        scale: ['needs the most fill', 'needs none'],
+        items: [
+          { label: 'Overcast day — soft, even light' }, // 0
+          { label: 'Backlit at sunset — face in shadow' }, // 1
+          { label: 'Harsh noon sun, hard side-shadow' }, // 2
+        ],
+        solution: [1, 2, 0], // backlit (most) → harsh noon (some) → overcast (none)
+        feedback: {
+          correct:
+            'Match the fill to the light. A backlit face is the darkest of the three — it needs the most fill to bring it back. Harsh noon needs some, to open the side-shadow. And overcast is already soft and even — adding flash there just flattens lovely light. Fill fixes HARSH light; it doesn’t improve good light.',
+          stages: [
+            'The darker the subject is relative to the background, the more fill it needs. Which face is most in shadow?',
+            'Most fill: backlit-at-sunset, then harsh noon; overcast soft light needs none.',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: a flattering, balanced fill
+      {
+        kind: 'light-direction',
+        control: 'fill',
+        fixed: { angle: 100, soft: 0.14, warmth: 0.18 },
+        start: { fill: 0 },
+        keeper: true,
+        prompt:
+          'Your portrait. The sun’s harsh on one side — add just enough fill to open the shadows and flatter the face, without blasting it flat. Take a shot worth keeping.',
+        check: ({ fill }) => fill >= 0.4 && fill <= 0.72,
+        feedback: {
+          correct:
+            'A flattering frame: the harsh shadow opened, the face kept its shape, the light reads natural — not a flash-blasted snapshot. You added light like a pro: just enough, and no more.',
+          stages: [
+            'Still harsh on the shadow side — bring some fill in.',
+            'Open the shadows to a soft, even glow — but stop before the face goes flat.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
   // L7 — LONG EXPOSURE (painting with time). Produced by the lesson factory,
   // then fixed (BEAT 3 gates on a brightness BAND so overshoot fails) + verified
   // against the real gate and a live playthrough. Uses only existing primitives.
