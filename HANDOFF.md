@@ -21,30 +21,36 @@ So: the branch has the newest work and is **unpushed + undeployed**. Decide whet
 `lesson-factory` → `main`, push, and redeploy. Nothing destructive has touched `main` or `origin`.
 
 ## TL;DR
-The course is **11 lessons and growing** — Sky redirected (2026-06-25) to **CURRICULUM EXPANSION**
-(more topics, broad lessons broken up, gaps filled; researched online → a 15-lesson / 6-module plan,
-**content-first**, in `Factory/IMPROVEMENTS-LOG.md`). Also has an **AI photo grader**, **try-before-signup**
-onboarding, a **lesson factory**, and the **BET** pedagogy primitive. `npm test` = **114/114 green**, build clean.
+The course is **15 lessons** — the **CURRICULUM EXPANSION** Sky asked for (2026-06-25: "another topic...
+break up the current lessons... fill in the rest... look online for how you should structure it") is
+COMPLETE. Researched online → a 15-lesson / 6-module plan, content-first; **6 new lessons + 1 split
+shipped** (all live-verified). Also has an **AI photo grader**, **try-before-signup** onboarding, a
+**lesson factory**, the **BET** primitive. `npm test` = **144/144 green**, build clean.
 
-## The course now — 11 lessons (verified from `src/content/course.js`; `number` is derived from order)
+## The course now — 15 lessons (verified from `src/content/course.js`; `number` is derived from order)
 | # | id | what it teaches |
 |---|----|------|
-| 1 | `exposure-triangle` | capture-light → aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9 beats) |
-| 2 | `depth-of-field` | forward flower-bokeh, 4 levers, night-bokeh, synthesis keeper (8) |
-| 3 | `shutter-motion` | **NEW (expansion 1).** shutter as a creative axis: blur=speed → freeze → rank by shutter → commit-keeper (5) |
-| 4 | `metering` | histogram: spread · clip highs/lows · **blinkies** + dynamic range (backlit) · high-key snow · rank (7) |
-| 5 | `white-balance` | **BET: predict where neutral is (snow), be wrong, correct** · cool/warm casts · **click-WB eyedropper** · creative warmth (5) |
-| 6 | `rule-of-thirds` | thirds · lead-room · **leading lines** · horizon · keeper (6) |
-| 7 | `composition-balance` | **NEW (expansion 2).** visual weight: counterbalance a heavy element · negative space · transfer · free keeper (5) |
-| 8 | `light-direction` | reveal-form · backlight · hard/soft (now feathered) · **warmth** · flattering recipe · **dramatic** keeper (7) |
-| 9 | `flash-fill` | **NEW (expansion 3).** fill flash: open harsh shadows · the over-flash-goes-flat balance · rank · keeper (5) |
-| 10 | `long-exposure-night` | **factory-made.** gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
-| 11 | `iso-and-noise` | **factory-made.** max-crank cost · the floor · expose-to-the-right · when-forced rank · keeper (6) |
+| 1 | `exposure-triangle` | aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9) |
+| 2 | `depth-of-field` | flower-bokeh, 4 blur levers, night-bokeh, synthesis keeper (8) |
+| 3 | `shutter-motion` | **NEW.** shutter as a creative axis: blur=speed → freeze → rank → commit-keeper (5) |
+| 4 | `focus-point` | **NEW.** focus is a PLACED choice: rack-focus the subject sharp; wide aperture = thin slice; rank; keeper (5) |
+| 5 | `focal-length` | **NEW.** focal as PERSPECTIVE (f/16, no blur): telephoto compresses / wide expands; rank; keeper (5) |
+| 6 | `metering` | histogram: spread · clip · **blinkies** + dynamic range · high-key snow · rank (7) |
+| 7 | `white-balance` | **BET** predict-neutral (snow) · casts · **eyedropper** · creative warmth (5) |
+| 8 | `rule-of-thirds` | thirds · lead-room · leading lines · horizon · keeper (6) |
+| 9 | `composition-balance` | **NEW.** visual weight: counterbalance · negative space · transfer · free keeper (5) |
+| 10 | `light-direction` | reveal-form · backlight · hard/soft · warmth · flattering · dramatic keeper (7) |
+| 11 | `flash-fill` | **NEW.** fill flash: open harsh shadows · over-flash-goes-flat balance · rank · keeper (5) |
+| 12 | `portrait` | **NEW.** genre capstone: soft+fill → shape+warm → 4-lever light synthesis → keeper (5) |
+| 13 | `long-exposure-night` | gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
+| 14 | `landscape` | **NEW.** genre capstone: horizon low=sky / high=foreground · foreground-anchor depth · keeper (5) |
+| 15 | `iso-and-noise` | max-crank cost · the floor · expose-to-the-right · rank · keeper (6) |
 
-**Expansion status (content-first):** 3 shipped — shutter-motion (L3), composition-balance (L7), flash-fill
-(L9); meter-fooled SKIPPED (metering covers it). **Remaining all need heavier sim work:** Focus (needs a
-focus-plane subject — DofBokeh is flower-only), the Portrait/Landscape genre capstones (sim coherence), and
-the major Focal-length compression sim. See the ledger DIRECTION block for the next-step options.
+**Expansion COMPLETE (content-first).** New sims added: MotionView goal-aware caption; compose `balance`/
+`negativespace`/`composefree` + horizon `third`; LightDirection `fill`; DofBokeh `focusDist` (rack focus)
++ bokeh `check(blur, params)`; new `focus` step kind. `number` derived from array order. **meter-fooled
+SKIPPED** (metering covers it). An adversarial Sky-critic over the 7 new lessons is the last gate — fix-
+forward its findings, then the next move is Sky's: chapter/Review nav layer · deferred polish · merge+deploy.
 
 All predict-first, no multiple choice, calm feedback, success mints a polaroid keepsake.
 
@@ -95,7 +101,7 @@ meter-fooled → Portrait → Landscape (all buildable now), per the DIRECTION b
 shutter-motion redesign (needs a panning sim) → free-play Studio. Parked: silhouettes.
 
 ## How to run / verify
-- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (107/107).
+- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (144/144).
   **Build:** `npm run build`. **Deploy:** `npm run deploy`. **Functions deps:** `cd functions && npm install`.
 - **Verify a lesson:** full beat walkthrough in the UI, mobile 375 + desktop, test wrong paths, confirm the
   keepsake matches the lesson. **Preview gotcha:** the `capture` beat's rAF exposure animation can stall in

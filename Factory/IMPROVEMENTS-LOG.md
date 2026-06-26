@@ -12,33 +12,28 @@ browser (the critic's lesson: an automated gate keeps passing prose/pixel diverg
 Sky redirected: "i wanted another topic. break up the current lessons into more, and fill in the rest.
 look online for how you should structure it." A 4-lens web-research workflow (35 sources) produced a
 **15-lesson structure in 6 modules** (proposal in the wf result / synthesized below). Sky chose
-**content-first** ("go ahead and i will tell you if anything is wrong"). Keep exposure as ONE lesson;
-skip prose-y RAW/critique (no sim). **Progress:**
-1. ✅ **Shutter speed & motion** — DONE (d77c6d3), L3. Added goal-aware MotionView caption; derived `number`.
-2. ✅ **Composition: balance & negative space** — DONE (acd78b5), L7. Split from rule-of-thirds; added
-   `balance`/`negativespace`/`composefree` compose targets + a fixed-anchor render.
-3. ❌ **When the meter is fooled** — SKIPPED: metering already covers snow-fools-the-meter (beat 6) +
-   backlit dynamic range (beat 5); a separate lesson would duplicate it (the thin-split Sky warns against).
-   If wanted later, fold ONE "night reads grey → compensate DOWN" beat into the metering lesson instead.
-4. ✅ **Flash: adding your own light** — DONE (82ee257), L9. Added a `fill` dimension to the LightDirection
-   sim (opens harsh shadows; full fill → flat). Distinct from L8 (natural light). [expansion 3]
-5. **Focus & the focus point** — NEXT candidate, but ⚠️ needs a focusable subject with a clear focus PLANE;
-   DofBokeh is flower-only (no face/eye). Either add a focus-point tap to DofBokeh (focus subject vs bg) or build a small sim.
-6. **Portrait (genre capstone)** — ⚠️ sim-coherence (combine aperture+light+focus into one artifact).
-7. **Landscape (genre capstone)** — ⚠️ recombines but each beat jumps sim / overlaps; needs design.
-8. **Focal length & perspective** — major compression sim.
+**content-first** ("go ahead... i will tell you if anything is wrong" → "continue all the way"). Keep
+exposure as ONE lesson; skipped prose-y RAW/critique (no sim). **✅ EXPANSION COMPLETE — 8 → 15 lessons.**
+1. ✅ **Shutter speed & motion** (d77c6d3, L3) — goal-aware MotionView caption; derived `number`.
+2. ✅ **Composition: balance & negative space** (acd78b5, L9) — new `balance`/`negativespace`/`composefree`
+   compose targets + fixed-anchor render.
+3. ❌ **When the meter is fooled** — SKIPPED (metering already covers snow-fools-meter + DR; would duplicate).
+4. ✅ **Flash: adding your own light** (82ee257, L11) — new `fill` dimension on LightDirection (opens
+   harsh shadows; full = flat).
+5. ✅ **Focal length & perspective** (committed, L5) — DofBokeh at f/16 (no blur) → `focal` = pure
+   compression; bokeh `check` now gets (blur, params); gate sweeps the lever space.
+6. ✅ **Focus & the focus point** (committed, L4) — new `focus` kind + DofBokeh `focusDist` rack-focus
+   (the SUBJECT softens off-plane; null = always sharp, DoF unaffected).
+7. ✅ **Portrait: flattering light** (committed, L12) — LightDirection multi-control synthesis (no new sim).
+8. ✅ **Landscape: framing the wide scene** (committed, L14) — compose capstone; horizon `third` option
+   (low=sky / high=foreground) + foreground-anchor depth.
 
-**⚠️ KEY FINDING (2026-06-25): the cheap content-recombination wins (#1, #2) are DONE; everything left
-needs NEW SIM WORK, not just content.** Next move is a SIM decision, not another quick lesson:
-- **Focus & focus-point** — tap-to-focus, but needs a face/eye subject (DofBokeh is flower-only).
-- **Flash** — a flash source + ambient slider on LightDirection (read `src/sim/LightDirection.jsx` first).
-- **Focal length & perspective** — a major compression/dolly-zoom sim.
-- **Genre capstones (Portrait/Landscape)** — sims are scene-specific, so one coherent portrait/landscape
-  artifact across aperture+light+compose isn't free. Pick: build a dedicated genre sim, or accept multi-sim beats.
-Read `src/sim/DofBokeh.jsx` + `src/sim/LightDirection.jsx` before picking the next sim to build.
+**STATUS: the content-first 15-lesson plan is DONE.** An adversarial Sky-critic over all 7 new lessons
+is the last gate (run after this commit) — fix-forward whatever it finds, like the BET critic did.
+**Next options (Sky's call):** (a) the chapter/Review NAV layer (the Brilliant shape — Home/Course/store
+rework); (b) the deferred truth/polish items below; (c) merge `lesson-factory` → main + deploy.
 Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) · Reading&Colour
-(Metering,Meter-fooled,WB) · Composition(I placing, II lines/balance) · Light(Direction,Flash) ·
-Genre(Portrait,LongExposure,Landscape).
+(Metering,WB) · Composition(I placing, II balance) · Light(Direction,Flash) · Genre(Portrait,LongExp,Landscape) · ISO.
 
 ## Deferred (lower priority than the curriculum breadth Sky asked for)
 - **Second BET** (L3 snow-histogram ghost-tick) — the `bet` kind is proven; revisit after breadth.
