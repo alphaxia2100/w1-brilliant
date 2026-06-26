@@ -21,26 +21,29 @@ So: the branch has the newest work and is **unpushed + undeployed**. Decide whet
 `lesson-factory` → `main`, push, and redeploy. Nothing destructive has touched `main` or `origin`.
 
 ## TL;DR
-The course is **9 lessons and growing** — Sky redirected (2026-06-25) to **CURRICULUM EXPANSION**
+The course is **10 lessons and growing** — Sky redirected (2026-06-25) to **CURRICULUM EXPANSION**
 (more topics, broad lessons broken up, gaps filled; researched online → a 15-lesson / 6-module plan,
 **content-first**, in `Factory/IMPROVEMENTS-LOG.md`). Also has an **AI photo grader**, **try-before-signup**
-onboarding, a **lesson factory**, and the **BET** pedagogy primitive. `npm test` = **99/99 green**, build clean.
+onboarding, a **lesson factory**, and the **BET** pedagogy primitive. `npm test` = **107/107 green**, build clean.
 
-## The course now — 9 lessons (verified from `src/content/course.js`; `number` is derived from order)
+## The course now — 10 lessons (verified from `src/content/course.js`; `number` is derived from order)
 | # | id | what it teaches |
 |---|----|------|
 | 1 | `exposure-triangle` | capture-light → aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9 beats) |
 | 2 | `depth-of-field` | forward flower-bokeh, 4 levers, night-bokeh, synthesis keeper (8) |
-| 3 | `shutter-motion` | **NEW (expansion 1/5).** shutter as a creative axis: blur=speed → freeze → rank by shutter → commit-keeper (5) |
+| 3 | `shutter-motion` | **NEW (expansion 1).** shutter as a creative axis: blur=speed → freeze → rank by shutter → commit-keeper (5) |
 | 4 | `metering` | histogram: spread · clip highs/lows · **blinkies** + dynamic range (backlit) · high-key snow · rank (7) |
 | 5 | `white-balance` | **BET: predict where neutral is (snow), be wrong, correct** · cool/warm casts · **click-WB eyedropper** · creative warmth (5) |
 | 6 | `rule-of-thirds` | thirds · lead-room · **leading lines** · horizon · keeper (6) |
-| 7 | `light-direction` | reveal-form · backlight · hard/soft (now feathered) · **warmth** · flattering recipe · **dramatic** keeper (7) |
-| 8 | `long-exposure-night` | **factory-made.** gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
-| 9 | `iso-and-noise` | **factory-made.** max-crank cost · the floor · expose-to-the-right · when-forced rank · keeper (6) |
+| 7 | `composition-balance` | **NEW (expansion 2).** visual weight: counterbalance a heavy element · negative space · transfer · free keeper (5) |
+| 8 | `light-direction` | reveal-form · backlight · hard/soft (now feathered) · **warmth** · flattering recipe · **dramatic** keeper (7) |
+| 9 | `long-exposure-night` | **factory-made.** gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
+| 10 | `iso-and-noise` | **factory-made.** max-crank cost · the floor · expose-to-the-right · when-forced rank · keeper (6) |
 
-**Next (content-first expansion, buildable now):** Composition II (lines/balance) → When-the-meter-is-fooled
-→ Portrait → Landscape. Then small-sim: Focus, Flash. Then (if greenlit) the major focal-length/perspective sim.
+**Expansion status:** 2 clean content-splits shipped (shutter, composition-balance); meter-fooled SKIPPED
+(metering already covers it). **Everything left needs NEW SIM WORK** — Focus, Flash, Focal-length, and the
+Portrait/Landscape genre capstones (sims are scene-specific). Next move = a sim decision; see the ledger's
+KEY FINDING. Read `src/sim/DofBokeh.jsx` + `LightDirection.jsx` before building the next sim.
 
 All predict-first, no multiple choice, calm feedback, success mints a polaroid keepsake.
 
@@ -91,7 +94,7 @@ meter-fooled → Portrait → Landscape (all buildable now), per the DIRECTION b
 shutter-motion redesign (needs a panning sim) → free-play Studio. Parked: silhouettes.
 
 ## How to run / verify
-- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (92/92).
+- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (107/107).
   **Build:** `npm run build`. **Deploy:** `npm run deploy`. **Functions deps:** `cd functions && npm install`.
 - **Verify a lesson:** full beat walkthrough in the UI, mobile 375 + desktop, test wrong paths, confirm the
   keepsake matches the lesson. **Preview gotcha:** the `capture` beat's rAF exposure animation can stall in

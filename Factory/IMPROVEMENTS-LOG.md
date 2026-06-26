@@ -12,16 +12,25 @@ browser (the critic's lesson: an automated gate keeps passing prose/pixel diverg
 Sky redirected: "i wanted another topic. break up the current lessons into more, and fill in the rest.
 look online for how you should structure it." A 4-lens web-research workflow (35 sources) produced a
 **15-lesson structure in 6 modules** (proposal in the wf result / synthesized below). Sky chose
-**content-first**: add the gap LESSONS into the flat list now, then add a chapter/Review nav layer after.
-Keep exposure as ONE lesson (his prior call + transfer evidence); skip prose-y RAW/critique (no sim);
-defer the one major new sim (focal-length compression). **Build order (buildable-now first):**
-1. ✅ **Shutter speed & motion** — DONE (commit d77c6d3), L3.
-2. **Composition II: lines, balance & negative space** — split from L5 (rule-of-thirds); compose canvas.
-3. **When the meter is fooled** — split/deepen from L3 metering (pushes to grey → exposure compensation).
-4. **Portrait (genre capstone)** — recombine bokeh + light-direction + portrait scene + focus-on-eye.
-5. **Landscape (genre capstone)** — deep DoF + horizon + protect-the-sky + golden light.
-Then needs-small-sim: **Focus & the focus point** (tap-to-focus on bokeh), **Flash** (fill vs ambient).
-Then needs-major-sim: **Focal length & perspective** (compression) — only if Sky greenlights the sim.
+**content-first** ("go ahead and i will tell you if anything is wrong"). Keep exposure as ONE lesson;
+skip prose-y RAW/critique (no sim). **Progress:**
+1. ✅ **Shutter speed & motion** — DONE (d77c6d3), L3. Added goal-aware MotionView caption; derived `number`.
+2. ✅ **Composition: balance & negative space** — DONE (acd78b5), L7. Split from rule-of-thirds; added
+   `balance`/`negativespace`/`composefree` compose targets + a fixed-anchor render.
+3. ❌ **When the meter is fooled** — SKIPPED: metering already covers snow-fools-the-meter (beat 6) +
+   backlit dynamic range (beat 5); a separate lesson would duplicate it (the thin-split Sky warns against).
+   If wanted later, fold ONE "night reads grey → compensate DOWN" beat into the metering lesson instead.
+4. **Portrait (genre capstone)** — ⚠️ needs a sim decision (see KEY FINDING).
+5. **Landscape (genre capstone)** — ⚠️ recombines but each beat jumps sim / overlaps; needs design.
+
+**⚠️ KEY FINDING (2026-06-25): the cheap content-recombination wins (#1, #2) are DONE; everything left
+needs NEW SIM WORK, not just content.** Next move is a SIM decision, not another quick lesson:
+- **Focus & focus-point** — tap-to-focus, but needs a face/eye subject (DofBokeh is flower-only).
+- **Flash** — a flash source + ambient slider on LightDirection (read `src/sim/LightDirection.jsx` first).
+- **Focal length & perspective** — a major compression/dolly-zoom sim.
+- **Genre capstones (Portrait/Landscape)** — sims are scene-specific, so one coherent portrait/landscape
+  artifact across aperture+light+compose isn't free. Pick: build a dedicated genre sim, or accept multi-sim beats.
+Read `src/sim/DofBokeh.jsx` + `src/sim/LightDirection.jsx` before picking the next sim to build.
 Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) · Reading&Colour
 (Metering,Meter-fooled,WB) · Composition(I placing, II lines/balance) · Light(Direction,Flash) ·
 Genre(Portrait,LongExposure,Landscape).
