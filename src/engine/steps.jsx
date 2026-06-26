@@ -95,7 +95,7 @@ export function Feedback({ status, message, showWhy, step }) {
       className={`rounded-tile px-4 py-3 text-[15px] leading-snug animate-pop ${
         correct ? 'bg-correct-bg text-correct-ink' : 'bg-retry-bg text-retry-ink'
       }`}
-      role="status"
+      role={correct ? 'status' : 'alert'}
     >
       {hasVisual && (
         <div className="mb-2.5">
@@ -128,10 +128,14 @@ export function PolaroidReveal({ shot, onDone }) {
   doneRef.current = onDone
   const reduced = useReducedMotion()
   const tiltRef = useRef(null)
+  const overlayRef = useRef(null)
   // Random orientation each shot — but a JS transform isn't covered by the reduced-motion CSS rule,
   // so flatten the tilt for motion-sensitive users.
   if (tiltRef.current === null) tiltRef.current = reduced ? 0 : Math.random() * 11 - 5.5
   useEffect(() => {
+    // Move focus into the modal so a keyboard user can dismiss it (and isn't stranded on a now-hidden
+    // control behind the overlay).
+    overlayRef.current?.focus()
     // Hold long enough to enjoy the develop (which now starts at 0.42s and runs 1.5s) before auto-dismiss.
     const t = setTimeout(() => doneRef.current(), 2800)
     return () => clearTimeout(t)
@@ -139,11 +143,20 @@ export function PolaroidReveal({ shot, onDone }) {
   const keeper = shot.verdict !== 'experiment'
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center px-6 cursor-pointer"
+      ref={overlayRef}
+      tabIndex={-1}
+      className="fixed inset-0 z-40 flex items-center justify-center px-6 cursor-pointer outline-none"
       style={{ background: 'rgba(16,16,18,0.82)' }}
       onClick={onDone}
-      role="status"
-      aria-label="Captured photo — tap to continue"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault()
+          onDone()
+        }
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Captured photo — press Enter or Escape to continue"
     >
       <div style={{ transform: `rotate(${tiltRef.current}deg)` }}>
         <div className="polaroid-in bg-white rounded-[8px] p-3 pb-9" style={{ width: 252, boxShadow: '0 18px 44px rgba(0,0,0,0.32)' }}>
@@ -164,7 +177,7 @@ export function PolaroidReveal({ shot, onDone }) {
             </div>
           ) : shot.kind === 'compose' ? (
             <div className="polaroid-develop">
-              <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} horizon={shot.horizon} size={228} rounded={false} />
+              <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} horizon={shot.horizon} anchor={shot.anchor} size={228} rounded={false} />
             </div>
           ) : (
             <div className="polaroid-develop">
@@ -177,7 +190,7 @@ export function PolaroidReveal({ shot, onDone }) {
         </div>
         </div>
       </div>
-      <p className="absolute bottom-8 inset-x-0 text-center text-[12px] text-white/70">tap to continue</p>
+      <p className="absolute bottom-8 inset-x-0 text-center text-[12px] text-white/70">press any key or tap to continue</p>
     </div>
   )
 }
@@ -325,14 +338,16 @@ function SliderSimView({ step, status, onResult, onActivity }) {
   const useIndex = Array.isArray(stops)
   const [raw, setRaw] = useState(step.control.start)
   const [blinkOn, setBlinkOn] = useState(true)
+  const reduced = useReducedMotion()
   const locked = status === 'correct'
 
   // Blinkies blink: toggle a flag a couple times a second so clipped cells flash.
+  // Reduced-motion: skip the interval so clipped cells stay STEADILY highlighted (info kept, no flash).
   useEffect(() => {
-    if (!step.blinkies) return
+    if (!step.blinkies || reduced) return
     const id = setInterval(() => setBlinkOn((b) => !b), 850)
     return () => clearInterval(id)
-  }, [step.blinkies])
+  }, [step.blinkies, reduced])
 
   const value = useIndex ? stops[raw] : raw
   const params = step.toParams(value)
@@ -614,6 +629,21 @@ function ComposeView({ step, status, onResult, onActivity }) {
       /* synthetic event — fine */
     }
   }
+  // Keyboard path (the drag canvas is otherwise mouse/touch-only): arrows nudge the placement.
+  function key(e) {
+    if (locked) return
+    const STEP = e.shiftKey ? 8 : 3
+    let { x, y } = pos
+    if (e.key === 'ArrowLeft') x -= STEP
+    else if (e.key === 'ArrowRight') x += STEP
+    else if (e.key === 'ArrowUp') y -= STEP
+    else if (e.key === 'ArrowDown') y += STEP
+    else return
+    e.preventDefault()
+    setPos(horizon ? { x: 50, y: clampN(y, 6, 94) } : { x: clampN(x, 6, 94), y: clampN(y, 6, 94) })
+    setMoved(true)
+    onActivity?.()
+  }
 
   return (
     <div className="animate-risein">
@@ -622,8 +652,12 @@ function ComposeView({ step, status, onResult, onActivity }) {
         {horizon ? <HorizonScene y={pos.y} size={300} /> : <PixelScene scene={step.scene} size={300} />}
         <div
           ref={frame}
-          className="absolute inset-0 touch-none cursor-grab active:cursor-grabbing rounded-tile overflow-hidden"
+          tabIndex={locked ? -1 : 0}
+          role="application"
+          aria-label={`${horizon ? 'Horizon position' : 'Subject position'}. Use the arrow keys to ${horizon ? 'raise or lower the horizon' : 'move it'}.`}
+          className="absolute inset-0 touch-none cursor-grab active:cursor-grabbing rounded-tile overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link"
           onPointerDown={down}
+          onKeyDown={key}
           onPointerMove={(e) => dragging.current && place(e)}
           onPointerUp={() => (dragging.current = false)}
         >
@@ -671,7 +705,7 @@ function ComposeView({ step, status, onResult, onActivity }) {
           </svg>
         </div>
       </div>
-      <p className="text-[13px] text-center mb-4 font-medium" style={{ color: liveOk ? '#1B7D35' : '#666' }}>
+      <p className="text-[13px] text-center mb-4 font-medium" style={{ color: liveOk ? '#1B7D35' : '#666' }} role="status" aria-live="polite">
         {step.silentCue && !locked ? 'Place it where it feels right, then take the shot.' : cue}
       </p>
       {!locked && (
@@ -874,7 +908,7 @@ function DofView({ step, status, onResult }) {
           {['m', 'ft'].map((un) => {
             const on = (un === 'ft') === imperial
             return (
-              <button key={un} onClick={() => setImperial(un === 'ft')} className="px-2.5 py-1 rounded-[8px]" style={{ background: on ? '#141414' : '#F2F2F2', color: on ? '#fff' : '#666' }}>
+              <button key={un} aria-pressed={on} aria-label={un === 'm' ? 'Meters' : 'Feet'} onClick={() => setImperial(un === 'ft')} className="px-3 min-h-[40px] grid place-items-center rounded-[8px]" style={{ background: on ? '#141414' : '#F2F2F2', color: on ? '#fff' : '#666' }}>
                 {un}
               </button>
             )
@@ -908,7 +942,7 @@ function DofView({ step, status, onResult }) {
           <div className="text-[13px] text-muted mb-1">Sensor size</div>
           <div className="flex gap-1.5 flex-wrap">
             {Object.keys(SENSORS).map((k) => (
-              <button key={k} onClick={() => setSensorKey(k)} className="px-2.5 py-1 rounded-[8px] text-[12px]" style={{ background: k === sensorKey ? '#141414' : '#F2F2F2', color: k === sensorKey ? '#fff' : '#666' }}>
+              <button key={k} aria-pressed={k === sensorKey} aria-label={`Sensor: ${k}`} onClick={() => setSensorKey(k)} className="px-3 min-h-[40px] grid place-items-center rounded-[8px] text-[12px]" style={{ background: k === sensorKey ? '#141414' : '#F2F2F2', color: k === sensorKey ? '#fff' : '#666' }}>
                 {k}
               </button>
             ))}
@@ -1332,12 +1366,14 @@ function EyedropView({ step, status, onResult }) {
   const locked = status === 'correct'
   const N = 32
   const cells = getScene(step.scene, N).cells
+  // Keyboard crosshair: start over the hinted gray card if given, else center.
+  const hintCol = step.hint ? clampN(Math.round((parseFloat(step.hint.x) / 100) * N), 0, N - 1) : Math.round(N / 2)
+  const hintRow = step.hint ? clampN(Math.round((parseFloat(step.hint.y) / 100) * N), 0, N - 1) : Math.round(N / 2)
+  const [cur, setCur] = useState({ col: hintCol, row: hintRow })
+  const [kbd, setKbd] = useState(false) // show the crosshair once the keyboard is used
 
-  function pick(e) {
+  function pickCell(col, row) {
     if (locked) return
-    const rect = frame.current.getBoundingClientRect()
-    const col = clampN(Math.floor(((e.clientX - rect.left) / rect.width) * N), 0, N - 1)
-    const row = clampN(Math.floor(((e.clientY - rect.top) / rect.height) * N), 0, N - 1)
     const px = cells[row][col]
     const br = px[0]
     const bb = px[2]
@@ -1345,13 +1381,51 @@ function EyedropView({ step, status, onResult }) {
     setTemp(clampN(eff - base, -1, 1))
     setPicked(true)
   }
+  function pick(e) {
+    if (locked) return
+    const rect = frame.current.getBoundingClientRect()
+    const col = clampN(Math.floor(((e.clientX - rect.left) / rect.width) * N), 0, N - 1)
+    const row = clampN(Math.floor(((e.clientY - rect.top) / rect.height) * N), 0, N - 1)
+    pickCell(col, row)
+  }
+  function key(e) {
+    if (locked) return
+    let { col, row } = cur
+    if (e.key === 'ArrowLeft') col -= 1
+    else if (e.key === 'ArrowRight') col += 1
+    else if (e.key === 'ArrowUp') row -= 1
+    else if (e.key === 'ArrowDown') row += 1
+    else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault()
+      pickCell(cur.col, cur.row)
+      return
+    } else return
+    e.preventDefault()
+    setKbd(true)
+    setCur({ col: clampN(col, 0, N - 1), row: clampN(row, 0, N - 1) })
+  }
 
   return (
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
       <div className="relative mx-auto mb-3" style={{ maxWidth: 300 }}>
         <PixelScene scene={step.scene} size={300} temp={temp} baseTemp={base} />
-        <div ref={frame} onClick={pick} className="absolute inset-0 rounded-tile cursor-crosshair" />
+        <div
+          ref={frame}
+          onClick={pick}
+          onKeyDown={key}
+          tabIndex={locked ? -1 : 0}
+          role="application"
+          aria-label="Eyedropper. Use the arrow keys to move the sampler over a surface, then press Enter to sample it for a neutral gray."
+          className="absolute inset-0 rounded-tile cursor-crosshair focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link"
+        />
+        {/* keyboard crosshair (appears once arrows are used) */}
+        {kbd && !locked && (
+          <div
+            className="absolute pointer-events-none border-2 border-white rounded-[4px]"
+            style={{ left: `${((cur.col + 0.5) / N) * 100}%`, top: `${((cur.row + 0.5) / N) * 100}%`, width: 26, height: 26, transform: 'translate(-50%,-50%)', boxShadow: '0 0 0 1.5px rgba(0,0,0,0.5)' }}
+          />
+        )}
         {/* a pulsing marker over the gray card until the first sample — discoverable on touch */}
         {!picked && step.hint && (
           <div className="absolute pointer-events-none" style={{ left: step.hint.x, top: step.hint.y, transform: 'translate(-50%,-50%)', width: 50, height: 42 }}>
@@ -1445,6 +1519,7 @@ function BetView({ step, status, onResult, onActivity }) {
   const override = step.betMessages?.[step.betKind?.(bet)] || step.feedback?.correct
   return (
     <div className="animate-risein">
+      <p className="sr-only" aria-live="assertive">Bet locked. Now correct the color cast for real — your bet is pinned on the slider, and you’ll see how far past it neutral actually sits.</p>
       <Prompt>{step.prompt}</Prompt>
       <div className="relative flex justify-center mb-4">
         <PixelScene scene={step.scene} size={300} {...params} />

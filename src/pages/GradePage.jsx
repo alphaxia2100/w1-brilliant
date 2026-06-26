@@ -114,7 +114,7 @@ export default function GradePage() {
     <div className="min-h-[100dvh] max-w-col w-full mx-auto px-5 py-6 flex flex-col gap-6">
       <header className="flex items-center justify-between">
         <Logo />
-        <button onClick={() => navigate('/')} className="text-[13px] text-muted hover:text-ink transition">
+        <button onClick={() => navigate('/')} className="text-[13px] text-muted hover:text-ink transition -mr-2 px-3 py-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50">
           Home
         </button>
       </header>

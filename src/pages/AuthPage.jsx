@@ -95,7 +95,8 @@ export default function AuthPage() {
               setMode(m)
               setError('')
             }}
-            className={`px-4 py-1.5 rounded-[10px] text-[14px] font-medium transition ${
+            aria-pressed={mode === m}
+            className={`px-4 py-2.5 rounded-[10px] text-[14px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50 ${
               mode === m ? 'bg-white shadow-tile text-ink' : 'text-muted'
             }`}
           >

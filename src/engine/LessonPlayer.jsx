@@ -120,6 +120,11 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
           {lesson.title} · Lesson {lesson.number} of {lesson.totalLessons}
         </div>
 
+        {/* Announce step changes to screen readers (the <View> remounts silently otherwise). */}
+        <p className="sr-only" aria-live="polite" key={`ann-${idx}`}>
+          Step {idx + 1} of {lesson.steps.length}{step.prompt ? `. ${step.prompt}` : ''}
+        </p>
+
         <div className="flex-1">
           <View key={idx} step={step} status={status} onResult={handleResult} onActivity={handleActivity} />
         </div>

@@ -46,7 +46,7 @@ export function Slider({ value, min, max, step = 1, onChange, ariaLabel, valueTe
 // Segmented progress bar across a lesson's steps.
 export function ProgressBar({ total, index }) {
   return (
-    <div className="flex gap-1.5 flex-1" aria-label={`Step ${index + 1} of ${total}`}>
+    <div className="flex gap-1.5 flex-1" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={index + 1} aria-label={`Step ${index + 1} of ${total}`}>
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}

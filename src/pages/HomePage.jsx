@@ -68,7 +68,7 @@ export default function HomePage() {
         <Logo />
         <button
           onClick={logOut}
-          className="text-[13px] text-muted hover:text-ink transition rounded-md px-2 py-1 -mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50"
+          className="text-[13px] text-muted hover:text-ink transition rounded-md px-3 py-2.5 -mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50"
         >
           Log out
         </button>

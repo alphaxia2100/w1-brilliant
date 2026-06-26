@@ -38,7 +38,7 @@ function CompletionCard({ lesson, nextLesson, onReplay, stats }) {
         <Button variant="ghost" onClick={() => navigate('/course')}>
           See my progress
         </Button>
-        <button onClick={onReplay} className="text-[13px] text-muted hover:text-ink transition mt-1">
+        <button onClick={onReplay} className="text-[13px] text-muted hover:text-ink transition mt-1 px-3 py-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50">
           Replay this lesson
         </button>
       </div>
