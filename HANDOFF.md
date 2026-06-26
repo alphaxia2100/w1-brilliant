@@ -1,6 +1,6 @@
 # Aperture — Handoff
 
-**Updated:** 2026-06-25 (session 4 — expansion + nav + deployed) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore +
+**Updated:** 2026-06-26 (session 5 — polish pass deployed) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore +
 Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real photos.
 **Read order:** `WORKING-PROTOCOL.md` (how we work — git *is* memory) → this file → `Factory/IMPROVEMENTS-LOG.md`
 (the live loop) → `Redesign/PEDAGOGY-REDESIGN.md` (the approved direction) → the memory files.
@@ -9,12 +9,12 @@ Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real 
 > Everything below was verified against git + the code on 2026-06-25, not recalled. RE-READ a file
 > before asserting its contents or editing it (stale mental models have caused real bugs here).
 
-## ✅ Branch / push / deploy state — READ FIRST (all in sync as of 2026-06-25)
+## ✅ Branch / push / deploy state — READ FIRST (all in sync as of 2026-06-26)
 | Where | At | Contains |
 |---|---|---|
-| **GitHub `origin/main`** (pushed) | `00a65bf` | EVERYTHING — 21 lessons (6 chapters + Reviews), landscape, grader, git-as-memory system, BET, all truth-fixes |
-| **local `main`** | `00a65bf` | == origin |
-| **Deployed** `aperture-dac66.web.app` | `00a65bf` | **LIVE: the full 21-lesson course + chapter nav + Reviews** (hosting deployed + verified — asset hash `index-mPJrolaZ.js` matches dist). |
+| **GitHub `origin/main`** (pushed) | `0962eaf` | EVERYTHING — 21 lessons (6 chapters + Reviews), landscape, grader, git-as-memory system, BET, all truth-fixes, **+ the polish pass** |
+| **local `main`** | `0962eaf` | == origin |
+| **Deployed** `aperture-dac66.web.app` | `0962eaf` | **LIVE: the full 21-lesson course + chapter nav + Reviews + polish** (hosting deployed). ⚠️ Polish was build+CSS+gate-verified; **pixel-level live-verify pending** (preview MCP was down this session). |
 
 So: **main is pushed and the app is deployed live** — they're all in sync. Current branch: `main`
 (start a feature branch for new work). The **grader Cloud Function is still NOT deployed** — it needs
@@ -42,7 +42,7 @@ lessons (8 original + 7 new/rebuilt) + 6 chapter Reviews. Also has the **AI phot
 `horizon.third` + a real `HorizonScene` (the horizon truly moves — also fixed rule-of-thirds' old
 two-horizons bug); MotionView si≤1 truly sharp; `chapters` + Review splice; derived `number`.
 **meter-fooled** was SKIPPED (metering already covers it). All predict-first, no multiple choice, calm
-feedback, keepers mint a polaroid. **Next: a polish pass (in progress).**
+feedback, keepers mint a polaroid. **The polish pass (session 5) is DONE + deployed** — see ledger #6.
 
 All predict-first, no multiple choice, calm feedback, success mints a polaroid keepsake.
 

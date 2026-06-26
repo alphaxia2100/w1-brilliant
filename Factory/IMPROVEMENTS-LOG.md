@@ -73,6 +73,30 @@ Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) ·
   layer when a 2nd bet lands on a non-WB beat.
 
 ## Iterations
+### #6 — 2026-06-26 — POLISH PASS: a11y / moments / token cohesion / onboarding  ✓ (commit 0962eaf, deployed)
+Sky: "after finishing, focus on polish" — the app is graded on UX/design, so this was the priority once the
+21-lesson build landed. Ran a **14-vantage shimmering-personas critique** (motion designer, colorblind user,
+screen-reader user, film purist, WCAG auditor, first-run learner, …) → xhigh synthesis. The anti-confab
+guardrail earned its keep: **2 personas' top claims were debunked + dropped** (they were wrong about the
+code). Shipped the convergent, high-confidence items across 7 files:
+- **Moments:** polaroid reveal re-choreographed so develop waits for the card to LAND (one keepsake beat,
+  hold 2400→2800ms); wrong-answer feedback warmed grey→the orphaned `retry` amber token ("try again", not
+  "failure") — which also gives the wrong state hue+luminance salience for colorblind users.
+- **Truth-without-colour / a11y (convergent across colorblind + SR + WCAG):** exposure verdict no longer
+  colour-only ("Aim for the green"→"the band"; slider announces good/too dark/too bright via valueText);
+  fixed opacity-stacked muted text failing AA contrast; Auth got real aria-labels + a live password hint +
+  friendly Firebase error copy + busy text; 44px touch targets on exit/back + focus-visible rings on bare
+  nav buttons; reduced-motion now flattens the polaroid's JS tilt (CSS override couldn't reach it).
+- **Cohesion:** Feedback + ProgressBar use the Tailwind tokens (correct/retry/pear/ink/hairline) not inline
+  hex; chapter completion POPs (pear ✓ done chip); locked nodes read disabled via a crisp light lock + muted
+  title (not a blanket opacity wash); empty roll shows a nudge; Auth subtitle no longer says only "exposure
+  triangle" (course is now 6 chapters).
+VERIFIED: gate 170/170, build clean, all new token/ring utility classes confirmed generated in the built CSS.
+⚠️ HONEST GAP: the **preview MCP was disconnected** this session, so this is build+CSS+gate-verified, NOT
+pixel-verified. Deployed anyway (low regression risk — token/copy/a11y/timing, reversible, Sky gave
+permissions). **NEXT: live-eyeball when the preview reconnects** (amber feedback aesthetic, ✓-done chip,
+locked-node look, polaroid choreography are the 4 to look at) — re-deploy only if something's visually off.
+
 ### #1 — 2026-06-25 — shipped L7 "Long exposure: painting with time"  ✓ (commit dbc6725)
 Took the lesson factory's strongest candidate, fixed BEAT 3 (brightness band so overshoot fails),
 integrated as L7. Real gate 81/81, build clean, beat-0 glow confirmed live. The factory's correctness
