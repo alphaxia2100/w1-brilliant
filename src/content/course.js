@@ -1240,6 +1240,97 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
+  // PORTRAIT — genre capstone (expansion 5). SYNTHESIS on the LightDirection sim: combine
+  // soft + a gentle side angle + warmth + fill into ONE flattering portrait. Distinct from
+  // L8 (each light lever singly) and L9 (fill alone): here you wield them together, and judge
+  // FLATTERING vs harsh. No new sim — LightDirView already supports multi-control.
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'portrait',
+    title: 'Portrait: flattering light',
+    blurb: 'Put it together — light a face so it flatters.',
+    steps: [
+      // BEAT 1 — predict by doing: a harsh portrait → soften AND fill to flatter
+      {
+        kind: 'light-direction',
+        controls: ['soft', 'fill'],
+        start: { angle: 58, soft: 0.05, warmth: 0.15, fill: 0 },
+        prompt:
+          'This portrait is harsh — a hard light from the side carves a deep black shadow across the face. Make it flattering: SOFTEN the light, and add FILL to open the shadow.',
+        check: ({ soft, fill }) => soft >= 0.6 && fill >= 0.35,
+        feedback: {
+          correct:
+            'Instantly kinder. Soft light wraps gently around a face instead of slicing it; fill opens the shadow so no half disappears into black. Soft + filled is the backbone of flattering portrait light.',
+          stages: [
+            'Hard, unfilled light is unflattering. You have TWO things to fix — soften the source, and lift the shadow with fill.',
+            'Push softness up AND bring fill up until the face reads gentle and even.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm: the flattering recipe
+      {
+        kind: 'intro',
+        title: 'What flatters a face',
+        body: [
+          'Flattering portrait light is usually SOFT (it wraps, it doesn’t carve), a little to the SIDE (so the face has shape, not a flat snapshot), gently WARM (skin glows), with the shadow side FILLED so it’s open, not black.',
+          'Front-flat, hard, cold, unfilled light is the unflattering opposite — the on-camera-flash snapshot.',
+        ],
+      },
+      // BEAT 3 — shape + warm it: a gentle side angle for form, golden warmth
+      {
+        kind: 'light-direction',
+        controls: ['angle', 'warmth'],
+        start: { angle: 8, soft: 0.7, warmth: -0.2, fill: 0.45 },
+        prompt:
+          'The light’s soft and filled now, but it’s flat-front and cold — the face looks pasted-on. Bring the light a touch to the SIDE to give the face shape, and warm it toward golden.',
+        check: ({ angle, warmth }) => angle >= 30 && angle <= 80 && warmth >= 0.3,
+        feedback: {
+          correct:
+            'Now it has shape and life — a gentle side angle models the cheekbone and nose into three dimensions, and the warmth gives the skin a healthy glow. Not flat, not harsh: turned just enough.',
+          stages: [
+            'Flat-front light has no shape, and cold light looks clinical. Move the light off-centre, and warm it up.',
+            'Bring the angle to a gentle side (not all the way to a rim) and push warmth toward golden.',
+          ],
+        },
+      },
+      // BEAT 4 — the full synthesis: all four together
+      {
+        kind: 'light-direction',
+        controls: ['angle', 'soft', 'warmth', 'fill'],
+        start: { angle: 10, soft: 0.12, warmth: -0.1, fill: 0.05 },
+        prompt:
+          'Everything at once now. Take this flat, hard, cold, unfilled face and build the whole flattering portrait — soft, a gentle side, warm, shadows filled.',
+        check: ({ angle, soft, warmth, fill }) => angle >= 30 && angle <= 80 && soft >= 0.55 && warmth >= 0.25 && fill >= 0.3,
+        feedback: {
+          correct:
+            'That’s a portrait. Four choices, balanced into one flattering whole: soft to wrap, a gentle side for shape, warmth for life, fill to open the shadow. This is what “good light” on a face actually means.',
+          stages: [
+            'You’re juggling all four. Aim for: soft, a gentle side angle, warm, and filled shadows.',
+            'Soft up, angle to a gentle side, warmth toward golden, fill enough to open the shadow — all at once.',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: your flattering portrait
+      {
+        kind: 'light-direction',
+        controls: ['angle', 'soft', 'warmth', 'fill'],
+        start: { angle: 92, soft: 0.2, warmth: 0, fill: 0 },
+        prompt:
+          'Your portrait. Light this face so it flatters — soft, shaped, warm, and open. Take a shot worth keeping.',
+        check: ({ angle, soft, warmth, fill }) => angle >= 28 && angle <= 82 && soft >= 0.55 && warmth >= 0.22 && fill >= 0.3,
+        feedback: {
+          correct:
+            'A portrait you’d be proud of. You stopped lighting a sphere and started lighting a PERSON — wielding direction, softness, warmth, and fill together toward one feeling. That’s the whole craft of light, in one frame.',
+          stages: [
+            'Build the flattering recipe: soft, gentle side, warm, filled.',
+            'Soft + a gentle side angle + golden warmth + fill to open the shadow — then take the shot.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
   // L7 — LONG EXPOSURE (painting with time). Produced by the lesson factory,
   // then fixed (BEAT 3 gates on a brightness BAND so overshoot fails) + verified
   // against the real gate and a live playthrough. Uses only existing primitives.
