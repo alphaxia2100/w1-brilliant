@@ -12,10 +12,9 @@ Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real 
 ## ✅ Branch / push / deploy state — READ FIRST (all in sync as of 2026-06-25)
 | Where | At | Contains |
 |---|---|---|
-| **GitHub `origin/main`** (pushed) | `122df4b` | EVERYTHING — 14 lessons, chapter nav, grader, git-as-memory system, BET, all truth-fixes |
-| **local `main`** | `122df4b` | == origin (lesson-factory was fast-forward-merged in + pushed) |
-| **local `lesson-factory`** | `122df4b` | == main (kept; branch for the next feature) |
-| **Deployed** `aperture-dac66.web.app` | `122df4b` | **LIVE: the full 14-lesson course + chapter nav** (hosting deployed + verified, asset hash matches). |
+| **GitHub `origin/main`** (pushed) | `00a65bf` | EVERYTHING — 21 lessons (6 chapters + Reviews), landscape, grader, git-as-memory system, BET, all truth-fixes |
+| **local `main`** | `00a65bf` | == origin |
+| **Deployed** `aperture-dac66.web.app` | `00a65bf` | **LIVE: the full 21-lesson course + chapter nav + Reviews** (hosting deployed + verified — asset hash `index-mPJrolaZ.js` matches dist). |
 
 So: **main is pushed and the app is deployed live** — they're all in sync. Current branch: `main`
 (start a feature branch for new work). The **grader Cloud Function is still NOT deployed** — it needs
