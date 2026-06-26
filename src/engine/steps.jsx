@@ -555,7 +555,7 @@ export function HorizonScene({ y = 50, size = 300, rounded = true, fill = false 
   )
 }
 
-export function ComposeShot({ scene, x, y, facing, horizon, size = 228, rounded = true, fill = false }) {
+export function ComposeShot({ scene, x, y, facing, horizon, anchor, size = 228, rounded = true, fill = false }) {
   if (horizon) return <HorizonScene y={y} size={size} rounded={rounded} fill={fill} />
   return (
     <div
@@ -565,6 +565,14 @@ export function ComposeShot({ scene, x, y, facing, horizon, size = 228, rounded 
     >
       <PixelScene scene={scene} size={size} rounded={false} className="absolute inset-0" />
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+        {/* the fixed heavy element the learner counterbalanced — kept in the keepsake so the
+            saved frame reads BALANCED (both weights present), not lopsided. */}
+        {anchor && (
+          <g transform={`translate(${anchor.x} ${anchor.y})`}>
+            <circle cx="0" cy="0" r="5.4" fill="rgba(8,8,12,0.82)" stroke="#fff" strokeWidth="0.8" />
+            <circle cx="0" cy="0" r="8.2" fill="none" stroke="rgba(8,8,12,0.28)" strokeWidth="0.6" />
+          </g>
+        )}
         <ComposeFigure x={x} y={y} ok={false} gaze={facing} />
       </svg>
     </div>
@@ -670,7 +678,7 @@ function ComposeView({ step, status, onResult, onActivity }) {
             onResult(
               ok,
               step.keeper
-                ? { shot: horizon ? { kind: 'compose', horizon: true, y: pos.y } : { kind: 'compose', scene: step.scene, x: pos.x, y: pos.y, ...(target.facing ? { facing: target.facing } : {}) } }
+                ? { shot: horizon ? { kind: 'compose', horizon: true, y: pos.y } : { kind: 'compose', scene: step.scene, x: pos.x, y: pos.y, ...(target.facing ? { facing: target.facing } : {}), ...(anchor ? { anchor } : {}) } }
                 : undefined
             )
           }

@@ -166,7 +166,7 @@ const lessons = [
         check: (si) => si <= 1,
         feedback: {
           correct:
-            'A fast shutter opens for the tiniest slice of time — too short for the car to move — so it freezes (and gathers less light). A slow one blurs motion and gathers more.',
+            'A fast shutter opens for the tiniest slice of time — too short for the car to move — so it freezes. (It also lets in less light; a slow one blurs motion and lets in more — a trade you’ll feel in the triangle.)',
           stages: [
             'The car is smearing across the frame. Which way makes the shutter faster?',
             'Freezing needs a tiny slice of time — head toward the fast end, then take the shot.',
@@ -494,7 +494,7 @@ const lessons = [
         start: { focusDist: 0.92 },
         prompt:
           'The exposure on this shot is perfect — but the flower is SOFT. The camera’s focus plane fell BEHIND the flower. Rack the focus nearer, back onto the flower, until it snaps sharp.',
-        check: (fd) => Math.abs(fd - 0.34) < 0.08,
+        check: (fd) => Math.abs(fd - 0.34) < 0.03,
         feedback: {
           correct:
             'Snap — there it is. Focus isn’t automatic magic; it lands on a single PLANE at one distance, and the camera guessed wrong. A flawless exposure means nothing if the focus plane misses your subject.',
@@ -520,7 +520,7 @@ const lessons = [
         start: { focusDist: 0.04 },
         prompt:
           'This time the focus plane fell just in FRONT of the flower — soft again. Pull the focus the other way, back onto the subject, until it’s sharp.',
-        check: (fd) => Math.abs(fd - 0.34) < 0.08,
+        check: (fd) => Math.abs(fd - 0.34) < 0.03,
         feedback: {
           correct:
             'Back on the subject. Miss in front or miss behind — either way the subject goes soft. The only sharp spot is exactly on the plane you choose; everything nearer and farther falls away (the more so, the wider the aperture).',
@@ -558,7 +558,7 @@ const lessons = [
         start: { focusDist: 0.86 },
         prompt:
           'Your shot, wide open at f/2 for that creamy background — so the focus plane is thin. Rack it precisely onto the flower and take a shot that’s tack-sharp where it counts.',
-        check: (fd) => Math.abs(fd - 0.34) < 0.07,
+        check: (fd) => Math.abs(fd - 0.34) < 0.025,
         feedback: {
           correct:
             'Tack sharp where it matters. You opened up for the soft background AND placed the focus exactly on the subject — the two skills together. That’s the difference between a lucky snap and a photograph you meant.',
@@ -867,11 +867,14 @@ const lessons = [
           'So “correct” is rarely the middle of the dial — it depends on the light you are in. And sometimes you do not want neutral at all.',
         ],
       },
-      // BEAT 3 — the OTHER direction: a cool cast, warm it up
+      // BEAT 3 — the OTHER direction: a cool cast, warm it up. Scene = snow (same as beat 1,
+      // opposite cast): an ACHROMATIC scene whose neutral state actually renders white. The WB
+      // sim only trades red↔blue (never green), so a green-blue scene like 'seascape' can never
+      // read neutral — verified: snow goes R-B −81 (blue) → −12 (~white) as you warm to eff 0.
       {
         kind: 'slider-sim',
-        scene: 'seascape',
-        prompt: 'Now you are shooting in open shade and everything has gone too BLUE. Warm it back to natural.',
+        scene: 'snow',
+        prompt: 'Now the same snow, shot in open shade — it has gone too BLUE. Warm it back until the snow reads clean white again.',
         control: { min: -1, max: 1, step: 0.05, start: 0 },
         toParams: (v) => ({ temp: v, baseTemp: WB_SHADE }),
         readState: wbRead(WB_SHADE),
@@ -906,11 +909,14 @@ const lessons = [
           ],
         },
       },
-      // BEAT 5 — creative warmth: neutral is WRONG here (keeper)
+      // BEAT 5 — creative warmth: neutral is WRONG here (keeper). Scene = room (same as beat 4):
+      // you JUST neutralized it with the eyedropper — but a cozy lamplit room shouldn't be gray.
+      // Room is achromatic, so warming truly glows gold — verified R-B +40→+68 across the keep
+      // band (the old 'seascape' stayed net-BLUE the whole band, never gold).
       {
         kind: 'slider-sim',
-        scene: 'seascape',
-        prompt: 'Someone “corrected” this sunset to neutral and killed the mood. Warm it back — keep the golden glow, don’t bleach it gray.',
+        scene: 'room',
+        prompt: 'Same room — but a lamplit room is SUPPOSED to feel warm. Someone “corrected” the cozy glow to a flat gray. Warm it back — keep the golden glow, don’t bleach it.',
         control: { min: -1, max: 1, step: 0.05, start: -0.45 },
         toParams: (v) => ({ temp: v, baseTemp: WB_SUNSET }),
         label: 'White balance',
@@ -919,9 +925,9 @@ const lessons = [
         check: wbWarmKept(WB_SUNSET),
         feedback: {
           correct:
-            'Right — neutral is not always the goal. A sunset SHOULD feel warm; “correct” white balance is a creative choice, and here the choice is to keep the gold.',
+            'Right — neutral is not always the goal. You just proved you CAN make this room perfectly gray — but warm lamplight SHOULD feel warm. “Correct” white balance is a creative choice, and here the choice is to keep the gold.',
           stages: [
-            'Neutral looks flat and cold for a sunset. Which way brings the warmth back?',
+            'Neutral looks flat and cold for warm lamplight. Which way brings the glow back?',
             'Warm it up — but stop at a golden glow, not a heavy orange.',
           ],
         },
@@ -1213,7 +1219,9 @@ const lessons = [
         controls: ['angle', 'soft', 'warmth'],
         prompt: 'A portrait client wants soft, flattering, golden-hour light. Set all three — direction, softness, and warmth — to give it to them.',
         start: { angle: 12, soft: 0.18, warmth: -0.2 },
-        check: ({ angle, soft, warmth }) => angle >= 45 && angle <= 120 && soft >= 0.55 && warmth >= 0.25,
+        // upper bound 100° (lit ≈ 0.41) so every passing "flattering" answer keeps a clearly lit
+        // face — above ~100° the face falls mostly into shadow, which isn't flattering portrait light.
+        check: ({ angle, soft, warmth }) => angle >= 45 && angle <= 100 && soft >= 0.55 && warmth >= 0.25,
         feedback: {
           correct:
             'That is the flattering-portrait recipe: light from the side so the face keeps its form, softened so the shadows stay gentle, and warmed so the skin glows. Three dials, one look.',
@@ -1229,7 +1237,10 @@ const lessons = [
         controls: ['angle', 'soft', 'warmth'],
         prompt: 'Last one — the opposite mood. Forget flattering: make it DRAMATIC. Harden the light and swing it around behind the subject for crisp-edged shadows and a rim of light. Then take the shot to keep it.',
         start: { angle: 40, soft: 0.7, warmth: 0.3 },
-        check: ({ angle, soft }) => angle >= 110 && soft <= 0.3,
+        // floor 130° (not 110°): the rim of light only renders once the source is behind enough
+        // (backlit turns on at ~121.4°); at 130° backlit≈0.26, a comfortably visible rim — so every
+        // passing answer actually shows the rim the feedback promises.
+        check: ({ angle, soft }) => angle >= 130 && soft <= 0.3,
         feedback: {
           correct:
             'Hard, raking, near-backlit — the same subject now reads moody and powerful instead of soft and warm. Flattering and dramatic are just two settings of the same three dials; you can dial in either, on purpose.',
@@ -1356,9 +1367,9 @@ const lessons = [
       {
         kind: 'light-direction',
         controls: ['soft', 'fill'],
-        start: { angle: 58, soft: 0.05, warmth: 0.15, fill: 0 },
+        start: { angle: 75, soft: 0.05, warmth: 0.15, fill: 0 },
         prompt:
-          'This portrait is harsh — a hard light from the side carves a deep black shadow across the face. Make it flattering: SOFTEN the light, and add FILL to open the shadow.',
+          'This portrait is harsh — a hard light from the side carves a hard shadow down one side of the face. Make it flattering: SOFTEN the light, and add FILL to open the shadow.',
         check: ({ soft, fill }) => soft >= 0.6 && fill >= 0.35,
         feedback: {
           correct:
@@ -1576,9 +1587,11 @@ const lessons = [
         loupe: { cx: 4, cy: 25, cells: 6 },
         // Gate on the brightness MATCH (the long-exposure glow band), not just on noise:
         // overshoot blows past the glow, undershoot never reaches it — both fail with a hint.
+        // Band is a SINGLE stop (only ISO 1600, exp 1.6) so this agrees with iso-and-noise's
+        // "floor = ISO 1600" beat — ISO 800 (exp 1.2) is too dim and must fail here too.
         check: (iso) => {
           const exp = isoToExposure(iso)
-          return exp >= 1.2 && exp <= 1.8
+          return exp >= 1.5 && exp <= 1.8
         },
         feedback: {
           correct:
@@ -1817,7 +1830,7 @@ const reviewsByChapter = {
       {
         kind: 'focus', f: 2, start: { focusDist: 0.9 },
         prompt: 'The subject is soft. Rack the focus onto it until it snaps sharp.',
-        check: (fd) => Math.abs(fd - 0.34) < 0.08,
+        check: (fd) => Math.abs(fd - 0.34) < 0.03,
         feedback: { correct: 'Nailed — the sharp plane is one distance, and you placed it on the subject.', stages: ['Focus: move the focus plane onto the flower.'] },
       },
       {
@@ -1853,8 +1866,8 @@ const reviewsByChapter = {
     id: 'review-composition', title: 'Review: Composition', blurb: 'Place and balance, no hints.', review: true,
     steps: [
       {
-        kind: 'compose', scene: 'portrait', target: { kind: 'thirds' }, start: { x: 50, y: 50 },
-        prompt: 'Place the subject where the photo feels most alive — not dead-centre.',
+        kind: 'compose', scene: 'seascape', target: { kind: 'thirds' }, start: { x: 50, y: 50 },
+        prompt: 'Place the subject where the photo feels most alive — not dead-center.',
         feedback: { correct: 'On a power point — off-centre breathes.', stages: ['Rule of thirds: drift the subject onto a point where the lines cross.'] },
       },
       {

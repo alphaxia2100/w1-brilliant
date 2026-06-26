@@ -401,6 +401,9 @@ export function computeGrid(params) {
 
   // White balance: a scene can ship with an intrinsic cast (baseTemp); the slider
   // (temp) is the CORRECTION. Neutral happens when they cancel — usually NOT at temp 0.
+  // CONSTRAINT: this only trades red↔blue (the amber↔blue axis), never green — so "neutral"
+  // is only ever R≈B. WB lesson beats MUST use scenes whose neutral palette is achromatic
+  // (snow, room/gray-card), NEVER a green-blue scene like 'seascape' (it can never read gray).
   const effTemp = baseTemp + temp
   if (effTemp !== 0) {
     const rF = 1 + 0.32 * effTemp
