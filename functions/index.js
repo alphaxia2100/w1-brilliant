@@ -1,17 +1,20 @@
 // AI photo grader — a callable Cloud Function that sends a learner's uploaded
-// photo to Claude's vision model and returns a structured grade on the six
+// photo to OpenAI's vision model and returns a structured grade on the six
 // fundamentals the Aperture course teaches.
 //
-// The Anthropic API key is a Secret Manager secret (ANTHROPIC_API_KEY), never
+// The OpenAI API key is a Secret Manager secret (OPENAI_API_KEY), never
 // shipped to the client. Set it once with:
-//   firebase functions:secrets:set ANTHROPIC_API_KEY
-// Requires the Blaze plan (Functions need outbound network to reach Anthropic).
+//   firebase functions:secrets:set OPENAI_API_KEY
+// Requires the Blaze plan (Functions need outbound network to reach OpenAI).
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret } = require('firebase-functions/params')
-const Anthropic = require('@anthropic-ai/sdk')
+const OpenAI = require('openai')
 
-const ANTHROPIC_API_KEY = defineSecret('ANTHROPIC_API_KEY')
+const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY')
+
+// Vision + JSON-schema structured outputs. Swap to a newer vision model here if desired.
+const MODEL = 'gpt-4o'
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 const LESSON_IDS = ['exposure-triangle', 'depth-of-field', 'metering', 'white-balance', 'rule-of-thirds', 'light-direction']
@@ -69,7 +72,7 @@ const GRADE_SCHEMA = {
 }
 
 exports.gradePhoto = onCall(
-  { secrets: [ANTHROPIC_API_KEY], timeoutSeconds: 120, memory: '512MiB' },
+  { secrets: [OPENAI_API_KEY], timeoutSeconds: 120, memory: '512MiB' },
   async (request) => {
     // Any signed-in user (including the anonymous "guest") may grade; this keeps
     // the paid endpoint from being hit by fully unauthenticated callers.
@@ -80,44 +83,48 @@ exports.gradePhoto = onCall(
     if (!ALLOWED_MIME.has(mimeType)) throw new HttpsError('invalid-argument', 'Use a JPEG, PNG, WebP, or GIF image.')
     if (imageBase64.length > 7_000_000) throw new HttpsError('invalid-argument', 'Image too large — downscale before uploading.')
 
-    const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY.value() })
+    const client = new OpenAI({ apiKey: OPENAI_API_KEY.value() })
 
-    let msg
+    let completion
     try {
-      msg = await client.messages.create({
-        model: 'claude-opus-4-8',
+      completion = await client.chat.completions.create({
+        model: MODEL,
         max_tokens: 2048,
-        thinking: { type: 'adaptive' },
-        system: SYSTEM,
-        output_config: { format: { type: 'json_schema', schema: GRADE_SCHEMA } },
         messages: [
+          { role: 'system', content: SYSTEM },
           {
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
               { type: 'text', text: 'Grade this photograph.' },
+              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}`, detail: 'auto' } },
             ],
           },
         ],
+        response_format: {
+          type: 'json_schema',
+          json_schema: { name: 'photo_grade', strict: true, schema: GRADE_SCHEMA },
+        },
       })
     } catch (err) {
-      console.error('Anthropic call failed', err)
+      console.error('OpenAI call failed', err)
       throw new HttpsError('internal', 'The grader had trouble — please try again.')
     }
 
-    if (msg.stop_reason === 'refusal') {
+    const choice = (completion.choices || [])[0]
+    // A strict-schema refusal comes back on message.refusal, not as content.
+    if (choice?.message?.refusal) {
       throw new HttpsError('failed-precondition', 'This image could not be graded.')
     }
 
-    const textBlock = (msg.content || []).find((b) => b.type === 'text' && b.text)
-    if (!textBlock) throw new HttpsError('internal', 'No grade came back — please try again.')
+    const text = choice?.message?.content
+    if (!text) throw new HttpsError('internal', 'No grade came back — please try again.')
 
     // Structured outputs return clean JSON; parse defensively all the same.
     let grade
     try {
-      grade = JSON.parse(textBlock.text)
+      grade = JSON.parse(text)
     } catch {
-      const m = textBlock.text.match(/\{[\s\S]*\}/)
+      const m = text.match(/\{[\s\S]*\}/)
       if (!m) throw new HttpsError('internal', 'The grade was malformed — please try again.')
       grade = JSON.parse(m[0])
     }

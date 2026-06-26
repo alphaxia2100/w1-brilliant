@@ -48,9 +48,10 @@ All predict-first, no multiple choice, calm feedback, success mints a polaroid k
 
 ## What's new this session (on `lesson-factory`, unless noted)
 - **AI photo grader** (`/grade`, on `main` too): upload a photo → a Firebase callable function
-  (`functions/gradePhoto`) sends it to **Claude vision (`claude-opus-4-8`)** with a json_schema and
-  returns a grade on the six fundamentals + strengths/improvements + a "practice this next" lesson link.
-  Key is a Secret Manager secret, never client-side. See `functions/index.js` + `src/pages/GradePage.jsx`.
+  (`functions/gradePhoto`) sends it to **OpenAI vision (`gpt-4o`)** with a json_schema (strict structured
+  outputs) and returns a grade on the six fundamentals + strengths/improvements + a "practice this next"
+  lesson link. Key is a Secret Manager secret (`OPENAI_API_KEY`), never client-side. See `functions/index.js`
+  + `src/pages/GradePage.jsx`. (Ported Anthropic→OpenAI 2026-06-26 per Sky — he has an OpenAI key.)
 - **Google sign-in** (on `main`/origin): `add-google-login` skill + the wiring; anon→Google linking keeps
   guest progress. `src/lib/firebase.js`, `src/store.jsx`, `src/pages/AuthPage.jsx`.
 - **Cold-start onboarding** (branch): unguarded `/try` route lets a visitor play Lesson 1 with **no
@@ -60,8 +61,9 @@ All predict-first, no multiple choice, calm feedback, success mints a polaroid k
 - **The improvement loop** (branch, `Factory/IMPROVEMENTS-LOG.md`): see below — it's mid-run.
 
 ## Pending USER actions (Firebase console / billing — can't be done from code)
-1. **Grader (to go live):** enable **Blaze** plan → `firebase functions:secrets:set ANTHROPIC_API_KEY`
-   → `firebase deploy --only functions`. The grader UI degrades gracefully until then.
+1. **Grader (to go live):** enable **Blaze** plan → `firebase functions:secrets:set OPENAI_API_KEY`
+   → `firebase deploy --only functions`. The grader UI degrades gracefully until then. (Function uses
+   OpenAI `gpt-4o`; no manual IAM needed — deploy auto-grants the runtime SA secretAccessor on the secret.)
 2. **Google sign-in:** enable Google in Firebase → Authentication → Sign-in method (else the button
    returns a friendly "not enabled yet").
 3. **Anonymous sign-in:** no longer needed — cold-start `/try` replaced it.
