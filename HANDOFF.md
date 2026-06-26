@@ -12,9 +12,9 @@ Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real 
 ## ✅ Branch / push / deploy state — READ FIRST (all in sync as of 2026-06-26)
 | Where | At | Contains |
 |---|---|---|
-| **GitHub `origin/main`** (pushed) | `0962eaf` | EVERYTHING — 21 lessons (6 chapters + Reviews), landscape, grader, git-as-memory system, BET, all truth-fixes, **+ the polish pass** |
-| **local `main`** | `0962eaf` | == origin |
-| **Deployed** `aperture-dac66.web.app` | `0962eaf` | **LIVE: the full 21-lesson course + chapter nav + Reviews + polish** (hosting deployed + asset-hash verified). Polish **pixel-verified live** via headless Chrome + playwright-core (preview MCP was down, so drove the deployed URL directly) — auth subtitle, password hint, amber wrong-feedback, green correct-feedback, polaroid "★ keeper" choreography, empty-roll nudge, /course locked nodes + REVIEW pills + 6 chapters/0-of-21 all confirmed. Only the chapter **✓-done** chip (needs a completed chapter) is code+token-verified, not pixel-verified. |
+| **GitHub `origin/main`** (pushed) | `d8d925a` | EVERYTHING — 21 lessons, chapters+Reviews, landscape, grader (now **OpenAI gpt-4o**), git-as-memory, BET, polish pass, **+ the 47-finding quality-audit fixes (4 waves)** |
+| **local `main`** | `d8d925a` | == origin |
+| **Deployed** `aperture-dac66.web.app` | `d8d925a` | **LIVE: full course + polish + audit fixes** (hosting deployed). Polish was pixel-verified live earlier; the audit truth-fixes were verified numerically (sim-math re-derived) + gate 170/170; Lesson-1 flow re-verified live post-fix (no regression). |
 
 So: **main is pushed and the app is deployed live** — they're all in sync. Current branch: `main`
 (start a feature branch for new work). The **grader Cloud Function is still NOT deployed** — it needs

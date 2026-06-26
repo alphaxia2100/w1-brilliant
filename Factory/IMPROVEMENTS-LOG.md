@@ -73,6 +73,31 @@ Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) ·
   layer when a 2nd bet lands on a non-WB beat.
 
 ## Iterations
+### #7 — 2026-06-26 — GRADER → OpenAI + 47-finding quality audit, fixed in 4 waves  ✓ (commits 9d95703, 6c3bc82, a7ab565, 25c00c9, d8d925a — deployed)
+Sky enabled Blaze + has an OpenAI key → **ported the grader** functions/index.js from Anthropic to OpenAI
+gpt-4o (chat.completions + json_schema strict; secret renamed OPENAI_API_KEY; the GRADE_SCHEMA was already
+strict-compatible). Deploy-ready; still blocked on the Blaze upgrade actually completing (CLI showed Spark).
+Then ran an **ultracode multi-agent quality audit** (63 agents: 6 per-chapter optics-truth auditors +
+pedagogy/sim-math/a11y/design/copy/robustness finders → EVERY finding adversarially refuted). 64 findings →
+**47 confirmed, 4 refuted** (the adversarial layer killed overstated claims: "rackfocus bg never sharp",
+"locked-label contrast", "histogram color-only", "metricchip overflow"). Fixed in 4 gate-green waves:
+- **Wave 1 truth (6c3bc82):** 9 prose/pixel divergences. Biggest: WB seascape beats lied ("neutral"/"golden
+  glow" rendered net-BLUE) because the WB sim never touches green → moved beats to achromatic snow/room
+  (verified numerically); light-direction rim floor 110°→130° (rim only renders >121°); rack-focus
+  tolerance 0.08→0.03 (called a 7.5px-soft subject "tack sharp"); ISO night-floor contradiction (800 vs
+  1600) reconciled; balance keeper kept its anchor; review-thirds off the baked-center portrait scene.
+- **Wave 2 pedagogy/robustness (a7ab565):** Reviews now truly "no hints" (engine was serving the full hint
+  ladder + live compose cue); keeper polaroid no longer mints on deliberately-ruined shots; double-click
+  guard; value-agnostic/direction-only hints; local re-signup data-loss guard.
+- **Wave 3 contrast/copy (25c00c9):** all flagged text → WCAG AA (success green→#1B7D35 as a `correct.text`
+  token, danger→#D63B3B, score amber, placeholders); American spelling throughout; "Take the shot" consistent.
+- **Wave 4 a11y (d8d925a):** keyboard paths for the drag-only compose + click-only eyedropper; polaroid is a
+  focusable/Escapable dialog; role=alert on misses; step-change + bet-phase live regions; aria-pressed +
+  40px toggles; reduced-motion blinkies.
+VERIFIED: gate 170/170 each wave, build clean, WB pixels re-derived numerically, Lesson-1 flow re-walked
+live post-deploy (no regression). LEFT (intentional, low-value): #39 rank terminal hint (deliberate
+convention) and #40 "use the BET primitive in more beats" (an enhancement, not a defect).
+
 ### #6 — 2026-06-26 — POLISH PASS: a11y / moments / token cohesion / onboarding  ✓ (commit 0962eaf, deployed)
 Sky: "after finishing, focus on polish" — the app is graded on UX/design, so this was the priority once the
 21-lesson build landed. Ran a **14-vantage shimmering-personas critique** (motion designer, colorblind user,
