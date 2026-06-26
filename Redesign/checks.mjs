@@ -53,16 +53,19 @@ for (const lesson of course.lessons) {
       // check() takes the combined effectiveBlur; assert start fails and the most-favorable
       // setting of every active lever passes.
       const bkBase = { f: 5.6, subjectDist: 0.5, bgDist: 0.4, focal: 0.3, ...(s.lock || {}), ...(s.start || {}) }
-      ok(`${tag}: fails at start`, !s.check(effectiveBlur(bkBase)))
-      const ctrls = Array.isArray(s.control) ? s.control : [s.control || 'aperture']
-      const fav = { ...bkBase }
-      for (const c of ctrls) {
-        if (c === 'aperture') fav.f = 1.4
-        else if (c === 'subjectDist') fav.subjectDist = 0
-        else if (c === 'bgDist') fav.bgDist = 1
-        else if (c === 'focal') fav.focal = 1
-      }
-      ok(`${tag}: reachable`, s.check(effectiveBlur(fav)))
+      // check receives (blur, params) — a blur beat uses blur; a compression beat uses params.focal.
+      ok(`${tag}: fails at start`, !s.check(effectiveBlur(bkBase), bkBase))
+      // Sweep the lever space (respecting locked levers) so a beat can check blur OR a
+      // specific lever in EITHER direction (e.g. focal high = compress, low = expand).
+      let reach = false
+      for (const fAp of [1.4, 2.8, 5.6, 11, 16])
+        for (let sd = 0; sd <= 1.001; sd += 0.25)
+          for (let bd = 0; bd <= 1.001; bd += 0.25)
+            for (let fo = 0; fo <= 1.001; fo += 0.1) {
+              const p = { f: fAp, subjectDist: sd, bgDist: bd, focal: fo, ...(s.lock || {}) }
+              if (s.check(effectiveBlur(p), p)) reach = true
+            }
+      ok(`${tag}: reachable`, reach)
     } else if (s.kind === 'motion' && s.check) {
       ok(`${tag}: fails at start`, !s.check(s.start))
       ok(`${tag}: reachable`, [0, 1, 2, 3, 4, 5, 6, 7].some((si) => s.check(si)))

@@ -1184,7 +1184,7 @@ function BokehView({ step, status, onResult }) {
       {!locked && (
         <Button
           className="w-full mt-2"
-          onClick={() => onResult(step.check(blur), { chosen: Math.round(blur), shot: { kind: 'bokeh', f, subjectDist, bgDist, focal, bg: step.bg || 'garden' } })}
+          onClick={() => onResult(step.check(blur, { f, subjectDist, bgDist, focal }), { chosen: Math.round(blur), shot: { kind: 'bokeh', f, subjectDist, bgDist, focal, bg: step.bg || 'garden' } })}
         >
           <Shutter /> Take the shot
         </Button>

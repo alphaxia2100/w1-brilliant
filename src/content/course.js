@@ -470,6 +470,107 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
+  // FOCAL LENGTH & PERSPECTIVE — the lens axis (compression), distinct from aperture.
+  // Locks aperture NARROW (f/16 → zero blur in the bokeh sim), so the `focal` lever shows
+  // ONLY perspective: the background swells/compresses (tele) or recedes (wide) while the
+  // subject stays the same size. Distinct from DoF's focal beat (which uses focal for BLUR).
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'focal-length',
+    title: 'Focal length & perspective',
+    blurb: 'Zoom changes more than size — it bends perspective.',
+    steps: [
+      // BEAT 1 — predict by doing: telephoto compresses the background (subject same size)
+      {
+        kind: 'bokeh',
+        bg: 'garden',
+        control: 'focal',
+        lock: { f: 16, subjectDist: 0.5, bgDist: 0.4 }, // narrow aperture = no blur → ONLY perspective changes
+        start: { focal: 0 },
+        prompt:
+          'Same subject, same size in the frame — but swap the lens. On a WIDE lens the background sits far back and small. Zoom to TELEPHOTO and watch the background swell and press in close behind the subject. That’s compression.',
+        check: (_blur, p) => p.focal >= 0.7,
+        feedback: {
+          correct:
+            'That’s the lens bending space. A long (telephoto) lens magnifies the background and pulls it forward, stacking it right behind your subject — even though the subject itself never changed size. Focal length isn’t just “zoom”; it changes PERSPECTIVE.',
+          stages: [
+            'The background is still small and far. Reach for the longer (telephoto) end.',
+            'Drag focal length all the way to telephoto and watch the background grow in behind the subject.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm
+      {
+        kind: 'intro',
+        title: 'A different axis from blur',
+        body: [
+          'Aperture controls how much is SHARP (depth of field). Focal length controls PERSPECTIVE: a telephoto compresses distance — far things loom large and close; a wide-angle expands it — far things shrink and recede.',
+          'It’s why portrait photographers step back and zoom in (flattering compression), and why a wide lens makes a small room feel vast.',
+        ],
+      },
+      // BEAT 3 — the other direction: go wide to open the scene up
+      {
+        kind: 'bokeh',
+        bg: 'garden',
+        control: 'focal',
+        lock: { f: 16, subjectDist: 0.5, bgDist: 0.4 },
+        start: { focal: 1 },
+        prompt:
+          'Now the opposite: you want the subject set in a big, open scene — lots of space and depth behind it. Go to the WIDE end and watch the background fall away, small and distant.',
+        check: (_blur, p) => p.focal <= 0.3,
+        feedback: {
+          correct:
+            'Wide open. A wide-angle lens pushes the background away and shrinks it — the scene feels deep and spacious. Same spot, same subject: the LENS decided how near or far the world behind feels.',
+          stages: [
+            'The background is still looming large — that’s the telephoto end. Head the other way.',
+            'Drag focal length toward wide-angle and watch the background shrink and recede.',
+          ],
+        },
+      },
+      // BEAT 4 — transfer: match the lens to the intent
+      {
+        kind: 'rank',
+        prompt: 'Order these by the focal length they call for — the most TELEPHOTO (most compression) first.',
+        scale: ['telephoto · compressed', 'wide · expansive'],
+        items: [
+          { label: 'A sweeping landscape, vast and deep' }, // 0
+          { label: 'A flattering head-and-shoulders portrait' }, // 1
+          { label: 'A far mountain stacked huge behind a subject' }, // 2
+        ],
+        solution: [2, 1, 0], // stacked-mountain (most tele) → portrait → landscape (widest)
+        feedback: {
+          correct:
+            'Match the lens to the look. Stacking a far mountain right behind a subject needs the longest lens (maximum compression); a flattering portrait wants a moderate telephoto; a vast, deep landscape wants a wide lens to open the space up. Focal length is a creative choice, not just reach.',
+          stages: [
+            'More compression (background pulled in close) = more telephoto. Which shot needs the background pulled in most?',
+            'Most telephoto: the stacked mountain, then the portrait; the expansive landscape wants the widest lens.',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: compress for an intimate, isolated subject
+      {
+        kind: 'bokeh',
+        bg: 'garden',
+        control: 'focal',
+        lock: { f: 16, subjectDist: 0.5, bgDist: 0.4 },
+        start: { focal: 0 },
+        keeper: true,
+        prompt:
+          'Your shot: make this subject feel intimate and isolated, with the background compressed up close behind it. Reach for the lens that does that, and take it.',
+        check: (_blur, p) => p.focal >= 0.7,
+        feedback: {
+          correct:
+            'A compressed, intimate frame — the kind a portrait photographer reaches an 85mm for. You chose the focal length for the FEELING, not just to fill the frame. That’s seeing like a photographer.',
+          stages: [
+            'To compress the background up close, you need the telephoto end.',
+            'Push focal length toward telephoto until the background stacks in tight behind the subject.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
   // METERING (read the light with the histogram)
   // ───────────────────────────────────────────────────────────────────────────
   {
