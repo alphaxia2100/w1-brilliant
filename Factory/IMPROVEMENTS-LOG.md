@@ -76,7 +76,10 @@ Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) ·
 ### #7 — 2026-06-26 — GRADER → OpenAI + 47-finding quality audit, fixed in 4 waves  ✓ (commits 9d95703, 6c3bc82, a7ab565, 25c00c9, d8d925a — deployed)
 Sky enabled Blaze + has an OpenAI key → **ported the grader** functions/index.js from Anthropic to OpenAI
 gpt-4o (chat.completions + json_schema strict; secret renamed OPENAI_API_KEY; the GRADE_SCHEMA was already
-strict-compatible). Deploy-ready; still blocked on the Blaze upgrade actually completing (CLI showed Spark).
+strict-compatible). **Now LIVE (2026-06-26):** Sky enabled Blaze + set the secret; deployed gradePhoto;
+the deploy didn't grant public invoke so it 401'd → granted `allUsers` run.invoker on the Cloud Run
+service (function still enforces auth in code); verified end-to-end (real photo → 200, valid grade,
+overall 85, both run.app + cloudfunctions.net paths).
 Then ran an **ultracode multi-agent quality audit** (63 agents: 6 per-chapter optics-truth auditors +
 pedagogy/sim-math/a11y/design/copy/robustness finders → EVERY finding adversarially refuted). 64 findings →
 **47 confirmed, 4 refuted** (the adversarial layer killed overstated claims: "rackfocus bg never sharp",

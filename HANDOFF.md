@@ -17,8 +17,15 @@ Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real 
 | **Deployed** `aperture-dac66.web.app` | `d8d925a` | **LIVE: full course + polish + audit fixes** (hosting deployed). Polish was pixel-verified live earlier; the audit truth-fixes were verified numerically (sim-math re-derived) + gate 170/170; Lesson-1 flow re-verified live post-fix (no regression). |
 
 So: **main is pushed and the app is deployed live** — they're all in sync. Current branch: `main`
-(start a feature branch for new work). The **grader Cloud Function is still NOT deployed** — it needs
-the Blaze + secret steps below (the UI degrades gracefully until then).
+(start a feature branch for new work). The **grader Cloud Function is now DEPLOYED + LIVE** (2026-06-26):
+`gradePhoto` (v2 callable, us-central1, nodejs22) on **OpenAI gpt-4o**, secret `OPENAI_API_KEY` set, and
+**verified end-to-end** (real photo → HTTP 200, valid structured grade, overall 85). ⚠️ One non-obvious
+step: the deploy did NOT grant the Cloud Run service public invoke, so calls 401'd — fixed by granting
+`allUsers` → `roles/run.invoker` on the `gradephoto` Cloud Run service (the function still enforces
+sign-in in code via `request.auth`, so this is safe + required for ALL Firebase callables). If a future
+re-deploy ever 401s again, re-apply that binding (Cloud Run → gradephoto → Permissions → allUsers /
+Cloud Run Invoker, or `gcloud run services add-iam-policy-binding gradePhoto --region=us-central1
+--member=allUsers --role=roles/run.invoker`).
 
 ## TL;DR
 **21 lessons across 6 named chapters, each ending in a spaced-retrieval Review** — the full Brilliant
@@ -61,11 +68,10 @@ All predict-first, no multiple choice, calm feedback, success mints a polaroid k
 - **The improvement loop** (branch, `Factory/IMPROVEMENTS-LOG.md`): see below — it's mid-run.
 
 ## Pending USER actions (Firebase console / billing — can't be done from code)
-1. **Grader (to go live):** enable **Blaze** plan → `firebase functions:secrets:set OPENAI_API_KEY`
-   → `firebase deploy --only functions`. The grader UI degrades gracefully until then. (Function uses
-   OpenAI `gpt-4o`; no manual IAM needed — deploy auto-grants the runtime SA secretAccessor on the secret.)
+1. **Grader:** ✅ DONE 2026-06-26 — Blaze on, `OPENAI_API_KEY` secret set, `gradePhoto` deployed (gpt-4o)
+   + the `allUsers` run.invoker binding applied + verified end-to-end live. See the deploy-state note above.
 2. **Google sign-in:** enable Google in Firebase → Authentication → Sign-in method (else the button
-   returns a friendly "not enabled yet").
+   returns a friendly "not enabled yet"). *(Still pending — only matters if you want the Google button live.)*
 3. **Anonymous sign-in:** no longer needed — cold-start `/try` replaced it.
 4. **Deploy the new work:** ✅ DONE — hosting deployed live (`firebase deploy --only hosting`); the
    live site is the full 14-lesson course. Re-run after future changes. (Functions = the grader, still
