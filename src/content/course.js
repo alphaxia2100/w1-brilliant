@@ -469,7 +469,7 @@ const lessons = [
             'That’s a decision, not an accident. You committed — pin-sharp or boldly streaked — instead of leaving it in the mushy middle where it reads as a missed shot. Owning the shutter is owning whether a moment is held still or set in motion.',
           stages: [
             'A little blur looks like a mistake. Go one way or the other: all the way fast for crisp, or well into the slow end for a bold streak.',
-            'Pick a clear look — 1/1000 to freeze, or 1/15–1/8 to streak — not the middle.',
+            'Commit hard one way: go all the way to the fast end to freeze, or well into the slow end to streak — anywhere but the middle.',
           ],
         },
       },
@@ -716,6 +716,7 @@ const lessons = [
       {
         kind: 'slider-sim',
         scene: 'landscape',
+        noKeeper: true, // success here = deliberately RUINING the frame; don't file it as a keeper
         prompt: 'Push the exposure UP until the highlights blow — watch a spike slam against the RIGHT wall.',
         control: { min: -2.5, max: 2.5, step: 0.1, start: 0 },
         toParams: (v) => ({ exposure: v }),
@@ -737,6 +738,7 @@ const lessons = [
       {
         kind: 'slider-sim',
         scene: 'night',
+        noKeeper: true, // success here = deliberately RUINING the frame; don't file it as a keeper
         prompt: 'The other wall now: drag this night shot too DARK until the shadows crush against the LEFT edge.',
         control: { min: -2.5, max: 1.5, step: 0.1, start: 0.4 },
         toParams: (v) => ({ exposure: v }),
@@ -1278,7 +1280,7 @@ const lessons = [
           stages: [
             'The shadow side is still crushed black. The fill flash ADDS light — push it up.',
             'Bring the fill flash up until the dark side of the face opens and you can see into it.',
-            'Whoa — that’s blasting it to full (watch the readout say “over-flashed”). Ease back so the shadow lifts without going flat.',
+            'There’s a middle: too little and the shadow stays black; too much and the readout warns “over-flashed” and the face goes flat. Find the spot where the shadow opens but the face keeps its shape.',
           ],
         },
       },
@@ -1678,6 +1680,7 @@ const lessons = [
       {
         kind: 'slider-sim',
         scene: 'night',
+        noKeeper: true, // "crank to max → overpaid in grain": deliberately a ruined frame, not a keeper
         prompt: 'It’s dark, so do what the panic button says: crank the ISO all the way up to be safe. Watch the loupe as you go.',
         control: { stops: ISO_STOPS, start: 0 },
         toParams: (iso) => ({ exposure: isoToExposure(iso), iso: isoToNoise(iso) }),
@@ -1866,12 +1869,12 @@ const reviewsByChapter = {
     id: 'review-composition', title: 'Review: Composition', blurb: 'Place and balance, no hints.', review: true,
     steps: [
       {
-        kind: 'compose', scene: 'seascape', target: { kind: 'thirds' }, start: { x: 50, y: 50 },
+        kind: 'compose', scene: 'seascape', target: { kind: 'thirds' }, start: { x: 50, y: 50 }, silentCue: true,
         prompt: 'Place the subject where the photo feels most alive — not dead-center.',
         feedback: { correct: 'On a power point — off-centre breathes.', stages: ['Rule of thirds: drift the subject onto a point where the lines cross.'] },
       },
       {
-        kind: 'compose', scene: 'seascape', target: { kind: 'balance', anchor: { x: 26, y: 62 } }, start: { x: 50, y: 50 }, keeper: true,
+        kind: 'compose', scene: 'seascape', target: { kind: 'balance', anchor: { x: 26, y: 62 } }, start: { x: 50, y: 50 }, keeper: true, silentCue: true,
         prompt: 'A heavy element sits low-left. Place your subject to balance the frame.',
         feedback: { correct: 'Balanced — a counterweight across the centre settles the frame.', stages: ['Balance: put your subject opposite the heavy element, across the centre.'] },
       },
@@ -1904,7 +1907,7 @@ const reviewsByChapter = {
         feedback: { correct: 'A portrait — four levers balanced into one flattering whole.', stages: ['Portrait: soft + a gentle side + warmth + fill, all at once.'] },
       },
       {
-        kind: 'compose', scene: 'landscape', target: { kind: 'horizon' }, start: { x: 50, y: 50 }, keeper: true,
+        kind: 'compose', scene: 'landscape', target: { kind: 'horizon' }, start: { x: 50, y: 50 }, keeper: true, silentCue: true,
         prompt: 'Frame a landscape: decide sky or land, and put the horizon on that third.',
         feedback: { correct: 'Composed — you chose what the photo was about and framed for it.', stages: ['Landscape: don’t split it down the middle — give the better half the frame.'] },
       },

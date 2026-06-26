@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../store.jsx'
 import { STEP_VIEWS, Feedback, PolaroidReveal } from './steps.jsx'
 import { Button, ProgressBar } from '../components/ui.jsx'
@@ -12,6 +12,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   const [tries, setTries] = useState(0)
   const [showWhy, setShowWhy] = useState(null)
   const [polaroid, setPolaroid] = useState(null)
+  const lastResultAt = useRef(0) // debounce accidental double-clicks (real retries are far slower)
 
   const step = lesson.steps[idx]
   const isIntro = step.kind === 'intro'
@@ -31,10 +32,19 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
   // a visual "show-why" of the learner's actual choice. Tier 2+: escalating hints
   // that name a lever + direction but never the exact answer/value.
   function handleResult(correct, meta = {}) {
+    // Swallow accidental double-clicks: two events fired in the same burst would otherwise
+    // double-count attempts (and skip a hint tier on a miss). A deliberate retry is always
+    // slower than 400ms because it requires re-interacting first.
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    if (now - lastResultAt.current < 400) return
+    lastResultAt.current = now
+
     recordAttempt(lesson.id, correct)
-    // A "shootable" step hands back a shot — KEEPERS ONLY: save it and reveal the
-    // polaroid on success; a wrong attempt goes straight to calm feedback (no keepsake).
-    if (correct && meta.shot) {
+    // A "shootable" step hands back a shot — KEEPERS ONLY: save it and reveal the polaroid on
+    // success; a wrong attempt goes straight to calm feedback (no keepsake). `noKeeper` beats are
+    // the deliberately-ruin-the-shot ones (blow/crush highlights, max-noise) — success there means
+    // the learner correctly RUINED the frame, so it must NOT be filed as a keeper.
+    if (correct && meta.shot && !step.noKeeper) {
       saveShot({ ...meta.shot, lessonId: lesson.id, lessonTitle: lesson.title, stepIndex: idx, verdict: 'keeper' })
       setPolaroid({ ...meta.shot, verdict: 'keeper' })
     }
@@ -48,19 +58,23 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
     setStatus('wrong')
     let m = meta.override
     if (!m) {
-      if (tries === 0) {
+      if (lesson.review) {
+        // Reviews are spaced RECALL, not a guided lesson: one calm nudge, never the hint ladder
+        // or a show-why. (Advertised as "no hints" in /course.)
+        m = 'Not quite — trust what you learned, and try again.'
+      } else if (tries === 0) {
         const bo = fb.byOption || {}
         m = (meta.chosen != null && bo[meta.chosen]) || (meta.bucket && bo[meta.bucket]) || fb.stages?.[0]
       } else {
         m = fb.stages?.[Math.min(tries, (fb.stages?.length || 1) - 1)]
       }
-      if (!m) {
+      if (!m && !lesson.review) {
         const w = fb.wrong // legacy fallback
         m = Array.isArray(w) ? w[Math.min(tries, w.length - 1)] : w
       }
     }
     setMsg(m || '')
-    setShowWhy(fb.showWhy ? { ...fb.showWhy, chosen: meta.chosen } : null)
+    setShowWhy(lesson.review ? null : fb.showWhy ? { ...fb.showWhy, chosen: meta.chosen } : null)
     setTries((t) => t + 1)
   }
 

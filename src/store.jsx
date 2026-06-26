@@ -205,6 +205,13 @@ export function AppProvider({ children }) {
     }
     // LOCAL mode: migrate any anonymous progress to the new account
     const accounts = localStore.readJSON(LS_ACCOUNTS, {})
+    // Guard the duplicate-email case the way Firebase does — otherwise a second sign-up with an
+    // existing email silently overwrites that account's password AND wipes its saved progress.
+    if (accounts[email.toLowerCase()]) {
+      const e = new Error('That email already has an account — try logging in instead.')
+      e.code = 'auth/email-already-in-use'
+      throw e
+    }
     const uid = 'local:' + email.toLowerCase()
     const u = { uid, email, displayName: displayName || null, isAnonymous: false }
     accounts[email.toLowerCase()] = { ...u, password }

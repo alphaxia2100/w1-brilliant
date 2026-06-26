@@ -102,7 +102,7 @@ export function Feedback({ status, message, showWhy, step }) {
           <ShowWhy showWhy={showWhy} step={step} />
         </div>
       )}
-      {correct && <span className="font-medium">Nice. </span>}
+      {correct && !step?.noKeeper && <span className="font-medium">Nice. </span>}
       {message}
     </div>
   )
@@ -592,6 +592,9 @@ function ComposeView({ step, status, onResult, onActivity }) {
   const dragging = useRef(false)
   const locked = status === 'correct'
   const { ok, cue } = composeEval(target, pos)
+  // In a review, don't reveal correctness LIVE (that turns recall into recognition): the placement
+  // reads neutral while dragging, and only a correct COMMIT (locked) is allowed to glow.
+  const liveOk = step.silentCue && !locked ? false : ok
 
   function place(e) {
     const rect = frame.current.getBoundingClientRect()
@@ -626,7 +629,7 @@ function ComposeView({ step, status, onResult, onActivity }) {
         >
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden="true">
             {/* a "cramped" vignette when the frame reads static — the felt cue (placement beats only) */}
-            {!ok && moved && !horizon && !leading && !anchor && !negspace && (
+            {!liveOk && moved && !horizon && !leading && !anchor && !negspace && (
               <>
                 <rect x="0" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
                 <rect x="83" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
@@ -642,7 +645,7 @@ function ComposeView({ step, status, onResult, onActivity }) {
             {/* leading lines: rails/path converging on a point the eye is drawn to */}
             {leading &&
               [{ x: 0, y: 100 }, { x: 34, y: 100 }, { x: 66, y: 100 }, { x: 100, y: 100 }, { x: 0, y: 64 }, { x: 100, y: 64 }].map((p, i) => (
-                <line key={'L' + i} x1={p.x} y1={p.y} x2={conv.x} y2={conv.y} stroke={ok ? 'rgba(41,204,87,0.7)' : 'rgba(255,255,255,0.55)'} strokeWidth="0.5" />
+                <line key={'L' + i} x1={p.x} y1={p.y} x2={conv.x} y2={conv.y} stroke={liveOk ? 'rgba(41,204,87,0.7)' : 'rgba(255,255,255,0.55)'} strokeWidth="0.5" />
               ))}
             <g style={{ opacity: moved ? 1 : 0, transition: 'opacity 0.3s' }}>
               {!leading &&
@@ -659,17 +662,17 @@ function ComposeView({ step, status, onResult, onActivity }) {
             {horizon ? (
               <>
                 {/* the boundary line + grab handle ON the real sky/ground split from HorizonScene */}
-                <line x1="0" y1={pos.y} x2="100" y2={pos.y} stroke={ok ? '#29CC57' : '#FFFFFF'} strokeWidth="1.2" opacity="0.92" />
-                <rect x="42" y={pos.y - 3.2} width="16" height="6.4" rx="2" fill={ok ? '#29CC57' : '#141414'} />
+                <line x1="0" y1={pos.y} x2="100" y2={pos.y} stroke={liveOk ? '#29CC57' : '#FFFFFF'} strokeWidth="1.2" opacity="0.92" />
+                <rect x="42" y={pos.y - 3.2} width="16" height="6.4" rx="2" fill={liveOk ? '#29CC57' : '#141414'} />
               </>
             ) : (
-              <ComposeFigure x={pos.x} y={pos.y} ok={ok} gaze={target.kind === 'leadroom' ? target.facing || 'right' : null} />
+              <ComposeFigure x={pos.x} y={pos.y} ok={liveOk} gaze={target.kind === 'leadroom' ? target.facing || 'right' : null} />
             )}
           </svg>
         </div>
       </div>
-      <p className="text-[13px] text-center mb-4 font-medium" style={{ color: ok ? '#1F8A3B' : '#777' }}>
-        {cue}
+      <p className="text-[13px] text-center mb-4 font-medium" style={{ color: liveOk ? '#1B7D35' : '#666' }}>
+        {step.silentCue && !locked ? 'Place it where it feels right, then take the shot.' : cue}
       </p>
       {!locked && (
         <Button
