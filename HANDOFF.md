@@ -14,11 +14,12 @@ Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real 
 |---|---|---|
 | **GitHub `origin/main`** (pushed) | `0b64028` | 6 lessons + Google sign-in + pedagogy blueprint |
 | **local `main`** (NOT pushed) | `c6b8061` | the above **+ the AI photo grader** |
-| **local `lesson-factory`** (current, NOT pushed) | `7d0a98d` | main **+ 8 commits**: lesson factory, **L7 + L8**, cold-start onboarding, the improvement loop |
-| **Deployed** `aperture-dac66.web.app` | ~`0b64028` | **6 lessons + Google login only.** The grader, L7/L8, and cold-start are NOT live. |
+| **local `lesson-factory`** (current, NOT pushed) | `73c9ccc` | main **+ 26 commits**: lesson factory, L7/L8, cold-start, the improvement loop, the **git-as-memory system**, the **BET** primitive, and the **curriculum expansion → 14 lessons** (all critic-vetted) |
+| **Deployed** `aperture-dac66.web.app` | ~`0b64028` | **6 lessons + Google login only.** Everything since (grader, 8 new/changed lessons, etc.) is NOT live. |
 
-So: the branch has the newest work and is **unpushed + undeployed**. Decide whether to merge
-`lesson-factory` → `main`, push, and redeploy. Nothing destructive has touched `main` or `origin`.
+So: the branch has all the newest work and is **unpushed + undeployed** (26 commits ahead of `main`).
+Decide whether to merge `lesson-factory` → `main`, push, and redeploy. Nothing destructive has
+touched `main` or `origin`.
 
 ## TL;DR
 The course is **14 lessons** — the **CURRICULUM EXPANSION** Sky asked for (2026-06-25: "another topic...
