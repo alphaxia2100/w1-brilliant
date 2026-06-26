@@ -23,7 +23,7 @@ function CompletionCard({ lesson, nextLesson, onReplay, stats }) {
       <h1 className="text-[24px] font-semibold tracking-tight mb-2">{lesson.title}</h1>
       <p className="text-muted mb-3">Nicely done. Your progress is saved.</p>
       <div className="flex justify-center gap-5 text-[14px] mb-8">
-        <span className="text-correct font-medium">{correct} correct</span>
+        <span className="text-correct-text font-medium">{correct} correct</span>
         <span className="text-muted">{wrong} missed</span>
       </div>
 

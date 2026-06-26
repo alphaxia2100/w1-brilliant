@@ -71,12 +71,12 @@ const WB_SHADE = -0.55
 const WB_CARD = 0.5
 const WB_SUNSET = 0.45
 // No Kelvin readout: a "white balance" slider in Kelvin runs warmer→HIGHER-K on real cameras
-// but warmer→LOWER-K as the residual-cast's colour temperature — the two conventions conflict,
+// but warmer→LOWER-K as the residual-cast's color temperature — the two conventions conflict,
 // and a learner reads it as the camera one. So we DEMOTE the number (blueprint shift #6) and
 // judge by eye + a felt cue: where neutral is the goal, name the residual cast.
 const wbRead = (cast) => (v) => {
   const e = cast + v
-  return Math.abs(e) < 0.12 ? { t: 'reads neutral', c: '#1F8A3B' } : e > 0 ? { t: 'too warm', c: '#9A6A2F' } : { t: 'too cool', c: '#3A5A9A' }
+  return Math.abs(e) < 0.12 ? { t: 'reads neutral', c: '#1B7D35' } : e > 0 ? { t: 'too warm', c: '#9A6A2F' } : { t: 'too cool', c: '#3A5A9A' }
 }
 const wbNeutral = (cast) => (v) => Math.abs(cast + v) < 0.12
 const wbWarmKept = (cast) => (v) => {
@@ -100,12 +100,12 @@ const wbBetKind = (cast) => (bet) => {
 // WB_WARM-specific copy (the only bet beat today). The fix for a warm cast is toward blue.
 const WB_BET_MSG = {
   center:
-    'You bet the middle of the dial — but neutral was a real shove toward blue. You cancel a colour cast by adding its OPPOSITE, and a strong cast needs a strong correction.',
+    'You bet the middle of the dial — but neutral was a real shove toward blue. You cancel a color cast by adding its OPPOSITE, and a strong cast needs a strong correction.',
   wrong:
     'You bet toward orange — but the photo was ALREADY too orange; pushing that way only deepens the cast. Neutral lives the other direction: a real shove toward blue.',
   short:
     'Right instinct — toward blue — but neutral sat even FURTHER than you bet. A strong cast takes a bigger correction than it feels like it should.',
-  near: 'You called it — neutral really does sit well toward blue, not in the middle. Most people guess the centre; you didn’t.',
+  near: 'You called it — neutral really does sit well toward blue, not in the middle. Most people guess the center; you didn’t.',
   over: 'You went past it — you felt the cast was strong and over-shot into too-cool. Close, but neutral sat a touch back toward the middle.',
 }
 
@@ -121,7 +121,7 @@ const lessons = [
       {
         kind: 'capture',
         scene: 'landscape',
-        prompt: 'A photo is light gathered over time. This shot started dark — open the shutter to gather light and land the marker in the green, then take the photo.',
+        prompt: 'A photo is light gathered over time. This shot started dark — open the shutter to gather light and land the marker in the band, then take the shot.',
         start: -2,
         targetExp: { min: -0.5, max: 0.6 },
         feedback: {
@@ -783,7 +783,7 @@ const lessons = [
       {
         kind: 'slider-sim',
         scene: 'snow',
-        prompt: 'Snow fools the meter into muddy grey. Brighten it until the snow reads WHITE — its tones SHOULD pile toward the right, just short of clipping.',
+        prompt: 'Snow fools the meter into muddy gray. Brighten it until the snow reads WHITE — its tones SHOULD pile toward the right, just short of clipping.',
         control: { min: -2, max: 1.5, step: 0.1, start: -1 },
         toParams: (v) => ({ exposure: v }),
         format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV',
@@ -793,9 +793,9 @@ const lessons = [
         histogram: true,
         check: (v) => highKeyOK('snow', v),
         feedback: {
-          correct: 'For a bright, high-key scene the right histogram is piled to the RIGHT, not centered — that is how you keep snow white instead of grey. There is no one correct shape.',
+          correct: 'For a bright, high-key scene the right histogram is piled to the RIGHT, not centered — that is how you keep snow white instead of gray. There is no one correct shape.',
           stages: [
-            'Centering the tones leaves snow grey. Which way makes it truly white?',
+            'Centering the tones leaves snow gray. Which way makes it truly white?',
             'Brighten until the mass sits high and right without slamming the wall, then take the shot.',
           ],
         },
@@ -827,7 +827,7 @@ const lessons = [
     blurb: 'Make the colors read true — or warm on purpose.',
     steps: [
       // BEAT 1 — BET then be wrong: predict where neutral is, FEEL it's a hard shove to blue.
-      // Scene = snow: white is the purest cast indicator (why pros judge WB on white/grey). Verified
+      // Scene = snow: white is the purest cast indicator (why pros judge WB on white/gray). Verified
       // in-engine: snow reads strongly orange under the cast (R-B≈63) AND clean/neutral when corrected
       // (intrinsic R-B≈-12) — so "the orange lifts → clean white" is truthful both ways. No Kelvin
       // readout — the felt cast carries it (blueprint shift #6: demote the number, judge by eye), and
@@ -854,7 +854,7 @@ const lessons = [
           correct:
             'Neutral — and the slider did NOT end in the middle. You cancel a cast by adding its OPPOSITE, and a strong orange cast needs a real shove toward blue.',
           stages: [
-            'Still orange? What colour is the opposite of orange?',
+            'Still orange? What color is the opposite of orange?',
             'Orange is cancelled by blue — push toward the cool end until the cast lifts.',
           ],
         },
@@ -865,7 +865,7 @@ const lessons = [
         scene: 'seascape',
         title: 'Cancel a cast with its opposite',
         body: [
-          'Every light has a colour: tungsten bulbs and sunsets run warm/orange; open shade and overcast skies run cool/blue. White balance adds the OPPOSITE colour to cancel it.',
+          'Every light has a color: tungsten bulbs and sunsets run warm/orange; open shade and overcast skies run cool/blue. White balance adds the OPPOSITE color to cancel it.',
           'So “correct” is rarely the middle of the dial — it depends on the light you are in. And sometimes you do not want neutral at all.',
         ],
       },
@@ -900,11 +900,11 @@ const lessons = [
         start: { temp: 0 },
         hint: { x: '21%', y: '61%' }, // the gray card's location — pulses until first sample
 
-        prompt: 'Pros don’t eyeball it — they use the eyedropper. Tap the gray card on the wall, and the camera solves the white balance to make that card read a true, colourless gray.',
+        prompt: 'Pros don’t eyeball it — they use the eyedropper. Tap the gray card on the wall, and the camera solves the white balance to make that card read a true, colorless gray.',
         check: wbNeutral(WB_CARD),
         feedback: {
           correct:
-            'That’s click-white-balance: you tell the camera “this should be gray,” and it solves the exact temperature to neutralise the whole scene. The fastest, surest white balance there is — as long as you tap something truly neutral.',
+            'That’s click-white-balance: you tell the camera “this should be gray,” and it solves the exact temperature to neutralize the whole scene. The fastest, surest white balance there is — as long as you tap something truly neutral.',
           stages: [
             'That surface wasn’t neutral, so the camera tinted the whole image the wrong way to compensate. Find the flat gray card.',
             'Tap the plain gray reference card on the left wall — not the warmer wall or the floor around it.',
@@ -1063,7 +1063,7 @@ const lessons = [
             'Balanced. One heavy element alone drags the eye and tips the frame; a second weight across from it settles everything. Composition isn’t only WHERE one subject goes — it’s how the weights across the whole frame balance.',
           stages: [
             'It still leans to one side — the weight’s all up there. Where would a counterweight go?',
-            'Put your subject OPPOSITE the heavy element, across the centre, so the two balance.',
+            'Put your subject OPPOSITE the heavy element, across the center, so the two balance.',
           ],
         },
       },
@@ -1104,9 +1104,9 @@ const lessons = [
           'New frame, new weight — the heavy element now sits low-right. Counterbalance it again, wherever that has to be this time.',
         feedback: {
           correct:
-            'Same instinct, new spot: the counterweight goes across the centre from the heavy element — so this time it lands high-left. You’re reading the frame, not memorising a position.',
+            'Same instinct, new spot: the counterweight goes across the center from the heavy element — so this time it lands high-left. You’re reading the frame, not memorising a position.',
           stages: [
-            'The heavy element moved — so the counterweight moves too. Across the centre from it.',
+            'The heavy element moved — so the counterweight moves too. Across the center from it.',
             'It’s low-right now, so balance it from the upper-left.',
           ],
         },
@@ -1124,7 +1124,7 @@ const lessons = [
           correct:
             'Yours. You didn’t snap a subject to a dot — you weighed the whole frame and chose how it should feel: settled by balance, or charged by emptiness. That’s composition.',
           stages: [
-            'Two good options: counterweight the heavy element across the centre, OR push your subject far to one side into open space.',
+            'Two good options: counterweight the heavy element across the center, OR push your subject far to one side into open space.',
             'Either balance it (opposite the heavy mass) or isolate it (hard to one edge), then take the shot.',
           ],
         },
@@ -1208,9 +1208,9 @@ const lessons = [
         check: ({ warmth }) => warmth >= 0.5,
         feedback: {
           correct:
-            'Golden-hour light is warm AND directional — it wraps the subject in a flattering glow. The colour of the light is a creative tool in its own right, not only its direction.',
+            'Golden-hour light is warm AND directional — it wraps the subject in a flattering glow. The color of the light is a creative tool in its own right, not only its direction.',
           stages: [
-            'The light still reads cold and flat. Which way pushes it toward a warm, golden colour?',
+            'The light still reads cold and flat. Which way pushes it toward a warm, golden color?',
             'Warm it up toward the golden end, then take the shot.',
           ],
         },
@@ -1403,7 +1403,7 @@ const lessons = [
           correct:
             'Now it has shape and life — a gentle side angle models the cheekbone and nose into three dimensions, and the warmth gives the skin a healthy glow. Not flat, not harsh: turned just enough.',
           stages: [
-            'Flat-front light has no shape, and cold light looks clinical. Move the light off-centre, and warm it up.',
+            'Flat-front light has no shape, and cold light looks clinical. Move the light off-center, and warm it up.',
             'Bring the angle to a gentle side (not all the way to a rim) and push warmth toward golden.',
           ],
         },
@@ -1478,7 +1478,7 @@ const lessons = [
         kind: 'intro',
         title: 'The horizon is the decision',
         body: [
-          'In a landscape, where you put the horizon decides what the photo is ABOUT. Low horizon → the sky’s story. High horizon → the land’s. Dead-centre → neither, and it falls flat.',
+          'In a landscape, where you put the horizon decides what the photo is ABOUT. Low horizon → the sky’s story. High horizon → the land’s. Dead-center → neither, and it falls flat.',
           'So you don’t “find” the horizon — you place it, on whichever third gives the more interesting half the room.',
         ],
       },
@@ -1489,7 +1489,7 @@ const lessons = [
         target: { kind: 'horizon', third: 'high' },
         start: { x: 50, y: 50 },
         prompt:
-          'New scene: now the LAND is the story — texture and colour rolling to the hills, an ordinary sky above. Raise the horizon HIGH to give the land the frame.',
+          'New scene: now the LAND is the story — texture and color rolling to the hills, an ordinary sky above. Raise the horizon HIGH to give the land the frame.',
         feedback: {
           correct:
             'Now the land leads. A high horizon devotes the frame to the foreground — same tool, opposite choice. The horizon isn’t a rule to obey; it’s the lever that says what matters.',
@@ -1508,7 +1508,7 @@ const lessons = [
         items: [
           { label: 'A field of wildflowers at your feet' }, // 0
           { label: 'A blazing sunset over a flat plain' }, // 1
-          { label: 'Rolling hills under an ordinary grey sky' }, // 2
+          { label: 'Rolling hills under an ordinary gray sky' }, // 2
         ],
         solution: [1, 2, 0], // sunset sky (most sky) → hills (some) → wildflowers (least sky, high horizon)
         feedback: {
@@ -1859,7 +1859,7 @@ const reviewsByChapter = {
         kind: 'slider-sim', scene: 'room',
         control: { min: -1, max: 1, step: 0.05, start: 0 },
         toParams: (v) => ({ temp: v, baseTemp: WB_WARM }), readState: wbRead(WB_WARM), label: 'White balance', ends: ['cooler · blue', 'warmer · orange'], ariaLabel: 'White balance',
-        prompt: 'This indoor shot is too warm. Cool it until the colours read neutral.',
+        prompt: 'This indoor shot is too warm. Cool it until the colors read neutral.',
         check: wbNeutral(WB_WARM),
         feedback: { correct: 'Neutral — you cancelled the warm cast by adding its opposite.', stages: ['White balance: a warm cast is cancelled by pushing toward blue.'] },
       },
@@ -1871,12 +1871,12 @@ const reviewsByChapter = {
       {
         kind: 'compose', scene: 'seascape', target: { kind: 'thirds' }, start: { x: 50, y: 50 }, silentCue: true,
         prompt: 'Place the subject where the photo feels most alive — not dead-center.',
-        feedback: { correct: 'On a power point — off-centre breathes.', stages: ['Rule of thirds: drift the subject onto a point where the lines cross.'] },
+        feedback: { correct: 'On a power point — off-center breathes.', stages: ['Rule of thirds: drift the subject onto a point where the lines cross.'] },
       },
       {
         kind: 'compose', scene: 'seascape', target: { kind: 'balance', anchor: { x: 26, y: 62 } }, start: { x: 50, y: 50 }, keeper: true, silentCue: true,
         prompt: 'A heavy element sits low-left. Place your subject to balance the frame.',
-        feedback: { correct: 'Balanced — a counterweight across the centre settles the frame.', stages: ['Balance: put your subject opposite the heavy element, across the centre.'] },
+        feedback: { correct: 'Balanced — a counterweight across the center settles the frame.', stages: ['Balance: put your subject opposite the heavy element, across the center.'] },
       },
     ],
   },
@@ -1921,7 +1921,7 @@ const reviewsByChapter = {
 export const chapters = [
   { id: 'foundations', title: 'Foundations: Exposure', blurb: 'Gather the right light.', lessonIds: ['exposure-triangle', 'depth-of-field', 'shutter-motion'] },
   { id: 'lens', title: 'The Lens', blurb: 'Focus and perspective.', lessonIds: ['focus-point', 'focal-length'] },
-  { id: 'reading-light', title: 'Reading the Light', blurb: 'Meter it, colour it.', lessonIds: ['metering', 'white-balance'] },
+  { id: 'reading-light', title: 'Reading the Light', blurb: 'Meter it, color it.', lessonIds: ['metering', 'white-balance'] },
   { id: 'composition', title: 'Composition', blurb: 'Frame the shot.', lessonIds: ['rule-of-thirds', 'composition-balance'] },
   { id: 'light-tool', title: 'Light as a Tool', blurb: 'Shape light — and add your own.', lessonIds: ['light-direction', 'flash-fill'] },
   { id: 'genre', title: 'Genre & Low Light', blurb: 'Put it all together.', lessonIds: ['portrait', 'landscape', 'long-exposure-night', 'iso-and-noise'] },

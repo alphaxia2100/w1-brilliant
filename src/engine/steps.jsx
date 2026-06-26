@@ -172,7 +172,7 @@ export function PolaroidReveal({ shot, onDone }) {
             </div>
           )}
         </div>
-        <div className="text-center mt-3 font-mono text-[12px]" style={{ color: keeper ? '#1F8A3B' : '#888' }}>
+        <div className="text-center mt-3 font-mono text-[12px]" style={{ color: keeper ? '#1B7D35' : '#666' }}>
           {keeper ? '★ keeper' : 'experiment'}
         </div>
         </div>
@@ -280,7 +280,7 @@ function CaptureView({ step, status, onResult, onActivity }) {
       <div className="mb-4">
         <div className="flex justify-between text-[12px] text-muted mb-1.5">
           <span>Light gathered</span>
-          <span style={{ color: inBand ? '#1F8A3B' : '#666' }}>{inBand ? 'Good exposure' : 'Aim for the band'}</span>
+          <span style={{ color: inBand ? '#1B7D35' : '#666' }}>{inBand ? 'Good exposure' : 'Aim for the band'}</span>
         </div>
         <div className="relative h-3 rounded-full bg-hairline overflow-hidden">
           <span
@@ -312,7 +312,7 @@ function CaptureView({ step, status, onResult, onActivity }) {
 
       {!locked && (
         <Button className="w-full" disabled={busy} onClick={take}>
-          {busy ? 'Exposing…' : <><Shutter /> Take the photo</>}
+          {busy ? 'Exposing…' : <><Shutter /> Take the shot</>}
         </Button>
       )}
     </div>
@@ -495,7 +495,7 @@ function TriangleView({ step, status, onResult, onActivity }) {
         </svg>
         <p
           className="text-center text-[13px] font-medium mt-1"
-          style={{ color: balanced ? '#1F8A3B' : '#666' }}
+          style={{ color: balanced ? '#1B7D35' : '#666' }}
         >
           {balanced ? 'Level — correctly exposed' : sum > 0 ? 'Overexposed' : 'Underexposed'}
         </p>
@@ -503,10 +503,10 @@ function TriangleView({ step, status, onResult, onActivity }) {
 
       {goal && (
         <div className="flex items-center justify-between rounded-tile px-3 py-2 mb-3" style={{ background: goalMet ? '#D4F5DD' : '#F2F2F2' }}>
-          <span className="text-[13px] font-medium" style={{ color: goalMet ? '#1F8A3B' : '#555' }}>
+          <span className="text-[13px] font-medium" style={{ color: goalMet ? '#1B7D35' : '#555' }}>
             Your look: {goal.label}
           </span>
-          <span className="text-[12px] font-mono" style={{ color: goalMet ? '#1F8A3B' : '#666' }}>
+          <span className="text-[12px] font-mono" style={{ color: goalMet ? '#1B7D35' : '#666' }}>
             {goalMet ? '✓ got it' : 'not yet'}
           </span>
         </div>
@@ -852,9 +852,9 @@ function DofView({ step, status, onResult }) {
           <text x="36" y={midY - 34} fill="#141414" fontSize="17" fontWeight="600" fontFamily="monospace">
             {focal}mm f/{fnum % 1 === 0 ? fnum : fnum.toFixed(1)}
           </text>
-          <text x={xn - 5} y={groundY + 22} fill="#1F8A3B" fontSize="13" textAnchor="end" fontFamily="monospace">{dist(d.near)}</text>
+          <text x={xn - 5} y={groundY + 22} fill="#1B7D35" fontSize="13" textAnchor="end" fontFamily="monospace">{dist(d.near)}</text>
           {d.far !== Infinity && (
-            <text x={xf + 5} y={groundY + 22} fill="#1F8A3B" fontSize="13" textAnchor="start" fontFamily="monospace">{dist(d.far)}</text>
+            <text x={xf + 5} y={groundY + 22} fill="#1B7D35" fontSize="13" textAnchor="start" fontFamily="monospace">{dist(d.far)}</text>
           )}
         </svg>
       </div>
@@ -1070,7 +1070,7 @@ function MotionView({ step, status, onResult }) {
         <>
           <div className="flex items-center gap-3 mb-3">
             <span className="font-mono text-[20px] font-medium">{TRI_SHUT[captured.si]}s</span>
-            <span className="text-[13px]" style={{ color: hitGoal ? '#1F8A3B' : '#666' }}>
+            <span className="text-[13px]" style={{ color: hitGoal ? '#1B7D35' : '#666' }}>
               {frozen ? 'Frozen sharp' : 'The car moved while the shutter was open — motion blur'}
             </span>
           </div>
@@ -1146,7 +1146,7 @@ function RankView({ step, status, onResult }) {
                 background: filled ? '#fff' : '#FAFAFA',
               }}
             >
-              {filled ? items[idx].label : <span className="text-muted/50 text-[12px]">{pos + 1}</span>}
+              {filled ? items[idx].label : <span className="text-muted text-[12px]">{pos + 1}</span>}
             </button>
           )
         })}
@@ -1360,7 +1360,7 @@ function EyedropView({ step, status, onResult }) {
           </div>
         )}
       </div>
-      <p className="text-[13px] text-center mb-4" style={{ color: picked ? '#1F8A3B' : '#777' }}>
+      <p className="text-[13px] text-center mb-4" style={{ color: picked ? '#1B7D35' : '#666' }}>
         {picked ? 'Sampled — tap a different spot to try another, or take the shot.' : 'Tap the surface that should be a neutral gray.'}
       </p>
       {!locked && (
@@ -1401,7 +1401,7 @@ function BetView({ step, status, onResult, onActivity }) {
 
   // PHASE 1 — predict (photo frozen at the cast; no readout to give the answer away)
   if (phase === 'predict') {
-    const side = bet < -0.02 ? 'toward cooler, blue' : bet > 0.02 ? 'toward warmer, orange' : 'centre of the dial'
+    const side = bet < -0.02 ? 'toward cooler, blue' : bet > 0.02 ? 'toward warmer, orange' : 'center of the dial'
     return (
       <div className="animate-risein">
         <Prompt>{step.bet?.prompt || step.prompt}</Prompt>
@@ -1441,7 +1441,7 @@ function BetView({ step, status, onResult, onActivity }) {
   const value = raw
   const params = step.toParams(value)
   const eff = cast + value
-  const read = Math.abs(eff) < 0.12 ? { t: 'reads neutral', c: '#1F8A3B' } : eff > 0 ? { t: 'still warm', c: '#9A6A2F' } : { t: 'too cool', c: '#3A5A9A' }
+  const read = Math.abs(eff) < 0.12 ? { t: 'reads neutral', c: '#1B7D35' } : eff > 0 ? { t: 'still warm', c: '#9A6A2F' } : { t: 'too cool', c: '#3A5A9A' }
   const override = step.betMessages?.[step.betKind?.(bet)] || step.feedback?.correct
   return (
     <div className="animate-risein">

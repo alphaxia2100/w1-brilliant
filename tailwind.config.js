@@ -11,10 +11,11 @@ export default {
         cardDark: '#1E1E1E',
         pear: { DEFAULT: '#D8E82E', lip: '#A8B800', ink: '#141414' },
         link: '#456DFF',
-        correct: { DEFAULT: '#29CC57', bg: '#D4F5DD', ink: '#00370F' },
+        // `text` is the AA-on-white success green (4.5:1); DEFAULT #29CC57 (2.1:1) is graphics-only.
+        correct: { DEFAULT: '#29CC57', text: '#1B7D35', bg: '#D4F5DD', ink: '#00370F' },
         wrong: { bg: '#E5E5E5', ink: '#383838' },
         retry: { bg: '#FCE49D', ink: '#403000' },
-        danger: '#FF5D5D',
+        danger: '#D63B3B', // darkened from #FF5D5D (3.0:1) so error message text meets AA (4.6:1)
       },
       fontFamily: {
         sans: ['General Sans', 'Inter', 'system-ui', 'sans-serif'],

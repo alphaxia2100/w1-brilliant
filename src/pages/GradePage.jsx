@@ -30,7 +30,7 @@ function downscale(file, maxEdge = 1280, quality = 0.85) {
   })
 }
 
-const SCORE_COLOR = (s) => (s >= 8 ? '#1F8A3B' : s >= 5 ? '#A98A1E' : '#B0563B')
+const SCORE_COLOR = (s) => (s >= 8 ? '#1B7D35' : s >= 5 ? '#8A6D14' : '#B0563B')
 
 function ScoreRing({ value }) {
   const r = 34
@@ -202,10 +202,10 @@ export default function GradePage() {
           <div className="grid grid-cols-1 gap-4">
             {result.strengths?.length > 0 && (
               <Card className="p-5">
-                <h2 className="text-[13px] uppercase tracking-wide font-medium mb-2" style={{ color: '#1F8A3B' }}>What’s working</h2>
+                <h2 className="text-[13px] uppercase tracking-wide font-medium mb-2" style={{ color: '#1B7D35' }}>What’s working</h2>
                 <ul className="flex flex-col gap-1.5">
                   {result.strengths.map((s, i) => (
-                    <li key={i} className="text-[14px] leading-snug flex gap-2"><span style={{ color: '#1F8A3B' }}>✓</span>{s}</li>
+                    <li key={i} className="text-[14px] leading-snug flex gap-2"><span style={{ color: '#1B7D35' }}>✓</span>{s}</li>
                   ))}
                 </ul>
               </Card>

@@ -30,7 +30,7 @@ function ShotThumb({ shot, size = 88 }) {
       )}
       <span
         className="absolute bottom-0 inset-x-0 text-[9px] text-center py-0.5 text-white"
-        style={{ background: keeper ? 'rgba(31,138,59,0.74)' : 'rgba(20,20,20,0.6)' }}
+        style={{ background: keeper ? 'rgba(27,125,53,0.74)' : 'rgba(20,20,20,0.6)' }}
       >
         {keeper ? 'keeper' : 'experiment'}
       </span>

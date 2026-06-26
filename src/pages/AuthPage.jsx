@@ -137,7 +137,7 @@ export default function AuthPage() {
           autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
         />
         {mode === 'signup' && password.length > 0 && (
-          <p className="text-[12px] -mt-1.5 ml-1" style={{ color: password.length >= 6 ? '#1F8A3B' : '#666' }}>
+          <p className="text-[12px] -mt-1.5 ml-1" style={{ color: password.length >= 6 ? '#1B7D35' : '#666' }}>
             {password.length >= 6 ? '✓ Strong enough' : `${6 - password.length} more character${6 - password.length === 1 ? '' : 's'} to go`}
           </p>
         )}
