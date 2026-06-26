@@ -29,15 +29,15 @@ exposure as ONE lesson; skipped prose-y RAW/critique (no sim). **✅ EXPANSION C
    floats a horizon line over the scene's BAKED horizon (two horizons; the painted one never moves) and
    the "peak"/depth claims aren't rendered; 2 of 5 beats duplicated composition-balance.
 
-**STATUS: expansion COMPLETE = 14 lessons (6 new + 1 split; landscape dropped).** A 7-lens adversarial
-Sky-critic ran and EARNED ITS KEEP — caught real truth issues in the fast-built lessons (portrait flat-
-band praised as "shape"; flash/portrait over-flash passing; composition "isolated" while crowded; focus
-copy claiming an in-focus background the sim never renders; shutter si=1 ghost-streak labeled "Frozen
-sharp"). All fixed + re-verified live (commit after f29da7d). Lesson learned: a fast lesson sprint needs
-the critic before "done" — check bands must hold across the WHOLE accepted region, not just the sweet spot.
-**Next options (Sky's call):** (a) the chapter/Review NAV layer (Brilliant shape — Home/Course/store
-rework); (b) the deferred truth/polish below; (c) rebuild landscape once the horizon-reframing sim exists;
-(d) merge `lesson-factory` → main + deploy.
+**STATUS (2026-06-26): "continue with all" + "focus on polish" — ALL build items DONE; 21 lessons.**
+Done since the 14-lesson critic pass: (a) **WB Kelvin** truth-debt cleared (readout demoted to a felt
+cue, beats 3/5); (b) **chapter nav layer** — 6 named chapters + per-chapter **Review** lessons (spaced
+retrieval, fresh scenes, no scaffolding; ★ badge in /course); (c) **landscape REBUILT** on a real
+`HorizonScene` (the horizon truly moves — also fixed rule-of-thirds' two-horizons bug) → unparked;
+(d) **merged → pushed → deployed** (the 14-lesson nav build went live; landscape+reviews ship in the
+next deploy). The earlier 7-lens critic earned its keep (caught the portrait flat-band, over-flash,
+"isolated"-while-crowded, focus copy, shutter ghost-streak — all fixed). **NOW: polish pass** (Sky:
+"focus on polish") — the app is graded on UX/design, so this is the priority.
 Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) · Reading&Colour
 (Metering,WB) · Composition(I placing, II balance) · Light(Direction,Flash) · Genre(Portrait,LongExp,Landscape) · ISO.
 
@@ -48,7 +48,9 @@ Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) ·
 - **Free-play Studio** — locked north-star deliverable; larger build.
 
 ## Parked (need new engine capability — don't ship until built)
-- **landscape** — built + DROPPED by the critic (2026-06-25). The compose canvas floats the horizon
+- ✅ **landscape** — UNPARKED 2026-06-26: rebuilt on a real `HorizonScene` (the horizon truly moves);
+  back in the course (genre chapter). [Original drop reason kept below for history.]
+- **landscape (original drop)** — built + DROPPED by the critic (2026-06-25). The compose canvas floats the horizon
   line over the scene's BAKED horizon (two horizons; dragging never re-frames sky-vs-land), so "where
   you put the horizon decides the photo" is disproven by the pixels; the "distant peak" is the generic
   balance blob; and 2 beats duplicate composition-balance. NEEDS a horizon-reframing sim (drive the

@@ -22,37 +22,28 @@ So: **main is pushed and the app is deployed live** — they're all in sync. Cur
 the Blaze + secret steps below (the UI degrades gracefully until then).
 
 ## TL;DR
-The course is **14 lessons** — the **CURRICULUM EXPANSION** Sky asked for (2026-06-25: "another topic...
-break up the current lessons... fill in the rest... look online for how you should structure it") is
-COMPLETE. Researched online → a content-first plan; **6 new lessons + 1 split shipped** (all live-verified),
-then a 7-lens adversarial critic caught real truth issues (all fixed) and dropped a 7th (landscape, do-not-
-ship → parked). Also has the **AI photo grader**, **try-before-signup**, **lesson factory**, **BET**
-primitive. `npm test` = **136/136 green**, build clean.
+**21 lessons across 6 named chapters, each ending in a spaced-retrieval Review** — the full Brilliant
+shape. The **CURRICULUM EXPANSION** Sky asked for (2026-06-25) is COMPLETE + critic-vetted: 15 content
+lessons (8 original + 7 new/rebuilt) + 6 chapter Reviews. Also has the **AI photo grader**,
+**try-before-signup**, **lesson factory**, the **BET** primitive, and the **git-as-memory system**.
+`npm test` = **170/170 green**, build clean.
 
-## The course now — 14 lessons (verified from `src/content/course.js`; `number` is derived from order)
-| # | id | what it teaches |
-|---|----|------|
-| 1 | `exposure-triangle` | aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9) |
-| 2 | `depth-of-field` | flower-bokeh, 4 blur levers, night-bokeh, synthesis keeper (8) |
-| 3 | `shutter-motion` | **NEW.** shutter as a creative axis: blur=speed → freeze → rank → commit-keeper (5) |
-| 4 | `focus-point` | **NEW.** focus is a PLACED choice: rack the subject sharp; wide aperture = thin slice; rank; keeper (5) |
-| 5 | `focal-length` | **NEW.** focal as PERSPECTIVE (f/16, no blur): telephoto compresses / wide expands; rank; keeper (5) |
-| 6 | `metering` | histogram: spread · clip · **blinkies** + dynamic range · high-key snow · rank (7) |
-| 7 | `white-balance` | **BET** predict-neutral (snow) · casts · **eyedropper** · creative warmth (5) |
-| 8 | `rule-of-thirds` | thirds · lead-room · leading lines · horizon · keeper (6) |
-| 9 | `composition-balance` | **NEW.** visual weight: counterbalance · negative space · transfer · free keeper (5) |
-| 10 | `light-direction` | reveal-form · backlight · hard/soft · warmth · flattering · dramatic keeper (7) |
-| 11 | `flash-fill` | **NEW.** fill flash: open harsh shadows · over-flash-goes-flat balance · rank · keeper (5) |
-| 12 | `portrait` | **NEW.** genre capstone: soft+fill → shape+warm → 4-lever light synthesis → keeper (5) |
-| 13 | `long-exposure-night` | gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
-| 14 | `iso-and-noise` | max-crank cost · the floor · expose-to-the-right · rank · keeper (6) |
+## The course now — 6 chapters / 21 lessons (verified from `src/content/course.js`; numbers derive from order)
+| Chapter | Lessons (NEW = built this expansion) + Review |
+|---|---|
+| **1 · Foundations: Exposure** | exposure-triangle · depth-of-field · **shutter-motion** · ★Review |
+| **2 · The Lens** | **focus-point** (rack focus) · **focal-length** (compression) · ★Review |
+| **3 · Reading the Light** | metering · white-balance (BET; Kelvin demoted to a felt cue) · ★Review |
+| **4 · Composition** | rule-of-thirds · **composition-balance** (weight + negative space) · ★Review |
+| **5 · Light as a Tool** | light-direction · **flash-fill** · ★Review |
+| **6 · Genre & Low Light** | **portrait** · **landscape** (real horizon-reframing sim) · long-exposure · iso-and-noise · ★Review |
 
-**Expansion COMPLETE (content-first), critic-vetted.** New sims: MotionView goal-aware caption (si≤1 truly
-sharp); compose `balance`/`negativespace`/`composefree` (+ `horizon.third`, kept for a landscape rebuild);
-LightDirection `fill`; DofBokeh `focusDist` rack-focus + bokeh `check(blur, params)`; new `focus` step kind.
-`number` derived from order. **Dropped/parked:** `landscape` (critic do-not-ship — needs a horizon-reframing
-sim) and `meter-fooled` (metering covers it). **Next is Sky's call:** chapter/Review nav layer · deferred
-truth/polish (ledger) · rebuild landscape · merge `lesson-factory`→main + deploy.
+**Engine added this expansion:** `focus` step kind + DofBokeh `focusDist` rack-focus + bokeh
+`check(blur,params)`; LightDirection `fill`; compose `balance`/`negativespace`/`composefree` +
+`horizon.third` + a real `HorizonScene` (the horizon truly moves — also fixed rule-of-thirds' old
+two-horizons bug); MotionView si≤1 truly sharp; `chapters` + Review splice; derived `number`.
+**meter-fooled** was SKIPPED (metering already covers it). All predict-first, no multiple choice, calm
+feedback, keepers mint a polaroid. **Next: a polish pass (in progress).**
 
 All predict-first, no multiple choice, calm feedback, success mints a polaroid keepsake.
 
