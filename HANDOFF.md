@@ -14,7 +14,7 @@ Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real 
 |---|---|---|
 | **GitHub `origin/main`** (pushed) | `0962eaf` | EVERYTHING — 21 lessons (6 chapters + Reviews), landscape, grader, git-as-memory system, BET, all truth-fixes, **+ the polish pass** |
 | **local `main`** | `0962eaf` | == origin |
-| **Deployed** `aperture-dac66.web.app` | `0962eaf` | **LIVE: the full 21-lesson course + chapter nav + Reviews + polish** (hosting deployed). ⚠️ Polish was build+CSS+gate-verified; **pixel-level live-verify pending** (preview MCP was down this session). |
+| **Deployed** `aperture-dac66.web.app` | `0962eaf` | **LIVE: the full 21-lesson course + chapter nav + Reviews + polish** (hosting deployed + asset-hash verified). Polish **pixel-verified live** via headless Chrome + playwright-core (preview MCP was down, so drove the deployed URL directly) — auth subtitle, password hint, amber wrong-feedback, green correct-feedback, polaroid "★ keeper" choreography, empty-roll nudge, /course locked nodes + REVIEW pills + 6 chapters/0-of-21 all confirmed. Only the chapter **✓-done** chip (needs a completed chapter) is code+token-verified, not pixel-verified. |
 
 So: **main is pushed and the app is deployed live** — they're all in sync. Current branch: `main`
 (start a feature branch for new work). The **grader Cloud Function is still NOT deployed** — it needs

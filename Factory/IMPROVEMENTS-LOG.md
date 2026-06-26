@@ -92,10 +92,18 @@ code). Shipped the convergent, high-confidence items across 7 files:
   title (not a blanket opacity wash); empty roll shows a nudge; Auth subtitle no longer says only "exposure
   triangle" (course is now 6 chapters).
 VERIFIED: gate 170/170, build clean, all new token/ring utility classes confirmed generated in the built CSS.
-⚠️ HONEST GAP: the **preview MCP was disconnected** this session, so this is build+CSS+gate-verified, NOT
-pixel-verified. Deployed anyway (low regression risk — token/copy/a11y/timing, reversible, Sky gave
-permissions). **NEXT: live-eyeball when the preview reconnects** (amber feedback aesthetic, ✓-done chip,
-locked-node look, polaroid choreography are the 4 to look at) — re-deploy only if something's visually off.
+Then **pixel-verified LIVE on the deployed app**: the preview MCP was disconnected, so I drove the live URL
+with **headless Chrome + playwright-core** (installed in the scratchpad, not the project) — scripted /try
+through a wrong answer and a keeper, plus a throwaway account for the auth-gated surfaces. CONFIRMED live:
+auth subtitle; password hint ("3 more characters to go"); "Light gathered"/"Aim for the band" at proper
+contrast; segmented tokenized progress bar; 44px exit/back; aria valueText (Good exposure/too dark/too
+bright); **amber wrong-feedback** ("Too dark — …open the shutter longer", retry token); green correct-
+feedback; **polaroid reveal choreography** (card lands → develops → "★ keeper" → "tap to continue"); home
+greeting + 0/21 + **empty-roll nudge** (dashed card); /course **6 chapters / 0-of-21**, **locked nodes as
+light lock + muted title** (not the old opacity wash), REVIEW pills, muted incomplete counts. ONLY the
+chapter **✓-done pear chip** stays code+token-verified (not pixel — needs a fully completed chapter; low
+risk). Two throwaway test users (`polish-test-<ts>@example.com`) were created on the live Firebase for the
+auth-gated checks — harmless; delete from the Auth console if you want a clean user list.
 
 ### #1 — 2026-06-25 — shipped L7 "Long exposure: painting with time"  ✓ (commit dbc6725)
 Took the lesson factory's strongest candidate, fixed BEAT 3 (brightness band so overshoot fails),
