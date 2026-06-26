@@ -1549,6 +1549,99 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
+  // LANDSCAPE — genre capstone (expansion 7). Landscape COMPOSITION on the compose canvas:
+  // the horizon is the big decision (low = the sky's story, high = the foreground's), and a
+  // foreground anchor gives depth. Reuses compose; the horizon `third` option + foreground
+  // anchoring make it a distinct landscape-framing judgment, not generic rule-of-thirds.
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'landscape',
+    title: 'Landscape: framing the wide scene',
+    blurb: 'Where the horizon sits decides what the photo is about.',
+    steps: [
+      // BEAT 1 — predict by doing: dramatic sky → drop the horizon low
+      {
+        kind: 'compose',
+        scene: 'landscape',
+        target: { kind: 'horizon', third: 'low' },
+        start: { x: 50, y: 33 },
+        prompt:
+          'This sky is the whole show — golden light rolling across the clouds. Give it the frame: drag the horizon LOW so the sky fills most of the photo.',
+        feedback: {
+          correct:
+            'The sky takes over, and the photo is now ABOUT that light. A low horizon hands the frame to the sky — the first decision a landscape photographer makes is simply: how much sky?',
+          stages: [
+            'A centred horizon splits the frame and says nothing. To feature the sky, the horizon goes LOW.',
+            'Drag the horizon down toward the lower third so the sky owns the top two-thirds.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm
+      {
+        kind: 'intro',
+        scene: 'landscape',
+        title: 'The horizon is the decision',
+        body: [
+          'In a landscape, where you put the horizon decides what the photo is ABOUT. Low horizon → the sky’s story. High horizon → the foreground’s. Dead-centre → neither, and it falls flat.',
+          'Then give the scene DEPTH: an element in the near foreground anchors the eye before it travels to the distance.',
+        ],
+      },
+      // BEAT 3 — the other choice: interesting foreground → raise the horizon
+      {
+        kind: 'compose',
+        scene: 'seascape',
+        target: { kind: 'horizon', third: 'high' },
+        start: { x: 50, y: 66 },
+        prompt:
+          'Now the foreground is the story — wet sand and tide-pools catching the light. Raise the horizon HIGH to give that foreground the room it deserves.',
+        feedback: {
+          correct:
+            'Now the land leads. A high horizon devotes the frame to the foreground — same scene, opposite choice. The horizon isn’t a rule to obey; it’s the lever that says what matters.',
+          stages: [
+            'To feature the foreground, the horizon goes HIGH — the opposite of the big-sky shot.',
+            'Drag the horizon up toward the upper third so the foreground fills most of the frame.',
+          ],
+        },
+      },
+      // BEAT 4 — depth: anchor a foreground element beneath the distant peak
+      {
+        kind: 'compose',
+        scene: 'landscape',
+        target: { kind: 'balance', anchor: { x: 50, y: 24 } },
+        start: { x: 50, y: 50 },
+        prompt:
+          'A flat landscape feels like a postcard. There’s a far peak up high — place a foreground element to balance it and pull the eye THROUGH the scene, near to far. That depth is what makes a landscape feel three-dimensional.',
+        feedback: {
+          correct:
+            'Now it has depth. A near anchor below the distant peak gives the eye a journey — foreground to background — instead of one flat plane. Scale and depth are what separate a landscape from a snapshot of scenery.',
+          stages: [
+            'The frame is all far-away. Add something NEAR — low in the frame — to anchor the foreground.',
+            'Place your foreground element low, beneath the distant peak, so the eye travels from near to far.',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: frame your own landscape (balance the depth, or isolate in open space)
+      {
+        kind: 'compose',
+        scene: 'landscape',
+        target: { kind: 'composefree', anchor: { x: 50, y: 26 } },
+        start: { x: 50, y: 50 },
+        keeper: true,
+        prompt:
+          'Your wide scene. Anchor a foreground element to give it depth (balance the distant peak), or set your subject alone in open space — your call. Take a landscape worth keeping.',
+        feedback: {
+          correct:
+            'A landscape you composed, not just pointed at: you decided where the weight sits and how the eye moves through it. Sky or land, depth or simplicity — that judgment is the whole craft of the wide scene.',
+          stages: [
+            'Two good options: anchor a near element beneath the peak for depth, OR push your subject into open space to isolate it.',
+            'Place a foreground anchor low (to balance the peak), or far to one side (negative space), then take the shot.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
   // L8 — ISO & NOISE (the price of light). Factory candidate, fixed (BEAT 3 floor =
   // exactly 1600; BEAT 6 keeper recalibrated to the brighter room's real floor, 800)
   // and verified in-engine (ETTR shadow-grain confirmed to drop with capture light).

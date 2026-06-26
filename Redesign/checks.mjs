@@ -114,7 +114,7 @@ for (const lesson of course.lessons) {
       ok(`${tag}: fails at start`, !composeEval(t, s.start || { x: 50, y: 50 }).ok)
       let good
       if (t.kind === 'leadroom') good = t.facing === 'left' ? { x: 80, y: 50 } : { x: 20, y: 50 }
-      else if (t.kind === 'horizon') good = { x: 50, y: 33.33 }
+      else if (t.kind === 'horizon') good = { x: 50, y: t.third === 'low' ? 66.66 : 33.33 }
       else if (t.kind === 'leadinglines') good = t.point || { x: 66.66, y: 38 }
       else if (t.kind === 'balance' || t.kind === 'composefree') {
         const a = t.anchor || { x: 25, y: 50 } // mirror the anchor across centre to counterbalance

@@ -51,9 +51,15 @@ export function composeEval(target, pos) {
     return { ok, cue: ok ? (b.ok ? 'balanced — the frame settles' : 'isolated — the empty space carries it') : 'your call: balance the heavy element, or push your subject out into empty space' }
   }
   if (target.kind === 'horizon') {
-    const onThird = Math.min(Math.abs(pos.y - 33.33), Math.abs(pos.y - 66.66)) < (target.band || 9)
+    // third: 'low' = horizon near the bottom (big sky); 'high' = near the top (big foreground);
+    // unset = either third. Never bisecting (a centred horizon reads static).
+    const band = target.band || 9
     const bisecting = Math.abs(pos.y - 50) < 8
-    return { ok: onThird && !bisecting, cue: bisecting ? 'cutting it in half — static' : onThird ? 'a third of sky — it breathes' : 'find a third' }
+    let onThird, hint
+    if (target.third === 'low') { onThird = Math.abs(pos.y - 66.66) < band; hint = 'drop the horizon LOW to give the sky the frame' }
+    else if (target.third === 'high') { onThird = Math.abs(pos.y - 33.33) < band; hint = 'raise the horizon HIGH to give the foreground the frame' }
+    else { onThird = Math.min(Math.abs(pos.y - 33.33), Math.abs(pos.y - 66.66)) < band; hint = 'find a third' }
+    return { ok: onThird && !bisecting, cue: bisecting ? 'cutting it in half — static' : onThird ? 'a clean third — it breathes' : hint }
   }
   // thirds (default): on a power point, not dead-center
   const band = target.band || 13
