@@ -24,17 +24,23 @@ const NIGHT_LIGHTS = [
   [10, 70, 5.5, '#FFCF86'], [70, 74, 6, '#CFE8FF'], [50, 66, 4.5, '#FFE9A8'],
 ]
 
+// The subject plane (the flower) sits at this depth on the 0..1 focus track.
+const SUBJECT_DEPTH = 0.34
 export default function DofBokeh({
   f = 5.6,
   subjectDist = 0.5,
   bgDist = 0.4,
   focal = 0.3,
+  focusDist = null, // null = subject always sharp (back-compat). 0..1 = rack-focus plane (near..far).
   bg = 'garden',
   size = 300,
   rounded = true,
   className = '',
 }) {
   const blur = (effectiveBlur({ f, subjectDist, bgDist, focal }) * size) / 300
+  // Rack focus: the subject is sharp only when the focus plane sits on it; miss it and the
+  // subject softens (up to the same blur magnitude the wide aperture throws at the background).
+  const subjectBlur = focusDist == null ? 0 : blur * Math.min(1, Math.abs(focusDist - SUBJECT_DEPTH) / 0.24)
   const open = 1 - Math.max(0, BOKEH_STOPS.indexOf(f)) / (BOKEH_STOPS.length - 1) // 1 wide .. 0 narrow
   const night = bg === 'lights'
 
@@ -86,8 +92,9 @@ export default function DofBokeh({
         </svg>
       </div>
 
-      {/* Subject layer — the flower, always sharp; grows as the subject gets closer. */}
-      <div className="absolute inset-0" style={{ transform: `scale(${subjectScale})`, transformOrigin: '50% 64%' }}>
+      {/* Subject layer — the flower; grows as the subject gets closer. Sharp unless the
+          focus plane has been racked off it (focusDist), in which case it softens. */}
+      <div className="absolute inset-0" style={{ transform: `scale(${subjectScale})`, transformOrigin: '50% 64%', filter: subjectBlur ? `blur(${subjectBlur}px)` : undefined }}>
         <svg viewBox="0 0 100 100" className="w-full h-full block">
           <path d="M50 52 C 49 70, 51 86, 50 100 L50 100 Z" stroke="#3C6B36" strokeWidth="2.6" fill="none" />
           <ellipse cx="41" cy="72" rx="9" ry="4.2" fill="#4B8043" transform="rotate(-26 41 72)" />

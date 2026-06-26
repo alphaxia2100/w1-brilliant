@@ -150,7 +150,7 @@ export function PolaroidReveal({ shot, onDone }) {
             <img src={shot.image} alt="" className="block w-full polaroid-develop" />
           ) : shot.kind === 'bokeh' ? (
             <div className="polaroid-develop">
-              <DofBokeh f={shot.f} subjectDist={shot.subjectDist} bgDist={shot.bgDist} focal={shot.focal} bg={shot.bg} size={228} rounded={false} />
+              <DofBokeh f={shot.f} subjectDist={shot.subjectDist} bgDist={shot.bgDist} focal={shot.focal} focusDist={shot.focusDist} bg={shot.bg} size={228} rounded={false} />
             </div>
           ) : shot.kind === 'light' ? (
             <div className="polaroid-develop">
@@ -1193,6 +1193,36 @@ function BokehView({ step, status, onResult }) {
   )
 }
 
+/* ---------- focus (rack the focus plane onto the subject; a wide aperture = thin slice) ---------- */
+function FocusView({ step, status, onResult, onActivity }) {
+  const [fd, setFd] = useState(step.start?.focusDist ?? 0)
+  const locked = status === 'correct'
+  const f = step.f || 2
+  const lock = { subjectDist: 0.4, bgDist: 0.6, focal: 0.4, ...(step.lock || {}) }
+  return (
+    <div className="animate-risein">
+      <Prompt>{step.prompt}</Prompt>
+      <div className="flex justify-center mb-4">
+        <DofBokeh f={f} {...lock} focusDist={fd} bg={step.bg || 'garden'} size={300} />
+      </div>
+      <div className="text-[13px] text-muted mb-1">Focus distance</div>
+      <Slider value={fd} min={0} max={1} step={0.02} onChange={(v) => { if (!locked) { setFd(v); onActivity?.() } }} ariaLabel="Focus distance" valueText={`${Math.round(fd * 100)}% far`} />
+      <div className="flex justify-between text-[11px] text-muted mt-1 mb-4">
+        <span>near</span>
+        <span>far</span>
+      </div>
+      {!locked && (
+        <Button
+          className="w-full"
+          onClick={() => onResult(step.check(fd), { chosen: fd, shot: { kind: 'bokeh', f, ...lock, focusDist: fd, bg: step.bg || 'garden' } })}
+        >
+          <Shutter /> Take the shot
+        </Button>
+      )}
+    </div>
+  )
+}
+
 /* ---------- light-direction (Light & Direction: direction · softness · warmth) ---------- */
 const LD_CFG = {
   angle: { min: 0, max: 180, step: 1, label: 'Light direction', ends: ['front · flat', 'behind · rim'], readout: (v) => `${Math.round(v)}°` },
@@ -1430,6 +1460,7 @@ export const STEP_VIEWS = {
   compose: ComposeView,
   dof: DofView,
   bokeh: BokehView,
+  focus: FocusView,
   'light-direction': LightDirView,
   motion: MotionView,
   rank: RankView,

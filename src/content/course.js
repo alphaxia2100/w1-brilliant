@@ -470,6 +470,101 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
+  // FOCUS & THE FOCUS POINT — focus is a PLACED choice (expansion 6). Rack the focus plane
+  // onto the subject; at a wide aperture the in-focus slice is thin, so a perfect exposure is
+  // wasted if focus misses. New `focus` step kind + DofBokeh `focusDist` (the subject softens
+  // off-plane). Distinct from DoF (background blur): here the SUBJECT can be missed.
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'focus-point',
+    title: 'Focus & the focus point',
+    blurb: 'A perfect exposure is wasted if focus lands on the wrong thing.',
+    steps: [
+      // BEAT 1 — predict by doing: the subject is soft (focus fell behind it) → rack it back
+      {
+        kind: 'focus',
+        f: 2,
+        start: { focusDist: 0.92 },
+        prompt:
+          'The exposure on this shot is perfect — but the flower is SOFT. The camera locked focus on the background behind it. Rack the focus back onto the flower until it snaps sharp.',
+        check: (fd) => Math.abs(fd - 0.34) < 0.08,
+        feedback: {
+          correct:
+            'Snap — there it is. Focus isn’t automatic magic; it lands on a single PLANE at one distance, and the camera guessed wrong. A flawless exposure means nothing if the focus plane misses your subject.',
+          stages: [
+            'The focus plane is sitting too FAR back (on the background). Bring it nearer, toward the flower.',
+            'Rack the focus distance toward “near” until the flower sharpens, then take the shot.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm
+      {
+        kind: 'intro',
+        title: 'You place the focus',
+        body: [
+          'Focus falls on ONE plane, at one distance. The camera doesn’t know which thing in the frame is your subject — YOU place the focus point on it.',
+          'And the wider your aperture, the THINNER that in-focus slice — so a fast f/1.8 lens gives gorgeous blur but demands you nail focus exactly.',
+        ],
+      },
+      // BEAT 3 — the other miss: focus fell in FRONT of the subject → pull it back
+      {
+        kind: 'focus',
+        f: 2,
+        start: { focusDist: 0.04 },
+        prompt:
+          'This time the camera focused just in FRONT of the flower — soft again, the sharp plane sitting in the empty air before it. Pull the focus the other way, back onto the subject.',
+        check: (fd) => Math.abs(fd - 0.34) < 0.08,
+        feedback: {
+          correct:
+            'Back on the subject. Miss in front or miss behind — either way the subject goes soft. The only sharp spot is exactly on the plane you choose; everything nearer and farther falls away (the more so, the wider the aperture).',
+          stages: [
+            'The focus plane is too NEAR now (in front of the flower). Push it back a little.',
+            'Rack the focus toward “far” until the flower sharpens — but stop on it, don’t overshoot to the background.',
+          ],
+        },
+      },
+      // BEAT 4 — transfer: when does nailing focus matter most?
+      {
+        kind: 'rank',
+        prompt:
+          'A thin focus plane is unforgiving; a deep one hides small misses. Order these by how CRITICAL it is to nail focus — most critical first.',
+        scale: ['must nail it', 'forgiving'],
+        items: [
+          { label: 'A landscape at f/16 — everything sharp' }, // 0
+          { label: 'A close portrait at f/1.8 — the eye must be sharp' }, // 1
+          { label: 'A group photo at f/5.6' }, // 2
+        ],
+        solution: [1, 2, 0], // f/1.8 portrait (thinnest plane) → f/5.6 group → f/16 landscape (deep, forgiving)
+        feedback: {
+          correct:
+            'Right. A wide aperture (f/1.8) makes the focus plane paper-thin — miss the eye by an inch and it’s soft. Stop down to f/5.6 and there’s more leeway; at f/16 the depth of field is so deep almost everything’s sharp, so focus is forgiving. Aperture sets how much focus precision you can get away with.',
+          stages: [
+            'The wider the aperture, the thinner the sharp slice, the more focus precision you need. Which shot has the widest aperture?',
+            'Most critical: the f/1.8 portrait, then the f/5.6 group; the f/16 landscape is the most forgiving.',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: nail the focus on your subject
+      {
+        kind: 'focus',
+        f: 2,
+        start: { focusDist: 0.86 },
+        prompt:
+          'Your shot, wide open at f/2 for that creamy background — so the focus plane is thin. Rack it precisely onto the flower and take a shot that’s tack-sharp where it counts.',
+        check: (fd) => Math.abs(fd - 0.34) < 0.07,
+        feedback: {
+          correct:
+            'Tack sharp where it matters. You opened up for the soft background AND placed the focus exactly on the subject — the two skills together. That’s the difference between a lucky snap and a photograph you meant.',
+          stages: [
+            'The flower’s still soft — the focus plane isn’t on it yet. Rack it toward the subject.',
+            'Land the focus precisely on the flower (the slice is thin at f/2), then take the shot.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
   // FOCAL LENGTH & PERSPECTIVE — the lens axis (compression), distinct from aperture.
   // Locks aperture NARROW (f/16 → zero blur in the bokeh sim), so the `focal` lever shows
   // ONLY perspective: the background swells/compresses (tele) or recedes (wide) while the

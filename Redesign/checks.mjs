@@ -66,6 +66,12 @@ for (const lesson of course.lessons) {
               if (s.check(effectiveBlur(p), p)) reach = true
             }
       ok(`${tag}: reachable`, reach)
+    } else if (s.kind === 'focus' && s.check) {
+      // Rack focus: check(focusDist 0..1). Must fail at the start plane and be nailable in range.
+      const domain = []
+      for (let v = 0; v <= 1.0001; v += 0.02) domain.push(+v.toFixed(2))
+      ok(`${tag}: fails at start`, !s.check(s.start?.focusDist ?? 0))
+      ok(`${tag}: reachable`, domain.some((v) => s.check(v)))
     } else if (s.kind === 'motion' && s.check) {
       ok(`${tag}: fails at start`, !s.check(s.start))
       ok(`${tag}: reachable`, [0, 1, 2, 3, 4, 5, 6, 7].some((si) => s.check(si)))
