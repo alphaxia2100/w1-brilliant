@@ -1433,6 +1433,102 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
+  // LANDSCAPE — genre capstone, REBUILT on a real horizon-reframing sim (HorizonScene): the
+  // sky/ground split TRULY moves with the dragged line (no baked second horizon). Owns the one
+  // distinct landscape idea: the horizon is a subject CHOICE — low = the sky's story, high =
+  // the land's. (Dropped the old balance/peak beats that duplicated composition-balance.)
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'landscape',
+    title: 'Landscape: framing the wide scene',
+    blurb: 'Where the horizon sits decides what the photo is about.',
+    steps: [
+      // BEAT 1 — predict by doing: a dramatic sky → drop the horizon LOW (sky truly grows)
+      {
+        kind: 'compose',
+        scene: 'landscape',
+        target: { kind: 'horizon', third: 'low' },
+        start: { x: 50, y: 50 },
+        prompt:
+          'The sky is doing something beautiful and the ground is plain. Give the sky the frame: drag the horizon LOW so the sky fills most of the photo.',
+        feedback: {
+          correct:
+            'Now the photo is ABOUT the sky. A low horizon hands the frame to it — the very first decision a landscape photographer makes is simply: how much sky, how much land?',
+          stages: [
+            'A horizon through the middle splits the frame and commits to nothing. To feature the sky, the horizon goes LOW.',
+            'Drag the horizon down toward the lower third so the sky owns the top two-thirds.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm
+      {
+        kind: 'intro',
+        title: 'The horizon is the decision',
+        body: [
+          'In a landscape, where you put the horizon decides what the photo is ABOUT. Low horizon → the sky’s story. High horizon → the land’s. Dead-centre → neither, and it falls flat.',
+          'So you don’t “find” the horizon — you place it, on whichever third gives the more interesting half the room.',
+        ],
+      },
+      // BEAT 3 — the opposite choice: an interesting foreground → raise the horizon HIGH
+      {
+        kind: 'compose',
+        scene: 'landscape',
+        target: { kind: 'horizon', third: 'high' },
+        start: { x: 50, y: 50 },
+        prompt:
+          'New scene: now the LAND is the story — texture and colour rolling to the hills, an ordinary sky above. Raise the horizon HIGH to give the land the frame.',
+        feedback: {
+          correct:
+            'Now the land leads. A high horizon devotes the frame to the foreground — same tool, opposite choice. The horizon isn’t a rule to obey; it’s the lever that says what matters.',
+          stages: [
+            'To feature the land, the horizon goes HIGH — the opposite of the big-sky shot.',
+            'Drag the horizon up toward the upper third so the land fills most of the frame.',
+          ],
+        },
+      },
+      // BEAT 4 — transfer: match the horizon to where the interest is
+      {
+        kind: 'rank',
+        prompt:
+          'The horizon goes where the interest is. Order these by how much SKY they want in the frame — the most sky first.',
+        scale: ['most sky · horizon low', 'least sky · horizon high'],
+        items: [
+          { label: 'A field of wildflowers at your feet' }, // 0
+          { label: 'A blazing sunset over a flat plain' }, // 1
+          { label: 'Rolling hills under an ordinary grey sky' }, // 2
+        ],
+        solution: [1, 2, 0], // sunset sky (most sky) → hills (some) → wildflowers (least sky, high horizon)
+        feedback: {
+          correct:
+            'Match the frame to the story. A blazing sunset wants almost all sky (horizon low); rolling hills under a dull sky want mostly land (horizon high); and a carpet of wildflowers at your feet wants the least sky of all. The boring half gets the smaller share.',
+          stages: [
+            'More sky in the frame = lower horizon. Which scene has the most interesting SKY?',
+            'Most sky: the sunset; then the hills; the wildflowers want the least sky (highest horizon).',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: frame your own landscape (horizon on a third — your call)
+      {
+        kind: 'compose',
+        scene: 'landscape',
+        target: { kind: 'horizon' },
+        start: { x: 50, y: 50 },
+        keeper: true,
+        prompt:
+          'Your wide scene. Decide what it’s about — give the sky the frame, or give the land the frame — and put the horizon on that third. Not down the middle. Take a landscape worth keeping.',
+        feedback: {
+          correct:
+            'A landscape you composed, not just pointed at: you chose what it was about and framed for it. Sky’s story or land’s story — that decision, made on purpose, is the whole craft of the wide scene.',
+          stages: [
+            'Down the middle commits to nothing. Pick a side — sky or land — and put the horizon on its third.',
+            'Drag the horizon to the upper third (for land) or the lower third (for sky), then take the shot.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
   // L7 — LONG EXPOSURE (painting with time). Produced by the lesson factory,
   // then fixed (BEAT 3 gates on a brightness BAND so overshoot fails) + verified
   // against the real gate and a live playthrough. Uses only existing primitives.
@@ -1709,7 +1805,7 @@ export const chapters = [
   { id: 'reading-light', title: 'Reading the Light', blurb: 'Meter it, colour it.', lessonIds: ['metering', 'white-balance'] },
   { id: 'composition', title: 'Composition', blurb: 'Frame the shot.', lessonIds: ['rule-of-thirds', 'composition-balance'] },
   { id: 'light-tool', title: 'Light as a Tool', blurb: 'Shape light — and add your own.', lessonIds: ['light-direction', 'flash-fill'] },
-  { id: 'genre', title: 'Genre & Low Light', blurb: 'Put it all together.', lessonIds: ['portrait', 'long-exposure-night', 'iso-and-noise'] },
+  { id: 'genre', title: 'Genre & Low Light', blurb: 'Put it all together.', lessonIds: ['portrait', 'landscape', 'long-exposure-night', 'iso-and-noise'] },
 ]
 
 export const course = {

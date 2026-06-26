@@ -24,7 +24,7 @@ function ShotThumb({ shot, size = 88 }) {
       ) : shot.kind === 'motion' ? (
         <MotionShot si={shot.si} size={size} rounded={false} fill />
       ) : shot.kind === 'compose' ? (
-        <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} size={size} rounded={false} fill />
+        <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} horizon={shot.horizon} size={size} rounded={false} fill />
       ) : (
         <PixelScene scene={shot.scene} size={size} rounded={false} {...shot.params} />
       )}

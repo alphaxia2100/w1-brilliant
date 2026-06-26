@@ -162,7 +162,7 @@ export function PolaroidReveal({ shot, onDone }) {
             </div>
           ) : shot.kind === 'compose' ? (
             <div className="polaroid-develop">
-              <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} size={228} rounded={false} />
+              <ComposeShot scene={shot.scene} x={shot.x} y={shot.y} facing={shot.facing} horizon={shot.horizon} size={228} rounded={false} />
             </div>
           ) : (
             <div className="polaroid-develop">
@@ -535,7 +535,25 @@ function ComposeFigure({ x, y, ok, gaze }) {
 }
 
 // The composition keepsake — re-renders the scene + the placed subject from params.
-export function ComposeShot({ scene, x, y, facing, size = 228, rounded = true, fill = false }) {
+// A landscape whose horizon is a REAL movable boundary: sky band above y, ground band below.
+// Dragging y genuinely reframes sky-vs-land (no baked-in second horizon). Used by the horizon
+// lesson beats AND their keepsakes, so the artifact proves "where you put the horizon matters".
+export function HorizonScene({ y = 50, size = 300, rounded = true, fill = false }) {
+  return (
+    <div
+      className={`relative overflow-hidden ${rounded ? 'rounded-tile' : ''}`}
+      style={fill ? { width: '100%', height: '100%' } : { width: '100%', maxWidth: size, aspectRatio: '1 / 1' }}
+      aria-hidden="true"
+    >
+      <div className="absolute inset-x-0 top-0" style={{ height: `${y}%`, background: 'linear-gradient(#79B0E4, #DCEBF6)' }} />
+      <div className="absolute inset-x-0 bottom-0" style={{ height: `${100 - y}%`, background: 'linear-gradient(#6AA158, #3C6A34)' }} />
+      <div className="absolute rounded-full" style={{ width: '13%', aspectRatio: '1', right: '17%', top: `${Math.max(5, y * 0.42)}%`, background: '#FBE7A0', opacity: 0.9 }} />
+    </div>
+  )
+}
+
+export function ComposeShot({ scene, x, y, facing, horizon, size = 228, rounded = true, fill = false }) {
+  if (horizon) return <HorizonScene y={y} size={size} rounded={rounded} fill={fill} />
   return (
     <div
       className={`relative overflow-hidden ${rounded ? 'rounded-tile' : ''}`}
@@ -587,7 +605,7 @@ function ComposeView({ step, status, onResult, onActivity }) {
     <div className="animate-risein">
       <Prompt>{step.prompt}</Prompt>
       <div className="relative mx-auto mb-3" style={{ maxWidth: 300 }}>
-        <PixelScene scene={step.scene} size={300} />
+        {horizon ? <HorizonScene y={pos.y} size={300} /> : <PixelScene scene={step.scene} size={300} />}
         <div
           ref={frame}
           className="absolute inset-0 touch-none cursor-grab active:cursor-grabbing rounded-tile overflow-hidden"
@@ -629,8 +647,8 @@ function ComposeView({ step, status, onResult, onActivity }) {
             </g>
             {horizon ? (
               <>
-                <rect x="0" y="0" width="100" height={pos.y} fill="rgba(150,200,255,0.12)" />
-                <line x1="0" y1={pos.y} x2="100" y2={pos.y} stroke={ok ? '#29CC57' : '#FFFFFF'} strokeWidth="1.4" />
+                {/* the boundary line + grab handle ON the real sky/ground split from HorizonScene */}
+                <line x1="0" y1={pos.y} x2="100" y2={pos.y} stroke={ok ? '#29CC57' : '#FFFFFF'} strokeWidth="1.2" opacity="0.92" />
                 <rect x="42" y={pos.y - 3.2} width="16" height="6.4" rx="2" fill={ok ? '#29CC57' : '#141414'} />
               </>
             ) : (
@@ -646,7 +664,12 @@ function ComposeView({ step, status, onResult, onActivity }) {
         <Button
           className="w-full"
           onClick={() =>
-            onResult(ok, step.keeper ? { shot: { kind: 'compose', scene: step.scene, x: pos.x, y: pos.y, ...(target.facing ? { facing: target.facing } : {}) } } : undefined)
+            onResult(
+              ok,
+              step.keeper
+                ? { shot: horizon ? { kind: 'compose', horizon: true, y: pos.y } : { kind: 'compose', scene: step.scene, x: pos.x, y: pos.y, ...(target.facing ? { facing: target.facing } : {}) } }
+                : undefined
+            )
           }
         >
           {step.keeper ? <><Shutter /> Take the shot</> : 'Check'}
