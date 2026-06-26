@@ -20,8 +20,13 @@ skip prose-y RAW/critique (no sim). **Progress:**
 3. ❌ **When the meter is fooled** — SKIPPED: metering already covers snow-fools-the-meter (beat 6) +
    backlit dynamic range (beat 5); a separate lesson would duplicate it (the thin-split Sky warns against).
    If wanted later, fold ONE "night reads grey → compensate DOWN" beat into the metering lesson instead.
-4. **Portrait (genre capstone)** — ⚠️ needs a sim decision (see KEY FINDING).
-5. **Landscape (genre capstone)** — ⚠️ recombines but each beat jumps sim / overlaps; needs design.
+4. ✅ **Flash: adding your own light** — DONE (82ee257), L9. Added a `fill` dimension to the LightDirection
+   sim (opens harsh shadows; full fill → flat). Distinct from L8 (natural light). [expansion 3]
+5. **Focus & the focus point** — NEXT candidate, but ⚠️ needs a focusable subject with a clear focus PLANE;
+   DofBokeh is flower-only (no face/eye). Either add a focus-point tap to DofBokeh (focus subject vs bg) or build a small sim.
+6. **Portrait (genre capstone)** — ⚠️ sim-coherence (combine aperture+light+focus into one artifact).
+7. **Landscape (genre capstone)** — ⚠️ recombines but each beat jumps sim / overlaps; needs design.
+8. **Focal length & perspective** — major compression sim.
 
 **⚠️ KEY FINDING (2026-06-25): the cheap content-recombination wins (#1, #2) are DONE; everything left
 needs NEW SIM WORK, not just content.** Next move is a SIM decision, not another quick lesson:
