@@ -1,6 +1,6 @@
 # Aperture — Handoff
 
-**Updated:** 2026-06-25 (session 3) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore +
+**Updated:** 2026-06-25 (session 4 — expansion + nav + deployed) · **Stack:** Vite + React + Tailwind + Firebase (Auth + Firestore +
 Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real photos.
 **Read order:** `WORKING-PROTOCOL.md` (how we work — git *is* memory) → this file → `Factory/IMPROVEMENTS-LOG.md`
 (the live loop) → `Redesign/PEDAGOGY-REDESIGN.md` (the approved direction) → the memory files.
@@ -9,17 +9,17 @@ Hosting + **Functions**). All visuals are geometric SVG / pixel-art — no real 
 > Everything below was verified against git + the code on 2026-06-25, not recalled. RE-READ a file
 > before asserting its contents or editing it (stale mental models have caused real bugs here).
 
-## ⚠️ Branch / push / deploy state — READ FIRST (three different states)
+## ✅ Branch / push / deploy state — READ FIRST (all in sync as of 2026-06-25)
 | Where | At | Contains |
 |---|---|---|
-| **GitHub `origin/main`** (pushed) | `0b64028` | 6 lessons + Google sign-in + pedagogy blueprint |
-| **local `main`** (NOT pushed) | `c6b8061` | the above **+ the AI photo grader** |
-| **local `lesson-factory`** (current, NOT pushed) | `73c9ccc` | main **+ 26 commits**: lesson factory, L7/L8, cold-start, the improvement loop, the **git-as-memory system**, the **BET** primitive, and the **curriculum expansion → 14 lessons** (all critic-vetted) |
-| **Deployed** `aperture-dac66.web.app` | ~`0b64028` | **6 lessons + Google login only.** Everything since (grader, 8 new/changed lessons, etc.) is NOT live. |
+| **GitHub `origin/main`** (pushed) | `122df4b` | EVERYTHING — 14 lessons, chapter nav, grader, git-as-memory system, BET, all truth-fixes |
+| **local `main`** | `122df4b` | == origin (lesson-factory was fast-forward-merged in + pushed) |
+| **local `lesson-factory`** | `122df4b` | == main (kept; branch for the next feature) |
+| **Deployed** `aperture-dac66.web.app` | `122df4b` | **LIVE: the full 14-lesson course + chapter nav** (hosting deployed + verified, asset hash matches). |
 
-So: the branch has all the newest work and is **unpushed + undeployed** (26 commits ahead of `main`).
-Decide whether to merge `lesson-factory` → `main`, push, and redeploy. Nothing destructive has
-touched `main` or `origin`.
+So: **main is pushed and the app is deployed live** — they're all in sync. Current branch: `main`
+(start a feature branch for new work). The **grader Cloud Function is still NOT deployed** — it needs
+the Blaze + secret steps below (the UI degrades gracefully until then).
 
 ## TL;DR
 The course is **14 lessons** — the **CURRICULUM EXPANSION** Sky asked for (2026-06-25: "another topic...
@@ -75,8 +75,9 @@ All predict-first, no multiple choice, calm feedback, success mints a polaroid k
 2. **Google sign-in:** enable Google in Firebase → Authentication → Sign-in method (else the button
    returns a friendly "not enabled yet").
 3. **Anonymous sign-in:** no longer needed — cold-start `/try` replaced it.
-4. **Deploy the new work:** after merging the branch, `npm run deploy` (Hosting + rules). The live site
-   is still the 6-lesson version.
+4. **Deploy the new work:** ✅ DONE — hosting deployed live (`firebase deploy --only hosting`); the
+   live site is the full 14-lesson course. Re-run after future changes. (Functions = the grader, still
+   pending #1.)
 
 ## The lesson factory (`Factory/`, docs in `Factory/FACTORY.md`)
 Autonomous pipeline that generates NEW lessons in the house style, composing ONLY existing engine
