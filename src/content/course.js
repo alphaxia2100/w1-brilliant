@@ -1790,11 +1790,114 @@ const lessons = [
   },
 ]
 
-// Lesson numbers are derived from position, so inserting/reordering a lesson never
-// requires hand-renumbering (the course grows often). Display only: progress is keyed by id.
-lessons.forEach((l, i) => {
-  l.number = i + 1
-})
+// ── Chapter Reviews — one per chapter (the Brilliant "Level Review"): SHORT, no scaffolding
+// (a single calm nudge, not the lessons' escalating hints), on FRESH scenes/configs — spaced
+// retrieval of the chapter's skills, NOT repetition. Spliced in after each chapter in the export.
+const reviewsByChapter = {
+  foundations: {
+    id: 'review-foundations', title: 'Review: Foundations', blurb: 'Prove the exposure skills stuck.', review: true,
+    steps: [
+      {
+        kind: 'bokeh', bg: 'garden', control: 'aperture', start: { f: 8 },
+        prompt: 'No hints this time. Melt the background to a soft blur — set the aperture, then take the shot.',
+        check: (blur) => blur >= 9,
+        feedback: { correct: 'Still got it — a wide aperture throws the background out of focus.', stages: ['Depth of field: which way on the aperture blurs the background?'] },
+      },
+      {
+        kind: 'motion', start: 5,
+        prompt: 'Now freeze this speeding car razor-sharp.',
+        check: (si) => si <= 1,
+        feedback: { correct: 'Frozen. A fast shutter is a slice of time too short for the car to move.', stages: ['Shutter & motion: which end freezes — fast or slow?'] },
+      },
+    ],
+  },
+  lens: {
+    id: 'review-lens', title: 'Review: The Lens', blurb: 'Focus and perspective, no hints.', review: true,
+    steps: [
+      {
+        kind: 'focus', f: 2, start: { focusDist: 0.9 },
+        prompt: 'The subject is soft. Rack the focus onto it until it snaps sharp.',
+        check: (fd) => Math.abs(fd - 0.34) < 0.08,
+        feedback: { correct: 'Nailed — the sharp plane is one distance, and you placed it on the subject.', stages: ['Focus: move the focus plane onto the flower.'] },
+      },
+      {
+        kind: 'bokeh', bg: 'garden', control: 'focal', lock: { f: 16, subjectDist: 0.5, bgDist: 0.4 }, start: { focal: 0 },
+        prompt: 'Aperture is narrow (everything sharp). Use the LENS to compress the background close behind the subject.',
+        check: (_b, p) => p.focal >= 0.7,
+        feedback: { correct: 'Compression — a telephoto magnifies and stacks the background, no blur needed.', stages: ['Focal length: which end (wide or telephoto) compresses the background?'] },
+      },
+    ],
+  },
+  'reading-light': {
+    id: 'review-reading', title: 'Review: Reading the Light', blurb: 'Meter and white balance, no hints.', review: true,
+    steps: [
+      {
+        kind: 'slider-sim', scene: 'seascape', histogram: true,
+        control: { min: -2.5, max: 2.5, step: 0.1, start: -1.6 },
+        toParams: (v) => ({ exposure: v }), format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV', label: 'Exposure', ends: ['darker', 'brighter'], ariaLabel: 'Exposure compensation',
+        prompt: 'Read the histogram, not the photo: spread the tones so nothing piles against a wall.',
+        check: (v) => wellMetered('seascape', v),
+        feedback: { correct: 'Read by the graph — the tones spread without clipping either edge.', stages: ['Metering: the bars are bunched on one wall — move the exposure the other way.'] },
+      },
+      {
+        kind: 'slider-sim', scene: 'room',
+        control: { min: -1, max: 1, step: 0.05, start: 0 },
+        toParams: (v) => ({ temp: v, baseTemp: WB_WARM }), readState: wbRead(WB_WARM), label: 'White balance', ends: ['cooler · blue', 'warmer · orange'], ariaLabel: 'White balance',
+        prompt: 'This indoor shot is too warm. Cool it until the colours read neutral.',
+        check: wbNeutral(WB_WARM),
+        feedback: { correct: 'Neutral — you cancelled the warm cast by adding its opposite.', stages: ['White balance: a warm cast is cancelled by pushing toward blue.'] },
+      },
+    ],
+  },
+  composition: {
+    id: 'review-composition', title: 'Review: Composition', blurb: 'Place and balance, no hints.', review: true,
+    steps: [
+      {
+        kind: 'compose', scene: 'portrait', target: { kind: 'thirds' }, start: { x: 50, y: 50 },
+        prompt: 'Place the subject where the photo feels most alive — not dead-centre.',
+        feedback: { correct: 'On a power point — off-centre breathes.', stages: ['Rule of thirds: drift the subject onto a point where the lines cross.'] },
+      },
+      {
+        kind: 'compose', scene: 'seascape', target: { kind: 'balance', anchor: { x: 26, y: 62 } }, start: { x: 50, y: 50 }, keeper: true,
+        prompt: 'A heavy element sits low-left. Place your subject to balance the frame.',
+        feedback: { correct: 'Balanced — a counterweight across the centre settles the frame.', stages: ['Balance: put your subject opposite the heavy element, across the centre.'] },
+      },
+    ],
+  },
+  'light-tool': {
+    id: 'review-light', title: 'Review: Light as a Tool', blurb: 'Shape light and fill, no hints.', review: true,
+    steps: [
+      {
+        kind: 'light-direction', controls: ['angle', 'soft'], start: { angle: 10, soft: 0.1, warmth: 0.1, fill: 0.2 },
+        prompt: 'Light this face flatteringly: bring the light to a gentle side, and soften it.',
+        check: ({ angle, soft }) => angle >= 64 && angle <= 80 && soft >= 0.55,
+        feedback: { correct: 'Shaped and soft — a side light models the face; softness flatters it.', stages: ['Light & direction: front-flat has no shape — move it to the side and soften.'] },
+      },
+      {
+        kind: 'light-direction', control: 'fill', fixed: { angle: 95, soft: 0.12, warmth: 0.12 }, start: { fill: 0 },
+        prompt: 'Harsh sun has crushed the shadow side. Add fill to open it — but don’t blast it flat.',
+        check: ({ fill }) => fill >= 0.45 && fill <= 0.85,
+        feedback: { correct: 'Opened, not flattened — fill balances against the sun.', stages: ['Flash: add fill to lift the shadow, but ease off before it goes flat.'] },
+      },
+    ],
+  },
+  genre: {
+    id: 'review-genre', title: 'Review: Genre & Low Light', blurb: 'Put it together, no hints.', review: true,
+    steps: [
+      {
+        kind: 'light-direction', controls: ['angle', 'soft', 'warmth', 'fill'], start: { angle: 10, soft: 0.12, warmth: -0.1, fill: 0.05 },
+        prompt: 'Build a flattering portrait: soft, a gentle side, warm, shadows filled.',
+        check: ({ angle, soft, warmth, fill }) => angle >= 64 && angle <= 80 && soft >= 0.55 && soft <= 0.85 && warmth >= 0.25 && fill >= 0.3 && fill <= 0.7,
+        feedback: { correct: 'A portrait — four levers balanced into one flattering whole.', stages: ['Portrait: soft + a gentle side + warmth + fill, all at once.'] },
+      },
+      {
+        kind: 'compose', scene: 'landscape', target: { kind: 'horizon' }, start: { x: 50, y: 50 }, keeper: true,
+        prompt: 'Frame a landscape: decide sky or land, and put the horizon on that third.',
+        feedback: { correct: 'Composed — you chose what the photo was about and framed for it.', stages: ['Landscape: don’t split it down the middle — give the better half the frame.'] },
+      },
+    ],
+  },
+}
 
 // Lessons grouped into named chapters (the course's "levels", the Brilliant shape). Display +
 // navigation only — progress stays keyed by lesson id. Order matches the `lessons` array; the
@@ -1808,16 +1911,33 @@ export const chapters = [
   { id: 'genre', title: 'Genre & Low Light', blurb: 'Put it all together.', lessonIds: ['portrait', 'landscape', 'long-exposure-night', 'iso-and-noise'] },
 ]
 
+// Build the ORDERED lesson list: each chapter's lessons, then its Review. Reviews are appended
+// to the chapter's lessonIds so the nav + the partition gate stay consistent. Numbers derive
+// from final position, so progress (keyed by id) and ordering never need hand-maintenance.
+const lessonById = Object.fromEntries(lessons.map((l) => [l.id, l]))
+const orderedLessons = []
+for (const ch of chapters) {
+  for (const id of ch.lessonIds) orderedLessons.push(lessonById[id])
+  const rv = reviewsByChapter[ch.id]
+  if (rv) {
+    orderedLessons.push(rv)
+    ch.lessonIds = [...ch.lessonIds, rv.id]
+  }
+}
+orderedLessons.forEach((l, i) => {
+  l.number = i + 1
+})
+
 export const course = {
   id: 'exposure',
   title: 'Photography Foundations',
   subtitle: 'Exposure, light, and composition — by doing',
-  lessons,
+  lessons: orderedLessons,
   chapters,
 }
 
 export function getLesson(id) {
-  return lessons.find((l) => l.id === id)
+  return orderedLessons.find((l) => l.id === id)
 }
 
-export const totalLessons = lessons.length
+export const totalLessons = orderedLessons.length

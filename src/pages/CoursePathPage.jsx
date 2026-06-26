@@ -31,12 +31,19 @@ function LessonNode({ lesson, index, activeIndex, done, navigate }) {
               <rect x="5" y="11" width="14" height="9" rx="2" />
               <path d="M8 11V8a4 4 0 0 1 8 0v3" />
             </svg>
+          ) : lesson.review ? (
+            '★'
           ) : (
             lesson.number
           )}
         </span>
         <span className="min-w-0">
-          <span className="block font-semibold text-[16px] leading-tight truncate">{lesson.title}</span>
+          <span className="flex items-center gap-2">
+            <span className="font-semibold text-[16px] leading-tight truncate">{lesson.title}</span>
+            {lesson.review && !isDone && (
+              <span className="shrink-0 text-[10px] uppercase tracking-wide font-semibold text-muted/70 border border-hairline rounded-full px-1.5 py-0.5">Review</span>
+            )}
+          </span>
           <span className="block text-[13px] text-muted truncate">{lesson.blurb}</span>
         </span>
         {isNext && <span className="ml-auto text-[12px] font-medium text-link shrink-0">Start →</span>}
