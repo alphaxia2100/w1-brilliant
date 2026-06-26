@@ -70,7 +70,14 @@ const WB_WARM = 0.6
 const WB_SHADE = -0.55
 const WB_CARD = 0.5
 const WB_SUNSET = 0.45
-const wbResultK = (cast) => (v) => Math.round(5500 - (cast + v) * 2500) + 'K'
+// No Kelvin readout: a "white balance" slider in Kelvin runs warmer→HIGHER-K on real cameras
+// but warmer→LOWER-K as the residual-cast's colour temperature — the two conventions conflict,
+// and a learner reads it as the camera one. So we DEMOTE the number (blueprint shift #6) and
+// judge by eye + a felt cue: where neutral is the goal, name the residual cast.
+const wbRead = (cast) => (v) => {
+  const e = cast + v
+  return Math.abs(e) < 0.12 ? { t: 'reads neutral', c: '#1F8A3B' } : e > 0 ? { t: 'too warm', c: '#9A6A2F' } : { t: 'too cool', c: '#3A5A9A' }
+}
 const wbNeutral = (cast) => (v) => Math.abs(cast + v) < 0.12
 const wbWarmKept = (cast) => (v) => {
   const e = cast + v
@@ -867,7 +874,7 @@ const lessons = [
         prompt: 'Now you are shooting in open shade and everything has gone too BLUE. Warm it back to natural.',
         control: { min: -1, max: 1, step: 0.05, start: 0 },
         toParams: (v) => ({ temp: v, baseTemp: WB_SHADE }),
-        format: wbResultK(WB_SHADE),
+        readState: wbRead(WB_SHADE),
         label: 'White balance',
         ends: ['cooler · blue', 'warmer · orange'],
         ariaLabel: 'White balance',
@@ -906,7 +913,6 @@ const lessons = [
         prompt: 'Someone “corrected” this sunset to neutral and killed the mood. Warm it back — keep the golden glow, don’t bleach it gray.',
         control: { min: -1, max: 1, step: 0.05, start: -0.45 },
         toParams: (v) => ({ temp: v, baseTemp: WB_SUNSET }),
-        format: wbResultK(WB_SUNSET),
         label: 'White balance',
         ends: ['cooler · blue', 'warmer · orange'],
         ariaLabel: 'White balance',

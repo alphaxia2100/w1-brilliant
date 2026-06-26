@@ -333,6 +333,7 @@ function SliderSimView({ step, status, onResult, onActivity }) {
 
   const value = useIndex ? stops[raw] : raw
   const params = step.toParams(value)
+  const read = step.readState ? step.readState(value) : null // felt cue when there's no numeric readout
 
   return (
     <div className="animate-risein">
@@ -358,7 +359,11 @@ function SliderSimView({ step, status, onResult, onActivity }) {
       <div className="flex items-center gap-4 mb-4">
         {step.iris && <ApertureIris f={value} />}
         <div className="flex flex-col">
-          <span className="font-mono text-[26px] font-medium leading-none">{step.format(value)}</span>
+          {step.format ? (
+            <span className="font-mono text-[26px] font-medium leading-none">{step.format(value)}</span>
+          ) : read ? (
+            <span className="text-[20px] font-semibold leading-none" style={{ color: read.c }}>{read.t}</span>
+          ) : null}
           {step.label && <span className="text-[12px] text-muted mt-1">{step.label}</span>}
         </div>
       </div>
