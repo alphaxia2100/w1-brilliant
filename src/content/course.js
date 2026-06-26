@@ -830,6 +830,99 @@ const lessons = [
   },
 
   // ───────────────────────────────────────────────────────────────────────────
+  // COMPOSITION II — balance & negative space (beyond the grid: weigh the whole frame).
+  // Distinct from rule-of-thirds (placing ONE subject on a power point): this is about the
+  // RELATIONSHIP of weights across the frame, and using emptiness as a tool. New compose
+  // targets `balance` / `negativespace` / `composefree` (src/sim/composeEval.js).
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    id: 'composition-balance',
+    title: 'Composition: balance & negative space',
+    blurb: 'Weigh the whole frame — counterbalance, or leave it open on purpose.',
+    steps: [
+      // BEAT 1 — predict by doing: counterbalance a heavy element (visual weight)
+      {
+        kind: 'compose',
+        scene: 'seascape',
+        target: { kind: 'balance', anchor: { x: 24, y: 36 } },
+        start: { x: 50, y: 50 },
+        prompt:
+          'There’s already a heavy element in this frame — the dark mass, upper-left. Drop your subject so the photo feels BALANCED, not lopsided.',
+        feedback: {
+          correct:
+            'Balanced. One heavy element alone drags the eye and tips the frame; a second weight across from it settles everything. Composition isn’t only WHERE one subject goes — it’s how the weights across the whole frame balance.',
+          stages: [
+            'It still leans to one side — the weight’s all up there. Where would a counterweight go?',
+            'Put your subject OPPOSITE the heavy element, across the centre, so the two balance.',
+          ],
+        },
+      },
+      // BEAT 2 — confirm: visual weight (and the opposite move)
+      {
+        kind: 'intro',
+        scene: 'seascape',
+        title: 'Every element has weight',
+        body: [
+          'The eye feels visual “weight” — a dark mass, a face, a bright spot all tug at the frame. One weight alone tips the photo; a second, placed across from it, brings balance.',
+          'But balance isn’t the only choice. Sometimes you do the opposite — leave the frame almost empty on purpose.',
+        ],
+      },
+      // BEAT 3 — negative space: isolate by leaving emptiness (the opposite of filling)
+      {
+        kind: 'compose',
+        scene: 'seascape',
+        target: { kind: 'negativespace' },
+        start: { x: 50, y: 50 },
+        prompt:
+          'Now the opposite move: don’t fill the frame. Push your subject far to one side and let the rest fall away to empty — isolate it.',
+        feedback: {
+          correct:
+            'That emptiness is doing work. A small subject in a sea of negative space reads as alone, quiet, important — the open space points right at it. Empty isn’t wasted; it’s a tool.',
+          stages: [
+            'Too central — there’s no “empty” to speak of. Push the subject hard toward one edge.',
+            'Slide it far to one side so most of the frame is open space around it.',
+          ],
+        },
+      },
+      // BEAT 4 — transfer: balance a different heavy element (a new configuration)
+      {
+        kind: 'compose',
+        scene: 'landscape',
+        target: { kind: 'balance', anchor: { x: 74, y: 64 } },
+        start: { x: 50, y: 50 },
+        prompt:
+          'New frame, new weight — the heavy element now sits low-right. Counterbalance it again, wherever that has to be this time.',
+        feedback: {
+          correct:
+            'Same instinct, new spot: the counterweight goes across the centre from the heavy element — so this time it lands high-left. You’re reading the frame, not memorising a position.',
+          stages: [
+            'The heavy element moved — so the counterweight moves too. Across the centre from it.',
+            'It’s low-right now, so balance it from the upper-left.',
+          ],
+        },
+      },
+      // BEAT 5 — keeper: your call — balance the weight OR isolate with empty space
+      {
+        kind: 'compose',
+        scene: 'seascape',
+        target: { kind: 'composefree', anchor: { x: 30, y: 30 } },
+        start: { x: 50, y: 50 },
+        keeper: true,
+        prompt:
+          'Your frame, your call. A heavy element sits upper-left — either counterbalance it, or push your subject out into empty space and let it stand alone. Make a shot worth keeping.',
+        feedback: {
+          correct:
+            'Yours. You didn’t snap a subject to a dot — you weighed the whole frame and chose how it should feel: settled by balance, or charged by emptiness. That’s composition.',
+          stages: [
+            'Two good options: counterweight the heavy element across the centre, OR push your subject far to one side into open space.',
+            'Either balance it (opposite the heavy mass) or isolate it (hard to one edge), then take the shot.',
+          ],
+        },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────────
   // L6 — LIGHT & DIRECTION (where the light comes from shapes the subject)
   // ───────────────────────────────────────────────────────────────────────────
   {

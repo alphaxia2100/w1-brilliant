@@ -549,6 +549,8 @@ function ComposeView({ step, status, onResult, onActivity }) {
   const target = step.target || { kind: 'thirds' }
   const horizon = target.kind === 'horizon'
   const leading = target.kind === 'leadinglines'
+  const negspace = target.kind === 'negativespace'
+  const anchor = target.kind === 'balance' || target.kind === 'composefree' ? target.anchor || { x: 25, y: 50 } : null
   const conv = target.point || { x: 66.66, y: 38 }
   const [pos, setPos] = useState(step.start || { x: 50, y: 50 })
   const [moved, setMoved] = useState(false)
@@ -589,12 +591,19 @@ function ComposeView({ step, status, onResult, onActivity }) {
           onPointerUp={() => (dragging.current = false)}
         >
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden="true">
-            {/* a "cramped" vignette when the frame reads static — the felt cue */}
-            {!ok && moved && !horizon && !leading && (
+            {/* a "cramped" vignette when the frame reads static — the felt cue (placement beats only) */}
+            {!ok && moved && !horizon && !leading && !anchor && !negspace && (
               <>
                 <rect x="0" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
                 <rect x="83" y="0" width="17" height="100" fill="rgba(8,8,12,0.26)" />
               </>
+            )}
+            {/* the fixed HEAVY element the learner counterbalances (balance / free keeper) */}
+            {anchor && (
+              <g transform={`translate(${anchor.x} ${anchor.y})`}>
+                <circle cx="0" cy="0" r="5.4" fill="rgba(8,8,12,0.82)" stroke="#fff" strokeWidth="0.8" />
+                <circle cx="0" cy="0" r="8.2" fill="none" stroke="rgba(8,8,12,0.28)" strokeWidth="0.6" />
+              </g>
             )}
             {/* leading lines: rails/path converging on a point the eye is drawn to */}
             {leading &&

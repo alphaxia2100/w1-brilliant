@@ -24,6 +24,32 @@ export function composeEval(target, pos) {
     const ok = d < (target.band || 12)
     return { ok, cue: ok ? 'right where the lines lead — the eye lands on the subject' : 'follow the lines to where they meet, and put the subject there' }
   }
+  if (target.kind === 'balance') {
+    // A fixed heavy element sits in the frame; place YOUR subject so the visual weight
+    // balances — the centre of mass of the two sits near the middle, and they're on
+    // opposite sides (a real counterweight, not stacked next to the anchor).
+    const a = target.anchor || { x: 25, y: 50 }
+    const midX = (a.x + pos.x) / 2
+    const midY = (a.y + pos.y) / 2
+    const balanced = hypot(midX - 50, midY - 50) < (target.band || 10)
+    const apart = hypot(pos.x - a.x, pos.y - a.y) > 34
+    const ok = balanced && apart
+    return { ok, cue: ok ? 'balanced — the weight settles across the frame' : !apart ? 'put it OPPOSITE the heavy element, not beside it' : 'not level yet — shift it so the two weights balance around the centre' }
+  }
+  if (target.kind === 'negativespace') {
+    // Isolate the subject in a sea of empty space: push it well past a third, toward a
+    // side, so most of the frame is intentional emptiness (more extreme than rule-of-thirds).
+    const offX = Math.min(pos.x, 100 - pos.x) // distance to nearest L/R edge
+    const ok = offX >= 8 && offX <= 25 && Math.abs(pos.x - 50) > 18
+    return { ok, cue: ok ? 'isolated — the empty space makes the subject sing' : 'give it room: push the subject far to one side and let the rest of the frame fall away' }
+  }
+  if (target.kind === 'composefree') {
+    // Open keeper: EITHER balance the weight OR isolate with negative space — both valid.
+    const b = composeEval({ kind: 'balance', anchor: target.anchor, band: target.band }, pos)
+    const n = composeEval({ kind: 'negativespace' }, pos)
+    const ok = b.ok || n.ok
+    return { ok, cue: ok ? (b.ok ? 'balanced — the frame settles' : 'isolated — the empty space carries it') : 'your call: balance the heavy element, or push your subject out into empty space' }
+  }
   if (target.kind === 'horizon') {
     const onThird = Math.min(Math.abs(pos.y - 33.33), Math.abs(pos.y - 66.66)) < (target.band || 9)
     const bisecting = Math.abs(pos.y - 50) < 8
