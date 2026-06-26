@@ -130,6 +130,15 @@ for (const lesson of course.lessons) {
   })
 }
 
+console.log('\n=== chapters partition the lessons ===')
+{
+  const chap = course.chapters.flatMap((c) => c.lessonIds)
+  const ids = course.lessons.map((l) => l.id)
+  ok('every lesson is in exactly one chapter', ids.every((id) => chap.filter((c) => c === id).length === 1))
+  ok('no chapter references a missing lesson', chap.every((id) => ids.includes(id)))
+  ok('chapter order matches lesson order', JSON.stringify(chap) === JSON.stringify(ids))
+}
+
 console.log('\n=== scene math ===')
 const apStep = course.lessons[0].steps.find((s) => s.kind === 'slider-sim' && s.label === 'Aperture')
 if (apStep) {

@@ -1700,11 +1700,24 @@ lessons.forEach((l, i) => {
   l.number = i + 1
 })
 
+// Lessons grouped into named chapters (the course's "levels", the Brilliant shape). Display +
+// navigation only — progress stays keyed by lesson id. Order matches the `lessons` array; the
+// gate (checks.mjs) asserts the chapters partition every lesson exactly once.
+export const chapters = [
+  { id: 'foundations', title: 'Foundations: Exposure', blurb: 'Gather the right light.', lessonIds: ['exposure-triangle', 'depth-of-field', 'shutter-motion'] },
+  { id: 'lens', title: 'The Lens', blurb: 'Focus and perspective.', lessonIds: ['focus-point', 'focal-length'] },
+  { id: 'reading-light', title: 'Reading the Light', blurb: 'Meter it, colour it.', lessonIds: ['metering', 'white-balance'] },
+  { id: 'composition', title: 'Composition', blurb: 'Frame the shot.', lessonIds: ['rule-of-thirds', 'composition-balance'] },
+  { id: 'light-tool', title: 'Light as a Tool', blurb: 'Shape light — and add your own.', lessonIds: ['light-direction', 'flash-fill'] },
+  { id: 'genre', title: 'Genre & Low Light', blurb: 'Put it all together.', lessonIds: ['portrait', 'long-exposure-night', 'iso-and-noise'] },
+]
+
 export const course = {
   id: 'exposure',
   title: 'Photography Foundations',
   subtitle: 'Exposure, light, and composition — by doing',
   lessons,
+  chapters,
 }
 
 export function getLesson(id) {
