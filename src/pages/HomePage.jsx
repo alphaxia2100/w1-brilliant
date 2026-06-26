@@ -66,7 +66,10 @@ export default function HomePage() {
     <div className="min-h-[100dvh] max-w-col w-full mx-auto px-5 py-6 flex flex-col gap-6">
       <header className="flex items-center justify-between">
         <Logo />
-        <button onClick={logOut} className="text-[13px] text-muted hover:text-ink transition">
+        <button
+          onClick={logOut}
+          className="text-[13px] text-muted hover:text-ink transition rounded-md px-2 py-1 -mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50"
+        >
           Log out
         </button>
       </header>
@@ -111,7 +114,7 @@ export default function HomePage() {
         </Card>
       )}
 
-      {recentShots.length > 0 && (
+      {recentShots.length > 0 ? (
         <div>
           <div className="flex items-baseline justify-between mb-2">
             <h2 className="text-[15px] font-semibold">Your roll</h2>
@@ -124,6 +127,13 @@ export default function HomePage() {
             {recentShots.slice(1).map((s) => (
               <ShotThumb key={s.key + s.createdAt} shot={s} size={88} />
             ))}
+          </div>
+        </div>
+      ) : (
+        <div>
+          <h2 className="text-[15px] font-semibold mb-2">Your roll</h2>
+          <div className="rounded-big border border-dashed border-hairline px-4 py-5 text-center">
+            <p className="text-[13px] text-muted">Every shot you nail is kept here. Finish a beat to start your roll.</p>
           </div>
         </div>
       )}

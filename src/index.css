@@ -115,7 +115,9 @@ body {
   }
 }
 .polaroid-develop {
-  animation: develop 1.5s ease-out forwards;
+  /* Wait for the card to land (polaroid-in is 0.42s) THEN develop — one unified "the keepsake
+     arrives" beat instead of the photo developing while the card is still flying in. */
+  animation: develop 1.5s ease-out 0.42s both;
 }
 .polaroid-in {
   animation: polaroid-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;

@@ -50,8 +50,9 @@ export function ProgressBar({ total, index }) {
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}
-          className="h-[7px] flex-1 rounded-full transition-colors duration-200"
-          style={{ background: i < index ? '#D8E82E' : i === index ? '#141414' : '#E5E5E5' }}
+          className={`h-[7px] flex-1 rounded-full transition-colors duration-300 ease-out ${
+            i < index ? 'bg-pear' : i === index ? 'bg-ink' : 'bg-hairline'
+          }`}
         />
       ))}
     </div>

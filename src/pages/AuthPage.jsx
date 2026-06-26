@@ -36,7 +36,18 @@ export default function AuthPage() {
       if (mode === 'signup') await signUp(email.trim(), password, name.trim())
       else await logIn(email.trim(), password)
     } catch (err) {
-      setError(err?.message?.replace('Firebase: ', '') || 'Something went wrong.')
+      const code = err?.code || ''
+      setError(
+        code === 'auth/invalid-email'
+          ? 'That email doesn’t look right — check it and try again.'
+          : code === 'auth/weak-password'
+            ? 'Password needs at least 6 characters.'
+            : code === 'auth/email-already-in-use'
+              ? 'That email already has an account — try logging in instead.'
+              : code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found'
+                ? 'Email or password doesn’t match. Give it another go.'
+                : err?.message?.replace('Firebase: ', '') || 'Something went wrong.',
+      )
     } finally {
       setBusy(false)
     }
@@ -73,7 +84,7 @@ export default function AuthPage() {
         Learn photography by doing.
       </h1>
       <p className="text-muted mb-7 leading-relaxed">
-        Master the exposure triangle one hands-on lesson at a time.
+        Master exposure, light, and composition — one hands-on lesson at a time.
       </p>
 
       <div className="flex gap-1 mb-5 p-1 bg-surface rounded-tile w-fit">
@@ -98,6 +109,7 @@ export default function AuthPage() {
           <input
             className={field}
             placeholder="Your name (optional)"
+            aria-label="Your name (optional)"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
@@ -108,6 +120,7 @@ export default function AuthPage() {
           type="email"
           required
           placeholder="Email"
+          aria-label="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
@@ -118,13 +131,19 @@ export default function AuthPage() {
           required
           minLength={6}
           placeholder="Password (6+ characters)"
+          aria-label="Password (at least 6 characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
         />
+        {mode === 'signup' && password.length > 0 && (
+          <p className="text-[12px] -mt-1.5 ml-1" style={{ color: password.length >= 6 ? '#1F8A3B' : '#666' }}>
+            {password.length >= 6 ? '✓ Strong enough' : `${6 - password.length} more character${6 - password.length === 1 ? '' : 's'} to go`}
+          </p>
+        )}
         {error && <p className="text-[14px] text-danger">{error}</p>}
         <Button type="submit" className="w-full mt-1" disabled={busy}>
-          {busy ? 'One moment…' : mode === 'signup' ? 'Create account' : 'Log in'}
+          {busy ? (mode === 'signup' ? 'Creating account…' : 'Signing in…') : mode === 'signup' ? 'Create account' : 'Log in'}
         </Button>
       </form>
 
@@ -150,7 +169,7 @@ export default function AuthPage() {
       </Button>
 
       {!firebaseEnabled && (
-        <p className="text-[12px] text-muted/80 mt-6 leading-relaxed">
+        <p className="text-[12px] text-muted mt-6 leading-relaxed">
           Running in local mode — accounts and progress are stored in this browser. Add Firebase
           config in <code className="font-mono">.env</code> to sync to the cloud.
         </p>

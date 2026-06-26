@@ -12,22 +12,22 @@ function LessonNode({ lesson, index, activeIndex, done, navigate }) {
       <button
         disabled={locked}
         onClick={() => navigate(`/lesson/${lesson.id}`)}
-        className={`w-full text-left flex items-center gap-4 p-3 rounded-big transition ${
-          locked ? 'opacity-45 cursor-not-allowed' : 'hover:bg-surface active:translate-y-[1px]'
+        className={`w-full text-left flex items-center gap-4 p-3 rounded-big transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50 ${
+          locked ? 'cursor-not-allowed' : 'hover:bg-surface active:translate-y-[1px]'
         }`}
       >
         <span
-          className="shrink-0 w-10 h-10 rounded-full grid place-items-center text-[15px] font-semibold border-2"
+          className="shrink-0 w-11 h-11 rounded-full grid place-items-center text-[15px] font-semibold border-2"
           style={{
             background: isDone ? '#D8E82E' : isNext ? '#141414' : '#fff',
-            color: isDone ? '#141414' : isNext ? '#fff' : '#999',
+            color: isDone ? '#141414' : isNext ? '#fff' : '#9A9A9A',
             borderColor: isDone ? '#D8E82E' : isNext ? '#141414' : '#E5E5E5',
           }}
         >
           {isDone ? (
             '✓'
           ) : locked ? (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2.4" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBCBCB" strokeWidth="2.4" aria-hidden="true">
               <rect x="5" y="11" width="14" height="9" rx="2" />
               <path d="M8 11V8a4 4 0 0 1 8 0v3" />
             </svg>
@@ -39,9 +39,9 @@ function LessonNode({ lesson, index, activeIndex, done, navigate }) {
         </span>
         <span className="min-w-0">
           <span className="flex items-center gap-2">
-            <span className="font-semibold text-[16px] leading-tight truncate">{lesson.title}</span>
+            <span className={`font-semibold text-[16px] leading-tight truncate ${locked ? 'text-muted' : ''}`}>{lesson.title}</span>
             {lesson.review && !isDone && (
-              <span className="shrink-0 text-[10px] uppercase tracking-wide font-semibold text-muted/70 border border-hairline rounded-full px-1.5 py-0.5">Review</span>
+              <span className="shrink-0 text-[10px] uppercase tracking-wide font-semibold text-muted border border-hairline rounded-full px-1.5 py-0.5">Review</span>
             )}
           </span>
           <span className="block text-[13px] text-muted truncate">{lesson.blurb}</span>
@@ -62,7 +62,11 @@ export default function CoursePathPage() {
   return (
     <div className="min-h-[100dvh] max-w-col w-full mx-auto px-5 py-6">
       <header className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/')} aria-label="Back" className="text-muted hover:text-ink transition text-xl w-6">
+        <button
+          onClick={() => navigate('/')}
+          aria-label="Back"
+          className="-ml-2.5 w-11 h-11 grid place-items-center shrink-0 text-muted hover:text-ink transition text-xl rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50"
+        >
           ←
         </button>
         <div>
@@ -82,18 +86,19 @@ export default function CoursePathPage() {
             <section key={chapter.id}>
               <div className="flex items-baseline justify-between mb-2 px-1">
                 <div className="min-w-0">
-                  <span className="text-[11px] uppercase tracking-wide text-muted/80 font-medium">Chapter {ci + 1}</span>
+                  <span className="text-[11px] uppercase tracking-wide text-muted font-medium">Chapter {ci + 1}</span>
                   <h2 className="text-[17px] font-semibold leading-tight">{chapter.title}</h2>
                 </div>
-                <span
-                  className="text-[12px] font-medium shrink-0 ml-3"
-                  style={{ color: chComplete ? '#1F8A3B' : '#999' }}
-                >
-                  {chComplete ? '✓ done' : `${chDone}/${chLessons.length}`}
-                </span>
+                {chComplete ? (
+                  <span className="shrink-0 ml-3 text-[11px] font-bold uppercase tracking-wide rounded-full bg-pear text-pear-ink px-2 py-0.5">
+                    ✓ done
+                  </span>
+                ) : (
+                  <span className="text-[12px] font-medium shrink-0 ml-3 text-muted">{chDone}/{chLessons.length}</span>
+                )}
               </div>
               <ol className="relative">
-                <span className="absolute left-[19px] top-3 bottom-3 w-0.5 bg-hairline -z-0" aria-hidden="true" />
+                <span className="absolute left-[21px] top-3 bottom-3 w-0.5 bg-hairline -z-0" aria-hidden="true" />
                 {chLessons.map((lesson) => (
                   <LessonNode
                     key={lesson.id}

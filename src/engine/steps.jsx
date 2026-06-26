@@ -92,11 +92,9 @@ export function Feedback({ status, message, showWhy, step }) {
   const hasVisual = !correct && showWhy && showWhy.widget && showWhy.widget !== 'none'
   return (
     <div
-      className="rounded-tile px-4 py-3 text-[15px] leading-snug animate-pop"
-      style={{
-        background: correct ? '#D4F5DD' : '#E5E5E5',
-        color: correct ? '#00370F' : '#383838',
-      }}
+      className={`rounded-tile px-4 py-3 text-[15px] leading-snug animate-pop ${
+        correct ? 'bg-correct-bg text-correct-ink' : 'bg-retry-bg text-retry-ink'
+      }`}
       role="status"
     >
       {hasVisual && (
@@ -128,10 +126,14 @@ function Shutter() {
 export function PolaroidReveal({ shot, onDone }) {
   const doneRef = useRef(onDone)
   doneRef.current = onDone
+  const reduced = useReducedMotion()
   const tiltRef = useRef(null)
-  if (tiltRef.current === null) tiltRef.current = Math.random() * 11 - 5.5 // random orientation each shot
+  // Random orientation each shot — but a JS transform isn't covered by the reduced-motion CSS rule,
+  // so flatten the tilt for motion-sensitive users.
+  if (tiltRef.current === null) tiltRef.current = reduced ? 0 : Math.random() * 11 - 5.5
   useEffect(() => {
-    const t = setTimeout(() => doneRef.current(), 2400)
+    // Hold long enough to enjoy the develop (which now starts at 0.42s and runs 1.5s) before auto-dismiss.
+    const t = setTimeout(() => doneRef.current(), 2800)
     return () => clearTimeout(t)
   }, [])
   const keeper = shot.verdict !== 'experiment'
@@ -175,7 +177,7 @@ export function PolaroidReveal({ shot, onDone }) {
         </div>
         </div>
       </div>
-      <p className="absolute bottom-8 inset-x-0 text-center text-[12px] text-white/55">tap to continue</p>
+      <p className="absolute bottom-8 inset-x-0 text-center text-[12px] text-white/70">tap to continue</p>
     </div>
   )
 }
@@ -278,7 +280,7 @@ function CaptureView({ step, status, onResult, onActivity }) {
       <div className="mb-4">
         <div className="flex justify-between text-[12px] text-muted mb-1.5">
           <span>Light gathered</span>
-          <span style={{ color: inBand ? '#1F8A3B' : '#666' }}>{inBand ? 'Good exposure' : 'Aim for the green'}</span>
+          <span style={{ color: inBand ? '#1F8A3B' : '#666' }}>{inBand ? 'Good exposure' : 'Aim for the band'}</span>
         </div>
         <div className="relative h-3 rounded-full bg-hairline overflow-hidden">
           <span
@@ -304,6 +306,7 @@ function CaptureView({ step, status, onResult, onActivity }) {
             onActivity?.()
           }}
           ariaLabel="Shutter time — light gathered"
+          valueText={inBand ? 'good exposure' : exp < step.targetExp.min ? 'too dark' : 'too bright'}
         />
       </div>
 
@@ -503,7 +506,7 @@ function TriangleView({ step, status, onResult, onActivity }) {
           <span className="text-[13px] font-medium" style={{ color: goalMet ? '#1F8A3B' : '#555' }}>
             Your look: {goal.label}
           </span>
-          <span className="text-[12px] font-mono" style={{ color: goalMet ? '#1F8A3B' : '#999' }}>
+          <span className="text-[12px] font-mono" style={{ color: goalMet ? '#1F8A3B' : '#666' }}>
             {goalMet ? '✓ got it' : 'not yet'}
           </span>
         </div>
@@ -707,7 +710,7 @@ function ReadoutCard({ label, value }) {
 // A held (non-adjustable) factor — shown so the learner knows it's fixed this step.
 function FixedRow({ label, value }) {
   return (
-    <div className="flex items-center justify-between mb-2 text-[13px] text-muted/70">
+    <div className="flex items-center justify-between mb-2 text-[13px] text-muted">
       <span>{label}</span>
       <span className="font-mono">{value} · fixed</span>
     </div>

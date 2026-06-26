@@ -94,7 +94,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
         <button
           onClick={onExit}
           aria-label="Exit lesson"
-          className="text-muted hover:text-ink transition-colors text-xl leading-none w-6"
+          className="-ml-2.5 w-11 h-11 grid place-items-center shrink-0 text-muted hover:text-ink transition-colors text-xl leading-none rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link/50"
         >
           ✕
         </button>
@@ -102,7 +102,7 @@ export default function LessonPlayer({ lesson, onExit, onComplete }) {
       </header>
 
       <main className="flex-1 px-4 pb-4 max-w-col w-full mx-auto flex flex-col">
-        <div className="text-[12px] uppercase tracking-wide text-muted/80 font-medium mb-2">
+        <div className="text-[12px] uppercase tracking-wide text-muted font-medium mb-2">
           {lesson.title} · Lesson {lesson.number} of {lesson.totalLessons}
         </div>
 
