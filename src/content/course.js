@@ -486,7 +486,7 @@ const lessons = [
         f: 2,
         start: { focusDist: 0.92 },
         prompt:
-          'The exposure on this shot is perfect — but the flower is SOFT. The camera locked focus on the background behind it. Rack the focus back onto the flower until it snaps sharp.',
+          'The exposure on this shot is perfect — but the flower is SOFT. The camera’s focus plane fell BEHIND the flower. Rack the focus nearer, back onto the flower, until it snaps sharp.',
         check: (fd) => Math.abs(fd - 0.34) < 0.08,
         feedback: {
           correct:
@@ -512,7 +512,7 @@ const lessons = [
         f: 2,
         start: { focusDist: 0.04 },
         prompt:
-          'This time the camera focused just in FRONT of the flower — soft again, the sharp plane sitting in the empty air before it. Pull the focus the other way, back onto the subject.',
+          'This time the focus plane fell just in FRONT of the flower — soft again. Pull the focus the other way, back onto the subject, until it’s sharp.',
         check: (fd) => Math.abs(fd - 0.34) < 0.08,
         feedback: {
           correct:
@@ -537,7 +537,7 @@ const lessons = [
         solution: [1, 2, 0], // f/1.8 portrait (thinnest plane) → f/5.6 group → f/16 landscape (deep, forgiving)
         feedback: {
           correct:
-            'Right. A wide aperture (f/1.8) makes the focus plane paper-thin — miss the eye by an inch and it’s soft. Stop down to f/5.6 and there’s more leeway; at f/16 the depth of field is so deep almost everything’s sharp, so focus is forgiving. Aperture sets how much focus precision you can get away with.',
+            'Right. A wide aperture (f/1.8) makes the focus plane paper-thin — miss the eye by an inch and it’s soft. Stop down to f/5.6 and there’s more leeway; at f/16 the depth of field is so deep almost everything’s sharp, so focus is forgiving. Aperture is the biggest lever on how much focus precision you can get away with (distance and lens play in too).',
           stages: [
             'The wider the aperture, the thinner the sharp slice, the more focus precision you need. Which shot has the widest aperture?',
             'Most critical: the f/1.8 portrait, then the f/5.6 group; the f/16 landscape is the most forgiving.',
@@ -1254,13 +1254,14 @@ const lessons = [
         start: { fill: 0 },
         prompt:
           'Harsh midday sun rakes this face from the side — one half is bright, the other crushed into hard black shadow. You can ADD your own light: pop a fill flash from the camera and open those shadows.',
-        check: ({ fill }) => fill >= 0.45,
+        check: ({ fill }) => fill >= 0.45 && fill <= 0.85,
         feedback: {
           correct:
             'The shadows lift. A fill flash throws light back INTO the shadows the sun left behind — the dark side opens up and the face reads evenly, no harsh black pit. You added the light that wasn’t there.',
           stages: [
             'The shadow side is still crushed black. The fill flash ADDS light — push it up.',
             'Bring the fill flash up until the dark side of the face opens and you can see into it.',
+            'Whoa — that’s blasting it to full (watch the readout say “over-flashed”). Ease back so the shadow lifts without going flat.',
           ],
         },
       },
@@ -1378,7 +1379,7 @@ const lessons = [
         start: { angle: 8, soft: 0.7, warmth: -0.2, fill: 0.45 },
         prompt:
           'The light’s soft and filled now, but it’s flat-front and cold — the face looks pasted-on. Bring the light a touch to the SIDE to give the face shape, and warm it toward golden.',
-        check: ({ angle, warmth }) => angle >= 30 && angle <= 80 && warmth >= 0.3,
+        check: ({ angle, warmth }) => angle >= 64 && angle <= 80 && warmth >= 0.3,
         feedback: {
           correct:
             'Now it has shape and life — a gentle side angle models the cheekbone and nose into three dimensions, and the warmth gives the skin a healthy glow. Not flat, not harsh: turned just enough.',
@@ -1395,7 +1396,7 @@ const lessons = [
         start: { angle: 10, soft: 0.12, warmth: -0.1, fill: 0.05 },
         prompt:
           'Everything at once now. Take this flat, hard, cold, unfilled face and build the whole flattering portrait — soft, a gentle side, warm, shadows filled.',
-        check: ({ angle, soft, warmth, fill }) => angle >= 30 && angle <= 80 && soft >= 0.55 && warmth >= 0.25 && fill >= 0.3,
+        check: ({ angle, soft, warmth, fill }) => angle >= 64 && angle <= 80 && soft >= 0.55 && soft <= 0.85 && warmth >= 0.25 && fill >= 0.3 && fill <= 0.7,
         feedback: {
           correct:
             'That’s a portrait. Four choices, balanced into one flattering whole: soft to wrap, a gentle side for shape, warmth for life, fill to open the shadow. This is what “good light” on a face actually means.',
@@ -1412,7 +1413,7 @@ const lessons = [
         start: { angle: 92, soft: 0.2, warmth: 0, fill: 0 },
         prompt:
           'Your portrait. Light this face so it flatters — soft, shaped, warm, and open. Take a shot worth keeping.',
-        check: ({ angle, soft, warmth, fill }) => angle >= 28 && angle <= 82 && soft >= 0.55 && warmth >= 0.22 && fill >= 0.3,
+        check: ({ angle, soft, warmth, fill }) => angle >= 64 && angle <= 80 && soft >= 0.55 && soft <= 0.85 && warmth >= 0.22 && fill >= 0.3 && fill <= 0.72,
         feedback: {
           correct:
             'A portrait you’d be proud of. You stopped lighting a sphere and started lighting a PERSON — wielding direction, softness, warmth, and fill together toward one feeling. That’s the whole craft of light, in one frame.',
@@ -1543,99 +1544,6 @@ const lessons = [
         feedback: {
           correct:
             'A clean, glowing night — built from time, not noise. That is painting with time: when the light runs out, you stop cranking ISO and let the shutter gather it, second by second. The shot is yours to keep.',
-        },
-      },
-    ],
-  },
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // LANDSCAPE — genre capstone (expansion 7). Landscape COMPOSITION on the compose canvas:
-  // the horizon is the big decision (low = the sky's story, high = the foreground's), and a
-  // foreground anchor gives depth. Reuses compose; the horizon `third` option + foreground
-  // anchoring make it a distinct landscape-framing judgment, not generic rule-of-thirds.
-  // ───────────────────────────────────────────────────────────────────────────
-  {
-    id: 'landscape',
-    title: 'Landscape: framing the wide scene',
-    blurb: 'Where the horizon sits decides what the photo is about.',
-    steps: [
-      // BEAT 1 — predict by doing: dramatic sky → drop the horizon low
-      {
-        kind: 'compose',
-        scene: 'landscape',
-        target: { kind: 'horizon', third: 'low' },
-        start: { x: 50, y: 33 },
-        prompt:
-          'This sky is the whole show — golden light rolling across the clouds. Give it the frame: drag the horizon LOW so the sky fills most of the photo.',
-        feedback: {
-          correct:
-            'The sky takes over, and the photo is now ABOUT that light. A low horizon hands the frame to the sky — the first decision a landscape photographer makes is simply: how much sky?',
-          stages: [
-            'A centred horizon splits the frame and says nothing. To feature the sky, the horizon goes LOW.',
-            'Drag the horizon down toward the lower third so the sky owns the top two-thirds.',
-          ],
-        },
-      },
-      // BEAT 2 — confirm
-      {
-        kind: 'intro',
-        scene: 'landscape',
-        title: 'The horizon is the decision',
-        body: [
-          'In a landscape, where you put the horizon decides what the photo is ABOUT. Low horizon → the sky’s story. High horizon → the foreground’s. Dead-centre → neither, and it falls flat.',
-          'Then give the scene DEPTH: an element in the near foreground anchors the eye before it travels to the distance.',
-        ],
-      },
-      // BEAT 3 — the other choice: interesting foreground → raise the horizon
-      {
-        kind: 'compose',
-        scene: 'seascape',
-        target: { kind: 'horizon', third: 'high' },
-        start: { x: 50, y: 66 },
-        prompt:
-          'Now the foreground is the story — wet sand and tide-pools catching the light. Raise the horizon HIGH to give that foreground the room it deserves.',
-        feedback: {
-          correct:
-            'Now the land leads. A high horizon devotes the frame to the foreground — same scene, opposite choice. The horizon isn’t a rule to obey; it’s the lever that says what matters.',
-          stages: [
-            'To feature the foreground, the horizon goes HIGH — the opposite of the big-sky shot.',
-            'Drag the horizon up toward the upper third so the foreground fills most of the frame.',
-          ],
-        },
-      },
-      // BEAT 4 — depth: anchor a foreground element beneath the distant peak
-      {
-        kind: 'compose',
-        scene: 'landscape',
-        target: { kind: 'balance', anchor: { x: 50, y: 24 } },
-        start: { x: 50, y: 50 },
-        prompt:
-          'A flat landscape feels like a postcard. There’s a far peak up high — place a foreground element to balance it and pull the eye THROUGH the scene, near to far. That depth is what makes a landscape feel three-dimensional.',
-        feedback: {
-          correct:
-            'Now it has depth. A near anchor below the distant peak gives the eye a journey — foreground to background — instead of one flat plane. Scale and depth are what separate a landscape from a snapshot of scenery.',
-          stages: [
-            'The frame is all far-away. Add something NEAR — low in the frame — to anchor the foreground.',
-            'Place your foreground element low, beneath the distant peak, so the eye travels from near to far.',
-          ],
-        },
-      },
-      // BEAT 5 — keeper: frame your own landscape (balance the depth, or isolate in open space)
-      {
-        kind: 'compose',
-        scene: 'landscape',
-        target: { kind: 'composefree', anchor: { x: 50, y: 26 } },
-        start: { x: 50, y: 50 },
-        keeper: true,
-        prompt:
-          'Your wide scene. Anchor a foreground element to give it depth (balance the distant peak), or set your subject alone in open space — your call. Take a landscape worth keeping.',
-        feedback: {
-          correct:
-            'A landscape you composed, not just pointed at: you decided where the weight sits and how the eye moves through it. Sky or land, depth or simplicity — that judgment is the whole craft of the wide scene.',
-          stages: [
-            'Two good options: anchor a near element beneath the peak for depth, OR push your subject into open space to isolate it.',
-            'Place a foreground anchor low (to balance the peak), or far to one side (negative space), then take the shot.',
-          ],
         },
       },
     ],

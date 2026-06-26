@@ -66,7 +66,7 @@ export default function LightDirection({ angle = 90, soft = 0.4, warmth = 0, fil
         </defs>
         <rect width="100" height="100" fill="url(#ld-bg)" />
         {/* ground + cast shadow */}
-        <ellipse cx={shadowCx} cy={cy + R + 7} rx={24 + soft * 9} ry={5 + soft * 3} fill="#0C0A12" opacity={0.3 * (0.4 + lit) * (1 - 0.55 * fill)} />
+        <ellipse cx={shadowCx} cy={cy + R + 7} rx={24 + soft * 9} ry={5 + soft * 3} fill="#0C0A12" opacity={0.3 * (0.4 + lit)} />
         {/* the subject */}
         <circle cx={cx} cy={cy} r={R} fill="url(#ld-face)" />
         {/* rim light catching the edge when lit from behind — thin & crisp from a hard

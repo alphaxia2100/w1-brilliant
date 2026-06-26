@@ -44,11 +44,16 @@ export function composeEval(target, pos) {
     return { ok, cue: ok ? 'isolated — the empty space makes the subject sing' : 'give it room: push the subject far to one side and let the rest of the frame fall away' }
   }
   if (target.kind === 'composefree') {
-    // Open keeper: EITHER balance the weight OR isolate with negative space — both valid.
+    // Open keeper: EITHER balance the weight OR isolate with negative space. The heavy anchor
+    // stays on screen, so "isolate" only counts if the subject is pushed to the FAR side AWAY
+    // from the anchor (else it reads crowded next to the heavy mass, not isolated).
+    const a = target.anchor || { x: 25, y: 50 }
     const b = composeEval({ kind: 'balance', anchor: target.anchor, band: target.band }, pos)
     const n = composeEval({ kind: 'negativespace' }, pos)
-    const ok = b.ok || n.ok
-    return { ok, cue: ok ? (b.ok ? 'balanced — the frame settles' : 'isolated — the empty space carries it') : 'your call: balance the heavy element, or push your subject out into empty space' }
+    const awayFromAnchor = Math.abs(a.x - 50) < 8 ? Math.abs(pos.x - a.x) > 45 : Math.sign(pos.x - 50) !== Math.sign(a.x - 50)
+    const nOk = n.ok && awayFromAnchor
+    const ok = b.ok || nOk
+    return { ok, cue: ok ? (b.ok ? 'balanced — the frame settles' : 'isolated — the empty space carries it') : 'your call: balance the heavy element, or push your subject into the open space on the FAR side from it' }
   }
   if (target.kind === 'horizon') {
     // third: 'low' = horizon near the bottom (big sky); 'high' = near the top (big foreground);

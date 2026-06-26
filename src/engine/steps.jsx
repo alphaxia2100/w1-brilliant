@@ -918,14 +918,16 @@ function drawRoad(ctx, W, H, x, si, dashOff) {
   for (let i = -1; i * 72 - dashOff < W; i++) ctx.fillRect(i * 72 - dashOff, H * 0.78, 38, 5)
   const carH = H * 0.17
   const baseY = H * 0.73
-  const blurLen = (si / 7) * W * 0.45
+  // si <= 1 (1/1000, 1/500) is the FREEZE range — render truly sharp (no ghost trail) so the
+  // "Frozen sharp" caption + the si<=1 freeze checks match what's on screen. Streak from si>=2.
+  const blurLen = si <= 1 ? 0 : (si / 7) * W * 0.45
   const steps = Math.max(1, Math.round(blurLen / 6))
   ctx.fillStyle = '#1E2230'
   for (let i = steps; i >= 1; i--) {
     ctx.globalAlpha = 0.1
     drawCar(ctx, x - (i / steps) * blurLen, baseY, carH)
   }
-  ctx.globalAlpha = si === 0 ? 1 : 0.92
+  ctx.globalAlpha = si <= 1 ? 1 : 0.92
   drawCar(ctx, x, baseY, carH)
   ctx.globalAlpha = 1
 }
