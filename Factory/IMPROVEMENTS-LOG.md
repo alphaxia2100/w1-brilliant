@@ -25,13 +25,19 @@ exposure as ONE lesson; skipped prose-y RAW/critique (no sim). **✅ EXPANSION C
 6. ✅ **Focus & the focus point** (committed, L4) — new `focus` kind + DofBokeh `focusDist` rack-focus
    (the SUBJECT softens off-plane; null = always sharp, DoF unaffected).
 7. ✅ **Portrait: flattering light** (committed, L12) — LightDirection multi-control synthesis (no new sim).
-8. ✅ **Landscape: framing the wide scene** (committed, L14) — compose capstone; horizon `third` option
-   (low=sky / high=foreground) + foreground-anchor depth.
+8. ⛔ **Landscape** — built, then DROPPED by the critic (do-not-ship) → see Parked. The compose canvas
+   floats a horizon line over the scene's BAKED horizon (two horizons; the painted one never moves) and
+   the "peak"/depth claims aren't rendered; 2 of 5 beats duplicated composition-balance.
 
-**STATUS: the content-first 15-lesson plan is DONE.** An adversarial Sky-critic over all 7 new lessons
-is the last gate (run after this commit) — fix-forward whatever it finds, like the BET critic did.
-**Next options (Sky's call):** (a) the chapter/Review NAV layer (the Brilliant shape — Home/Course/store
-rework); (b) the deferred truth/polish items below; (c) merge `lesson-factory` → main + deploy.
+**STATUS: expansion COMPLETE = 14 lessons (6 new + 1 split; landscape dropped).** A 7-lens adversarial
+Sky-critic ran and EARNED ITS KEEP — caught real truth issues in the fast-built lessons (portrait flat-
+band praised as "shape"; flash/portrait over-flash passing; composition "isolated" while crowded; focus
+copy claiming an in-focus background the sim never renders; shutter si=1 ghost-streak labeled "Frozen
+sharp"). All fixed + re-verified live (commit after f29da7d). Lesson learned: a fast lesson sprint needs
+the critic before "done" — check bands must hold across the WHOLE accepted region, not just the sweet spot.
+**Next options (Sky's call):** (a) the chapter/Review NAV layer (Brilliant shape — Home/Course/store
+rework); (b) the deferred truth/polish below; (c) rebuild landscape once the horizon-reframing sim exists;
+(d) merge `lesson-factory` → main + deploy.
 Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) · Reading&Colour
 (Metering,WB) · Composition(I placing, II balance) · Light(Direction,Flash) · Genre(Portrait,LongExp,Landscape) · ISO.
 
@@ -42,6 +48,13 @@ Full module map: Foundations(Exposure,DoF,Shutter) · Lens(Focus,FocalLength) ·
 - **Free-play Studio** — locked north-star deliverable; larger build.
 
 ## Parked (need new engine capability — don't ship until built)
+- **landscape** — built + DROPPED by the critic (2026-06-25). The compose canvas floats the horizon
+  line over the scene's BAKED horizon (two horizons; dragging never re-frames sky-vs-land), so "where
+  you put the horizon decides the photo" is disproven by the pixels; the "distant peak" is the generic
+  balance blob; and 2 beats duplicate composition-balance. NEEDS a horizon-reframing sim (drive the
+  PixelScene sky/ground split from the dragged line, or composite sky/ground bands that cover the baked
+  gradient) — this also fixes the same two-horizons issue in rule-of-thirds BEAT 5 (pre-existing debt).
+  The composeEval `horizon.third` option + gate handling are KEPT, ready for the rebuild.
 - **silhouettes** — REJECTED as L9 (iter #3). The `backlit` scene's tree↔sky separation (~2.3 stops) is
   too small for a true silhouette: engine sweep showed NO exposure makes the tree black (<25) while the
   sky stays bright (>150). Needs a dedicated high-contrast scene (bright sky ~250, subject ~10) — then the

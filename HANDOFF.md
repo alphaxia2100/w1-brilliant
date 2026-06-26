@@ -21,19 +21,20 @@ So: the branch has the newest work and is **unpushed + undeployed**. Decide whet
 `lesson-factory` → `main`, push, and redeploy. Nothing destructive has touched `main` or `origin`.
 
 ## TL;DR
-The course is **15 lessons** — the **CURRICULUM EXPANSION** Sky asked for (2026-06-25: "another topic...
+The course is **14 lessons** — the **CURRICULUM EXPANSION** Sky asked for (2026-06-25: "another topic...
 break up the current lessons... fill in the rest... look online for how you should structure it") is
-COMPLETE. Researched online → a 15-lesson / 6-module plan, content-first; **6 new lessons + 1 split
-shipped** (all live-verified). Also has an **AI photo grader**, **try-before-signup** onboarding, a
-**lesson factory**, the **BET** primitive. `npm test` = **144/144 green**, build clean.
+COMPLETE. Researched online → a content-first plan; **6 new lessons + 1 split shipped** (all live-verified),
+then a 7-lens adversarial critic caught real truth issues (all fixed) and dropped a 7th (landscape, do-not-
+ship → parked). Also has the **AI photo grader**, **try-before-signup**, **lesson factory**, **BET**
+primitive. `npm test` = **136/136 green**, build clean.
 
-## The course now — 15 lessons (verified from `src/content/course.js`; `number` is derived from order)
+## The course now — 14 lessons (verified from `src/content/course.js`; `number` is derived from order)
 | # | id | what it teaches |
 |---|----|------|
 | 1 | `exposure-triangle` | aperture/shutter/ISO → balance → **reciprocity** → equivalent-exposure rank (9) |
 | 2 | `depth-of-field` | flower-bokeh, 4 blur levers, night-bokeh, synthesis keeper (8) |
 | 3 | `shutter-motion` | **NEW.** shutter as a creative axis: blur=speed → freeze → rank → commit-keeper (5) |
-| 4 | `focus-point` | **NEW.** focus is a PLACED choice: rack-focus the subject sharp; wide aperture = thin slice; rank; keeper (5) |
+| 4 | `focus-point` | **NEW.** focus is a PLACED choice: rack the subject sharp; wide aperture = thin slice; rank; keeper (5) |
 | 5 | `focal-length` | **NEW.** focal as PERSPECTIVE (f/16, no blur): telephoto compresses / wide expands; rank; keeper (5) |
 | 6 | `metering` | histogram: spread · clip · **blinkies** + dynamic range · high-key snow · rank (7) |
 | 7 | `white-balance` | **BET** predict-neutral (snow) · casts · **eyedropper** · creative warmth (5) |
@@ -43,14 +44,14 @@ shipped** (all live-verified). Also has an **AI photo grader**, **try-before-sig
 | 11 | `flash-fill` | **NEW.** fill flash: open harsh shadows · over-flash-goes-flat balance · rank · keeper (5) |
 | 12 | `portrait` | **NEW.** genre capstone: soft+fill → shape+warm → 4-lever light synthesis → keeper (5) |
 | 13 | `long-exposure-night` | gather light over time; long exposure vs high ISO; moving subject → freeze (7) |
-| 14 | `landscape` | **NEW.** genre capstone: horizon low=sky / high=foreground · foreground-anchor depth · keeper (5) |
-| 15 | `iso-and-noise` | max-crank cost · the floor · expose-to-the-right · rank · keeper (6) |
+| 14 | `iso-and-noise` | max-crank cost · the floor · expose-to-the-right · rank · keeper (6) |
 
-**Expansion COMPLETE (content-first).** New sims added: MotionView goal-aware caption; compose `balance`/
-`negativespace`/`composefree` + horizon `third`; LightDirection `fill`; DofBokeh `focusDist` (rack focus)
-+ bokeh `check(blur, params)`; new `focus` step kind. `number` derived from array order. **meter-fooled
-SKIPPED** (metering covers it). An adversarial Sky-critic over the 7 new lessons is the last gate — fix-
-forward its findings, then the next move is Sky's: chapter/Review nav layer · deferred polish · merge+deploy.
+**Expansion COMPLETE (content-first), critic-vetted.** New sims: MotionView goal-aware caption (si≤1 truly
+sharp); compose `balance`/`negativespace`/`composefree` (+ `horizon.third`, kept for a landscape rebuild);
+LightDirection `fill`; DofBokeh `focusDist` rack-focus + bokeh `check(blur, params)`; new `focus` step kind.
+`number` derived from order. **Dropped/parked:** `landscape` (critic do-not-ship — needs a horizon-reframing
+sim) and `meter-fooled` (metering covers it). **Next is Sky's call:** chapter/Review nav layer · deferred
+truth/polish (ledger) · rebuild landscape · merge `lesson-factory`→main + deploy.
 
 All predict-first, no multiple choice, calm feedback, success mints a polaroid keepsake.
 
@@ -101,7 +102,7 @@ meter-fooled → Portrait → Landscape (all buildable now), per the DIRECTION b
 shutter-motion redesign (needs a panning sim) → free-play Studio. Parked: silhouettes.
 
 ## How to run / verify
-- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (144/144).
+- **Dev:** `npm run dev` → :5173 (Claude_Preview MCP server "aperture"). **Gate:** `npm test` (136/136).
   **Build:** `npm run build`. **Deploy:** `npm run deploy`. **Functions deps:** `cd functions && npm install`.
 - **Verify a lesson:** full beat walkthrough in the UI, mobile 375 + desktop, test wrong paths, confirm the
   keepsake matches the lesson. **Preview gotcha:** the `capture` beat's rAF exposure animation can stall in
