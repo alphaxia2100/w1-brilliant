@@ -3,7 +3,8 @@
 // EVERY checked beat FAILS at its start state and is REACHABLE within its control's
 // range — so a retuned scene or mapping can't silently make a lesson unpassable or
 // pass-without-acting. Plus scene-math sanity (brightness monotonicity, no NaN).
-import { course } from '../src/content/course.js'
+import { course, skills } from '../src/content/course.js'
+import { reviewNext, intervalMs, isDue, selectDue, interleave, nextDueAt, BOX_DAYS, MAX_BOX, DAY } from '../src/lib/spacing.js'
 import { meanBrightness, computeGrid } from '../src/sim/scene.js'
 import { effectiveBlur } from '../src/sim/bokehMath.js'
 import { composeEval } from '../src/sim/composeEval.js'
@@ -15,9 +16,7 @@ const ok = (name, cond) => {
 }
 
 console.log('=== lesson reachability (every checked beat fails at start, passes in range) ===')
-for (const lesson of course.lessons) {
-  lesson.steps.forEach((s, i) => {
-    const tag = `${lesson.id}[${i}] ${s.kind}`
+function assertStep(s, tag) {
     if (s.kind === 'slider-sim' && s.check) {
       const stops = s.control.stops
       let domain
@@ -127,7 +126,9 @@ for (const lesson of course.lessons) {
       const startIn = s.start >= s.targetExp.min && s.start <= s.targetExp.max
       ok(`${tag}: starts outside the target band`, !startIn)
     }
-  })
+}
+for (const lesson of course.lessons) {
+  lesson.steps.forEach((s, i) => assertStep(s, `${lesson.id}[${i}] ${s.kind}`))
 }
 
 console.log('\n=== chapters partition the lessons ===')
@@ -137,6 +138,86 @@ console.log('\n=== chapters partition the lessons ===')
   ok('every lesson is in exactly one chapter', ids.every((id) => chap.filter((c) => c === id).length === 1))
   ok('no chapter references a missing lesson', chap.every((id) => ids.includes(id)))
   ok('chapter order matches lesson order', JSON.stringify(chap) === JSON.stringify(ids))
+}
+
+// A step LEAKS a live pre-commit correctness tell (turns unaided recall into recognition,
+// BRAINLIFT SPOV 5/2b) if its view renders a discrete "you're right" state before the learner
+// commits. triangle/capture have no silent mode (their green "correctly exposed" / "Good
+// exposure" is unconditional); compose's power-point glow and slider readState are tells unless
+// `silentCue` suppresses them. Reviews must use none of these.
+const leaksLiveTell = (s) =>
+  s.kind === 'triangle' ||
+  s.kind === 'capture' ||
+  (s.kind === 'compose' && !s.silentCue) ||
+  (s.kind === 'slider-sim' && s.readState && !s.silentCue)
+
+console.log('\n=== practice bank (spaced-retrieval items: unaided, fails at start, reachable) ===')
+ok('every content lesson has a practice skill', skills.length === 15)
+for (const sk of skills) {
+  const s = sk.item
+  const tag = `practice:${sk.id} ${s.kind}`
+  ok(`${tag}: marked review (no hint ladder / show-why)`, s.review === true)
+  ok(`${tag}: no live pre-commit correctness tell`, !leaksLiveTell(s))
+  ok(`${tag}: has success copy`, typeof s.feedback?.correct === 'string' && s.feedback.correct.length > 0)
+  ok(`${tag}: skill maps to a real content lesson`, course.lessons.some((l) => l.id === sk.lessonId))
+  assertStep(s, tag) // same fails-at-start + reachable invariants as lessons
+}
+
+console.log('\n=== chapter reviews are unaided (no live correctness tell) ===')
+for (const lesson of course.lessons.filter((l) => l.review)) {
+  lesson.steps.forEach((s, i) => ok(`${lesson.id}[${i}] ${s.kind}: no live tell`, !leaksLiveTell(s)))
+}
+
+console.log('\n=== spaced-retrieval scheduler (src/lib/spacing.js) ===')
+{
+  // Expanding ladder: each box waits strictly longer than the last.
+  let monoUp = true
+  for (let b = 2; b <= MAX_BOX; b++) if (!(intervalMs(b) > intervalMs(b - 1))) monoUp = false
+  ok('intervals strictly increase per box', monoUp)
+  ok('box 1 is the shortest interval', intervalMs(1) === BOX_DAYS[0] * DAY)
+
+  const NOW = 1_700_000_000_000
+  ok('a never-reviewed (learned) skill is due now', isDue(undefined, NOW) === true)
+
+  const s1 = reviewNext(undefined, true, NOW)
+  ok('first correct -> box 1', s1.box === 1)
+  ok('first correct -> not due now', isDue(s1, NOW) === false)
+  ok('first correct -> due after the box-1 interval', s1.dueAt === NOW + intervalMs(1))
+
+  const s2 = reviewNext(s1, true, NOW)
+  ok('second correct -> box 2', s2.box === 2)
+  ok('promotion pushes the next review further out', s2.dueAt > s1.dueAt)
+  ok('reps accumulate', s2.reps === 2)
+
+  const s3 = reviewNext(s2, false, NOW)
+  ok('a miss resets to box 1', s3.box === 1)
+  ok('a miss records a lapse', s3.lapses === 1)
+  ok('a miss reschedules soon (box 1)', s3.dueAt === NOW + intervalMs(1))
+
+  let cap
+  for (let i = 0; i < MAX_BOX + 3; i++) cap = reviewNext(cap, true, NOW)
+  ok('box caps at MAX_BOX', cap.box === MAX_BOX)
+
+  // Selection: only learned AND due; interleave spreads chapters across the opening run.
+  const allLearned = skills.map((s) => s.lessonId)
+  ok('all learned, never-reviewed skills are due', selectDue(skills, {}, allLearned, NOW).length === skills.length)
+  ok('nothing is due when no lessons are complete', selectDue(skills, {}, [], NOW).length === 0)
+  const oneReviewed = { [skills[0].id]: reviewNext(undefined, true, NOW) }
+  ok('a just-reviewed skill drops out of due', !selectDue(skills, oneReviewed, allLearned, NOW).some((s) => s.id === skills[0].id))
+
+  const due = selectDue(skills, {}, allLearned, NOW)
+  const inter = interleave(due)
+  ok('interleave preserves the set', inter.length === due.length)
+  const nChapters = new Set(due.map((s) => s.chapterId)).size
+  let opensSpread = true
+  for (let i = 1; i < Math.min(nChapters, inter.length); i++) if (inter[i].chapterId === inter[i - 1].chapterId) opensSpread = false
+  ok('interleave spreads chapters across the opening run', opensSpread)
+
+  const future = {
+    [skills[0].id]: reviewNext(reviewNext(undefined, true, NOW), true, NOW), // box 2, due +3d
+    [skills[1].id]: reviewNext(undefined, true, NOW), // box 1, due +1d
+  }
+  ok('nextDueAt returns the soonest upcoming review', nextDueAt(skills, future, allLearned, NOW) === NOW + intervalMs(1))
 }
 
 console.log('\n=== scene math ===')

@@ -351,7 +351,10 @@ function SliderSimView({ step, status, onResult, onActivity }) {
 
   const value = useIndex ? stops[raw] : raw
   const params = step.toParams(value)
-  const read = step.readState ? step.readState(value) : null // felt cue when there's no numeric readout
+  // The felt cue (e.g. "reads neutral") is a live correctness tell — fine in a lesson, but in
+  // a review it leaks the answer before commit (the green state == the grading threshold), so
+  // suppress it there until the shot is taken. `silentCue` is set on review/practice steps.
+  const read = step.readState && !(step.silentCue && status !== 'correct') ? step.readState(value) : null
 
   return (
     <div className="animate-risein">

@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db, firebaseEnabled, googleProvider } from './lib/firebase.js'
+import { reviewNext } from './lib/spacing.js'
 
 const COURSE = 'exposure'
 
@@ -25,6 +26,7 @@ function emptyProgress() {
     lastLesson: null,
     shots: [], // captured photos: keepers + experiments (params to re-render, not images)
     courses: { [COURSE]: { completedLessonIds: [], lessons: {} } },
+    review: { skills: {} }, // spaced-retrieval schedule, keyed by skill id (see src/lib/spacing.js)
   }
 }
 
@@ -130,6 +132,7 @@ export function AppProvider({ children }) {
         lastLesson: data.lastLesson || null,
         shots: data.shots || [],
         courses: data.courses || emptyProgress().courses,
+        review: data.review || { skills: {} },
       }
     }
     const fresh = emptyProgress()
@@ -160,6 +163,7 @@ export function AppProvider({ children }) {
             lastLesson: next.lastLesson,
             shots: next.shots || [],
             courses: next.courses,
+            review: next.review || { skills: {} },
           }),
           { merge: true },
         ).catch(() => {})
@@ -308,6 +312,24 @@ export function AppProvider({ children }) {
     })
   }
 
+  // Spaced-retrieval result. Called ONCE per skill per session — on the FIRST attempt,
+  // which is the honest recall signal (a later success after a miss is not unaided recall).
+  // Correct → promote a box and push the next review out; miss → reset to box 1.
+  // No XP/points here on purpose: bolting an extrinsic reward onto recall undercuts the
+  // intrinsic act (overjustification; Matuschak on SR's "meaningless goals"). Review is
+  // its own reward — the schedule, not a score.
+  function recordReview(skillId, correct) {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null }
+    setProgress((prev) => {
+      const next = structuredClone(prev)
+      if (!next.review) next.review = { skills: {} }
+      if (!next.review.skills) next.review.skills = {}
+      next.review.skills[skillId] = reviewNext(next.review.skills[skillId], correct, Date.now())
+      persist(user, next)
+      return next
+    })
+  }
+
   // Save a captured photo — KEEPERS ONLY (wrong answers are never collected). At
   // most one shot per lesson step (re-shooting overwrites), so the roll stays a
   // gallery of bests, not a log of failures.
@@ -354,6 +376,7 @@ export function AppProvider({ children }) {
     logOut,
     saveResume,
     recordAttempt,
+    recordReview,
     completeLesson,
     saveShot,
   }

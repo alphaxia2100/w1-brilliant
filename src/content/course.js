@@ -1856,7 +1856,7 @@ const reviewsByChapter = {
         feedback: { correct: 'Read by the graph — the tones spread without clipping either edge.', stages: ['Metering: the bars are bunched on one wall — move the exposure the other way.'] },
       },
       {
-        kind: 'slider-sim', scene: 'room',
+        kind: 'slider-sim', scene: 'room', silentCue: true, // unaided: hide the live "reads neutral" tell
         control: { min: -1, max: 1, step: 0.05, start: 0 },
         toParams: (v) => ({ temp: v, baseTemp: WB_WARM }), readState: wbRead(WB_WARM), label: 'White balance', ends: ['cooler · blue', 'warmer · orange'], ariaLabel: 'White balance',
         prompt: 'This indoor shot is too warm. Cool it until the colors read neutral.',
@@ -1915,6 +1915,118 @@ const reviewsByChapter = {
   },
 }
 
+// ── Practice bank — one unaided RETRIEVAL item per content skill, for spaced review.
+// These are the load-bearing learning-science artifact (BRAINLIFT SPOV 5): a single calm
+// nudge, no hint ladder, no live tell, on a fresh scene — recall, not recognition. Every
+// check here is one we already ship + audited in a lesson or chapter Review, so the
+// retrieval can't quietly become unpassable. Keyed by lessonId (== skill id). The
+// scheduler in src/lib/spacing.js decides WHICH are due; the session interleaves them.
+const practiceBank = {
+  'exposure-triangle': {
+    // Reciprocity recall via ranking (no live meter to read off): the triangle widget shows a
+    // green "correctly exposed" state live, which would leak the answer in an unaided review.
+    review: true, kind: 'rank',
+    prompt: 'No hints — these three settings all give the SAME brightness. Order them by background blur, most blur first.',
+    scale: ['most blur', 'all sharp'],
+    items: [{ label: 'f/2.8 · 1/500' }, { label: 'f/5.6 · 1/125' }, { label: 'f/11 · 1/30' }],
+    solution: [0, 1, 2],
+    feedback: { correct: 'Equivalent exposures — same light, different look. The wide aperture (f/2.8) blurs the background most.' },
+  },
+  'depth-of-field': {
+    review: true, kind: 'bokeh', bg: 'garden', control: 'aperture', start: { f: 8 },
+    prompt: 'No hints — melt the background to a soft blur, then take the shot.',
+    check: (blur) => blur >= 9,
+    feedback: { correct: 'A wide aperture throws the background out of focus.' },
+  },
+  'shutter-motion': {
+    review: true, kind: 'motion', start: 5,
+    prompt: 'No hints — freeze this speeding car razor-sharp.',
+    check: (si) => si <= 1,
+    feedback: { correct: 'A fast shutter is a slice of time too short for the car to move.' },
+  },
+  'focus-point': {
+    review: true, kind: 'focus', f: 2, start: { focusDist: 0.9 },
+    prompt: 'No hints — the subject is soft. Rack the focus onto it until it snaps sharp.',
+    check: (fd) => Math.abs(fd - 0.34) < 0.03,
+    feedback: { correct: 'The sharp plane is one distance — and you placed it on the subject.' },
+  },
+  'focal-length': {
+    review: true, kind: 'bokeh', bg: 'garden', control: 'focal', lock: { f: 16, subjectDist: 0.5, bgDist: 0.4 }, start: { focal: 0 },
+    prompt: 'No hints — aperture is narrow (all sharp). Use the LENS to compress the background close behind the subject.',
+    check: (_b, p) => p.focal >= 0.7,
+    feedback: { correct: 'Compression — a telephoto magnifies and stacks the background, no blur needed.' },
+  },
+  metering: {
+    review: true, kind: 'slider-sim', scene: 'seascape', histogram: true,
+    control: { min: -2.5, max: 2.5, step: 0.1, start: -1.6 },
+    toParams: (v) => ({ exposure: v }), format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV', label: 'Exposure', ends: ['darker', 'brighter'], ariaLabel: 'Exposure compensation',
+    prompt: 'No hints — read the histogram, not the photo: spread the tones so nothing piles against a wall.',
+    check: (v) => wellMetered('seascape', v),
+    feedback: { correct: 'Read by the graph — the tones spread without clipping either edge.' },
+  },
+  'white-balance': {
+    // silentCue hides the live "reads neutral" readout (it equals the grading threshold) — you
+    // judge neutrality by the IMAGE, unaided, until you commit.
+    review: true, kind: 'slider-sim', scene: 'room', silentCue: true,
+    control: { min: -1, max: 1, step: 0.05, start: 0 },
+    toParams: (v) => ({ temp: v, baseTemp: WB_WARM }), readState: wbRead(WB_WARM), label: 'White balance', ends: ['cooler · blue', 'warmer · orange'], ariaLabel: 'White balance',
+    prompt: 'No hints — this indoor shot is too warm. Cool it until the colors read neutral.',
+    check: wbNeutral(WB_WARM),
+    feedback: { correct: 'Neutral — you cancelled the warm cast by adding its opposite.' },
+  },
+  'rule-of-thirds': {
+    review: true, kind: 'compose', scene: 'seascape', target: { kind: 'thirds' }, start: { x: 50, y: 50 }, silentCue: true,
+    prompt: 'No hints — place the subject where the photo feels most alive, not dead-center.',
+    feedback: { correct: 'On a power point — off-center breathes.' },
+  },
+  'composition-balance': {
+    review: true, kind: 'compose', scene: 'seascape', target: { kind: 'balance', anchor: { x: 26, y: 62 } }, start: { x: 50, y: 50 }, keeper: true, silentCue: true,
+    prompt: 'No hints — a heavy element sits low-left. Place your subject to balance the frame.',
+    feedback: { correct: 'Balanced — a counterweight across the center settles the frame.' },
+  },
+  'light-direction': {
+    review: true, kind: 'light-direction', controls: ['angle', 'soft'], start: { angle: 10, soft: 0.1, warmth: 0.1, fill: 0.2 },
+    prompt: 'No hints — light this face flatteringly: bring the light to a gentle side, and soften it.',
+    check: ({ angle, soft }) => angle >= 64 && angle <= 80 && soft >= 0.55,
+    feedback: { correct: 'A side light models the face; softness flatters it.' },
+  },
+  'flash-fill': {
+    review: true, kind: 'light-direction', control: 'fill', fixed: { angle: 95, soft: 0.12, warmth: 0.12 }, start: { fill: 0 },
+    prompt: 'No hints — harsh sun has crushed the shadow side. Add fill to open it — but don’t blast it flat.',
+    check: ({ fill }) => fill >= 0.45 && fill <= 0.85,
+    feedback: { correct: 'Opened, not flattened — fill balances against the sun.' },
+  },
+  portrait: {
+    review: true, kind: 'light-direction', controls: ['angle', 'soft', 'warmth', 'fill'], start: { angle: 10, soft: 0.12, warmth: -0.1, fill: 0.05 },
+    prompt: 'No hints — build a flattering portrait: soft, a gentle side, warm, shadows filled.',
+    check: ({ angle, soft, warmth, fill }) => angle >= 64 && angle <= 80 && soft >= 0.55 && soft <= 0.85 && warmth >= 0.25 && fill >= 0.3 && fill <= 0.7,
+    feedback: { correct: 'A portrait — four levers balanced into one flattering whole.' },
+  },
+  landscape: {
+    review: true, kind: 'compose', scene: 'landscape', target: { kind: 'horizon' }, start: { x: 50, y: 50 }, keeper: true, silentCue: true,
+    prompt: 'No hints — decide sky or land, and put the horizon on that third.',
+    feedback: { correct: 'Composed — you chose what the photo was about and framed for it.' },
+  },
+  'long-exposure-night': {
+    // Slider (not capture): the capture view shows a live green "Good exposure" band, which leaks
+    // the answer. Here you judge the glow by the SCENE — drag the shutter open until the night reads.
+    review: true, kind: 'slider-sim', scene: 'night', silentCue: true,
+    control: { min: -3, max: 2, step: 0.1, start: -2.5 },
+    toParams: (v) => ({ exposure: v }), format: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + ' EV', label: 'Exposure', ends: ['shorter · darker', 'longer · brighter'], ariaLabel: 'Shutter / exposure',
+    prompt: 'No hints — camera locked, nothing moving. Drag the shutter open and let the dark scene gather light until it reads cleanly.',
+    check: (v) => v >= 1.2 && v <= 1.8,
+    feedback: { correct: 'Built from time, not noise — a long exposure lets a dark scene gather light cleanly.' },
+  },
+  'iso-and-noise': {
+    review: true, kind: 'slider-sim', scene: 'night',
+    control: { stops: ISO_STOPS, start: 0 },
+    toParams: (iso) => ({ exposure: isoToExposure(iso), iso: isoToNoise(iso) }), format: (iso) => 'ISO ' + iso, label: 'ISO', ends: ['ISO 100 · clean', 'ISO 12800 · noisy'], ariaLabel: 'ISO sensitivity', loupe: { cx: 4, cy: 25, cells: 6 },
+    prompt: 'No hints — find the LOWEST ISO that still reads this night cleanly: high enough to see, never a stop higher.',
+    check: (iso) => iso === 1600,
+    feedback: { correct: 'The floor — the darkness itself sets the minimum, and you sat right on it.' },
+  },
+}
+
 // Lessons grouped into named chapters (the course's "levels", the Brilliant shape). Display +
 // navigation only — progress stays keyed by lesson id. Order matches the `lessons` array; the
 // gate (checks.mjs) asserts the chapters partition every lesson exactly once.
@@ -1957,3 +2069,16 @@ export function getLesson(id) {
 }
 
 export const totalLessons = orderedLessons.length
+
+// Spaced-retrieval SKILLS — one per content lesson that has a practice item (chapter
+// Reviews are skipped: they're the in-course pass, not a recurring skill). Each skill
+// carries its chapter so the Practice session can interleave across chapters. The
+// schedule (which skills are due) lives in user progress; see src/lib/spacing.js.
+export const skills = []
+for (const ch of chapters) {
+  for (const id of ch.lessonIds) {
+    const item = practiceBank[id]
+    if (!item) continue
+    skills.push({ id, lessonId: id, title: lessonById[id].title, chapterId: ch.id, chapterTitle: ch.title, item })
+  }
+}

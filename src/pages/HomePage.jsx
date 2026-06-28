@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../store.jsx'
-import { course, getLesson, totalLessons } from '../content/course.js'
+import { course, getLesson, totalLessons, skills } from '../content/course.js'
+import { dueCount } from '../lib/spacing.js'
 import { Button, Card, Logo } from '../components/ui.jsx'
 import PixelScene from '../sim/PixelScene.jsx'
 import DofBokeh from '../sim/DofBokeh.jsx'
@@ -62,6 +63,9 @@ export default function HomePage() {
   const firstName = user?.displayName?.split(' ')[0]
   const nextLesson = course.lessons.find((l) => !done.includes(l.id)) || course.lessons[0]
 
+  const learnedSkills = skills.filter((s) => done.includes(s.lessonId)).length
+  const reviewDue = dueCount(skills, progress.review?.skills, done, Date.now())
+
   return (
     <div className="min-h-[100dvh] max-w-col w-full mx-auto px-5 py-6 flex flex-col gap-6">
       <header className="flex items-center justify-between">
@@ -112,6 +116,31 @@ export default function HomePage() {
             {done.length ? `Next: ${nextLesson.title}` : 'Start Lesson 1'}
           </Button>
         </Card>
+      )}
+
+      {learnedSkills > 0 && (
+        <button
+          onClick={() => navigate('/practice')}
+          className="text-left bg-surface rounded-big p-5 transition hover:bg-hairline/60 flex items-center gap-4"
+        >
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#141414" strokeWidth="1.7" aria-hidden="true" className="shrink-0">
+            <path d="M3 12a9 9 0 0 1 15.5-6.3M21 12a9 9 0 0 1-15.5 6.3" />
+            <path d="M18 3v3.5h-3.5M6 21v-3.5h3.5" />
+          </svg>
+          <div className="flex-1">
+            <h3 className="text-[17px] font-semibold">Daily Review</h3>
+            <p className="text-muted text-[14px]">
+              {reviewDue > 0
+                ? 'Spaced, unaided recall — the kind that sticks.'
+                : 'All caught up. Spaced recall keeps it from fading.'}
+            </p>
+          </div>
+          {reviewDue > 0 && (
+            <span className="shrink-0 text-[13px] font-semibold text-ink bg-pear rounded-full min-w-[26px] h-[26px] grid place-items-center px-2">
+              {reviewDue}
+            </span>
+          )}
+        </button>
       )}
 
       {recentShots.length > 0 ? (
